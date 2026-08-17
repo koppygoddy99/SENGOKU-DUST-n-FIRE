@@ -23,13 +23,15 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { SengokuIcon, type SengokuIconName } from "@/components/SengokuIcon";
 
-type PageId = "home" | "start" | "character" | "roll" | "log" | "archive" | "settings" | "icons";
+type PageId = "home" | "play" | "start" | "load" | "save" | "character" | "log" | "archive" | "settings" | "icons";
 
 const navItems: { id: PageId; label: string; icon: SengokuIconName }[] = [
   { id: "home", label: "หน้าหลัก", icon: "home" },
-  { id: "start", label: "เริ่มเกม", icon: "start" },
+  { id: "play", label: "เล่นเกม", icon: "sword" },
+  { id: "start", label: "NEW GAME 1", icon: "start" },
+  { id: "load", label: "LOAD GAME", icon: "document" },
+  { id: "save", label: "เซฟเกม", icon: "log" },
   { id: "character", label: "ตัวละคร", icon: "character" },
-  { id: "roll", label: "การทอย", icon: "roll" },
   { id: "log", label: "บันทึก LOG", icon: "log" },
   { id: "archive", label: "คลังโลก", icon: "archive" },
   { id: "settings", label: "ตั้งค่า", icon: "settings" },
@@ -57,13 +59,16 @@ function GhostLink({ children, onClick }: { children: React.ReactNode; onClick?:
 export default function Home() {
   const [page, setPage] = useState<PageId>("home");
   const [credits, setCredits] = useState(12);
-  const [rollResolved, setRollResolved] = useState(false);
   const [readerMode, setReaderMode] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
   const [fontSize, setFontSize] = useState<"small" | "normal" | "large">("normal");
   const [accent, setAccent] = useState<"vermilion" | "ochre" | "teal">("vermilion");
   const [menuOpen, setMenuOpen] = useState(false);
   const [notice, setNotice] = useState("ต้นแบบ UI/UX · ข้อมูลทุกอย่างเป็นตัวอย่าง");
+  const [currentLog, setCurrentLog] = useState(3);
+  const [manualSaveLog, setManualSaveLog] = useState(1);
+  const [autoSaveLog, setAutoSaveLog] = useState(3);
+  const [namedSaveLog, setNamedSaveLog] = useState<number | null>(null);
 
   const useCredit = (message: string) => {
     if (credits <= 0) {
@@ -73,6 +78,22 @@ export default function Home() {
     setCredits((value) => value - 1);
     setNotice(message);
     return true;
+  };
+
+  const saveManual = () => {
+    setManualSaveLog(currentLog);
+    setNotice(`บันทึกปกติถูกเขียนทับที่ LOG ${currentLog}`);
+  };
+
+  const saveAsNew = () => {
+    setNamedSaveLog(currentLog);
+    setNotice(`สร้างช่องบันทึกใหม่จาก LOG ${currentLog}`);
+  };
+
+  const loadGame = (log: number, type: string) => {
+    setCurrentLog(log);
+    setNotice(`โหลด ${type} ที่ LOG ${log} แล้ว`);
+    setPage("play");
   };
 
   const appClass = [
@@ -132,9 +153,11 @@ export default function Home() {
 
       <main className="main-content">
         {page === "home" && <HomeView setPage={setPage} credits={credits} />}
+        {page === "play" && <GameView credits={credits} useCredit={useCredit} currentLog={currentLog} setCurrentLog={setCurrentLog} setAutoSaveLog={setAutoSaveLog} onSave={saveManual} setPage={setPage} />}
         {page === "start" && <StartView credits={credits} useCredit={useCredit} setPage={setPage} />}
+        {page === "load" && <LoadGameView autoSaveLog={autoSaveLog} manualSaveLog={manualSaveLog} namedSaveLog={namedSaveLog} onLoad={loadGame} />}
+        {page === "save" && <SaveGameView currentLog={currentLog} manualSaveLog={manualSaveLog} autoSaveLog={autoSaveLog} namedSaveLog={namedSaveLog} onOverwrite={saveManual} onSaveAsNew={saveAsNew} setPage={setPage} />}
         {page === "character" && <CharacterView setPage={setPage} />}
-        {page === "roll" && <RollView credits={credits} rollResolved={rollResolved} setRollResolved={setRollResolved} useCredit={useCredit} />}
         {page === "log" && <LogView readerMode={readerMode} setReaderMode={setReaderMode} />}
         {page === "archive" && <ArchiveView setPage={setPage} />}
         {page === "settings" && <SettingsView darkMode={darkMode} setDarkMode={setDarkMode} fontSize={fontSize} setFontSize={setFontSize} accent={accent} setAccent={setAccent} />}
@@ -156,16 +179,16 @@ function HomeView({ setPage, credits }: { setPage: (page: PageId) => void; credi
           <p>เลือกทางเข้าของเจ้า แล้วกลับมาสู่เรื่องราวที่โลกยังจดจำไว้</p>
         </div>
         <div className="hero-ledger__actions">
-          <Button className="df-button df-button--primary" onClick={() => setPage("start")}><SengokuIcon name="start" size={17} tone="ink" /> ตั้งแคมเปญบทใหม่ <ArrowRight size={18} /></Button>
-          <Button className="df-button df-button--ghost" onClick={() => setPage("log")}>เปิดบันทึกเหตุการณ์ล่าสุด</Button>
+          <Button className="df-button df-button--primary" onClick={() => setPage("start")}><SengokuIcon name="start" size={17} tone="ink" /> NEW GAME 1 <ArrowRight size={18} /></Button>
+          <Button className="df-button df-button--ghost" onClick={() => setPage("load")}>LOAD GAME</Button>
         </div>
       </section>
       <section className="home-grid">
-        <button className="continue-panel" onClick={() => setPage("roll")}>
+        <button className="continue-panel" onClick={() => setPage("play")}>
           <div className="continue-panel__top"><SectionKicker>THE CURRENT LEAF</SectionKicker><span className="save-dot">บันทึกแล้ว</span></div>
           <h2>ค่ายไซกะ · โรงซ่อมปืน</h2>
           <p>มาซาคิจิถูกคุมตัวไว้ งานปืน 30 กระบอกยังค้างอยู่ และกันทาโร่กำลังรอคำตอบของเจ้า</p>
-          <span className="continue-panel__link">กลับไปตอบกันทาโร่ <ArrowRight size={17} /></span>
+          <span className="continue-panel__link">กลับไปเล่นฉากนี้ <ArrowRight size={17} /></span>
         </button>
         <div className="campaign-card">
           <SectionKicker>CONTEXT MARGIN</SectionKicker>
@@ -178,6 +201,7 @@ function HomeView({ setPage, credits }: { setPage: (page: PageId) => void; credi
         </div>
       </section>
       <section className="shortcut-row">
+        <button onClick={() => setPage("save")}><SengokuIcon name="log" tone="ochre" /><span><strong>เซฟเกม</strong><small>บันทึกใหม่ บันทึกทับ และ Auto Save</small></span><ChevronRight size={18} /></button>
         <button onClick={() => setPage("character")}><SengokuIcon name="character" tone="navy" /><span><strong>ตัวละครของฉัน</strong><small>แกนทอย ความชำนาญ สถานะ</small></span><ChevronRight size={18} /></button>
         <button onClick={() => setPage("log")}><SengokuIcon name="log" tone="teal" /><span><strong>บันทึก LOG</strong><small>อ่านตามเวลา หรือ Reader Mode</small></span><ChevronRight size={18} /></button>
         <button onClick={() => setPage("archive")}><SengokuIcon name="archive" tone="vermilion" /><span><strong>คลังโลก</strong><small>ผู้คน ภารกิจ ข่าว และพยาน</small></span><ChevronRight size={18} /></button>
@@ -190,7 +214,7 @@ function StartView({ credits, useCredit, setPage }: { credits: number; useCredit
   const [mode, setMode] = useState<"freeform" | "template">("freeform");
   return (
     <div className="page start-view">
-      <div className="page-heading"><div><SectionKicker>NEW CAMPAIGN · STEP 1 OF 3</SectionKicker><h1>เริ่มเกมให้ชัด<br/>ก่อนเริ่มเรื่องให้ลึก</h1><p>เลือกบริบทก่อน แล้วระบบจึงช่วยสร้างตัวละครที่อยู่ในโลกนี้ได้จริง</p></div><div className="credit-box"><SengokuIcon name="credit" tone="ochre" /><span>เครดิตคงเหลือ</span><strong>{credits}</strong></div></div>
+      <div className="page-heading"><div><SectionKicker>NEW GAME 1 · STEP 1 OF 3</SectionKicker><h1>สร้างแคมเปญที่หนึ่ง<br/>เริ่มเรื่องให้ชัด</h1><p>หนึ่งบัญชีมีหลายแคมเปญได้ เลือกบริบทของเรื่องนี้ก่อน แล้วระบบจึงช่วยสร้างตัวละครที่อยู่ในโลกนี้ได้จริง</p></div><div className="credit-box"><SengokuIcon name="credit" tone="ochre" /><span>เครดิตคงเหลือ</span><strong>{credits}</strong></div></div>
       <div className="start-layout">
         <ol className="step-rail"><li className="is-current"><span>1</span><div><strong>ตั้งชื่อแคมเปญ</strong><small>เรื่องราวบทใหม่ของเจ้า</small></div></li><li><span>2</span><div><strong>กำหนดบริบท</strong><small>ปี ฤดู ภูมิภาค</small></div></li><li><span>3</span><div><strong>สร้างตัวละคร</strong><small>พิมพ์เองหรือเลือกสาย</small></div></li></ol>
         <section className="start-form">
@@ -212,9 +236,27 @@ function CharacterView({ setPage }: { setPage: (page: PageId) => void }) {
   return <div className="page character-view"><div className="page-heading"><div><SectionKicker>CHARACTER DOSSIER</SectionKicker><h1>ตัวละครของฉัน</h1><p>ข้อมูลสำคัญเห็นทันที รายละเอียดกดดูได้ เหตุผลของโบนัสไม่เคยถูกซ่อน</p></div><GhostLink onClick={() => setPage("log")}>ดูบันทึกที่เกี่ยวข้อง</GhostLink></div><section className="dossier-header"><div className="dossier-name"><span className="mon-avatar mon-avatar--large">佐</span><div><h2>ซาเนฟุยุ</h2><p>อาชิงารุ · พลทหารชั้นต้น · ค่ายชายแดนมิกาวะ</p></div></div><div className="dossier-resources"><span>เลือด <strong>6/6</strong></span><span>ขวัญ <strong>5/6</strong></span><span>แรงส่ง <strong>0/2</strong></span><span>เครดิต <strong>2</strong></span></div></section><div className="character-columns"><section><div className="tab-strip"><button className="active">ภาพรวม</button><button>แกนทอย</button><button>ความชำนาญ</button><button>ของพก</button><button>สถานะ</button></div><div className="stat-grid">{stats.map(([label, text, value, icon]) => <div className="stat-cell" key={label}><SengokuIcon name={icon as SengokuIconName} tone="navy" /><strong>{label}</strong><b>{value}</b><small>{text}</small><button>ดูตัวอย่างการใช้</button></div>)}</div><div className="mastery-list"><div className="list-title"><span>ความชำนาญ</span><span>โบนัส</span><span>ที่มา</span></div>{[["เจรจาต่อรอง", "+2", "อาชีพและประสบการณ์"], ["อ่านตราประทับ", "+2", "จุดเด่น"], ["เอาตัวรอดในค่าย", "+1", "ภูมิหลัง"], ["ปฐมพยาบาล", "+1", "เรียนรู้จากผู้รู้"]].map((row) => <div className="mastery-row" key={row[0]}><span><SengokuIcon name="memory" size={15} tone="ochre" />{row[0]}</span><strong>{row[1]}</strong><small>{row[2]}</small><button>ที่มา</button></div>)}</div></section><aside className="status-rail"><SectionKicker>สถานะที่กำลังมีผล</SectionKicker>{statePills.map((state) => <div className={`status-row status-row--${state.tone}`} key={state.label}><span className="status-dot" /> <strong>{state.label}</strong><small>{state.tone === "vermilion" ? "เสี่ยง" : state.tone === "ochre" ? "ภาระหน้าที่" : "ผูกพัน"}</small></div>)}<div className="status-note"><SengokuIcon name="relation" tone="teal" />ข้อมูลลับยังไม่แสดง จนกว่าตัวละครจะมีทางรู้</div></aside></div></div>;
 }
 
-function RollView({ credits, rollResolved, setRollResolved, useCredit }: { credits: number; rollResolved: boolean; setRollResolved: (value: boolean) => void; useCredit: (message: string) => boolean }) {
-  const resolve = () => { if (useCredit("ทอยแล้ว · ใช้ 1 เครดิต · ผลลัพธ์ถูกบันทึกใน LOG")) setRollResolved(true); };
-  return <div className="page roll-view"><div className="page-heading"><div><SectionKicker>{rollResolved ? "ROLL RESULT" : "SKILL ROLL PREVIEW"}</SectionKicker><h1>{rollResolved ? "สำเร็จมีราคาตามมา" : "วิเคราะห์สกิลทอยก่อนยืนยัน"}</h1><p>{rollResolved ? "ผลสำเร็จถูกเก็บไว้ แต่รอยร้าวของฉากยังเดินทางต่อไปในโลก" : "ผู้เล่นเห็นสิ่งที่ระบบจะใช้ ความเสี่ยง และราคาเครดิตก่อนกดทอย"}</p></div><div className="credit-box"><SengokuIcon name="credit" tone="ochre" /><span>เครดิตคงเหลือ</span><strong>{credits}</strong></div></div><div className="roll-layout"><section className="narrative-panel"><div className="scene-tag">ค่ายไซกะ · โรงซ่อมปืน</div><p className="action-quote">“มาซาคิจิเคยมีเจ้านายเป็นช่างระฆังให้โอดะ เจ้านายเขาเลยให้เขาทำตราสัญลักษณ์บ่อยๆ”</p><div className="analysis-box"><div><strong>ระบบจะใช้</strong><span>ปัญญา +1 · เจรจาต่อรอง +2 · ข้ออ้างเชิงช่าง +2</span></div><div><strong>ความเสี่ยง</strong><span>มาซาคิจิอาจถูกคุมตัว และผู้คุมอาจจดชื่อเจ้าไว้</span></div><div><strong>ระดับความยาก</strong><span>DN 20 · ค่ายไซกะระแวงการเชื่อมโยงกับโอดะ</span></div></div>{rollResolved && <div className="story-result"><SectionKicker>ผลในเรื่อง</SectionKicker><p>กันทาโร่ยอมฟังคำอธิบาย แต่สั่งริบเครื่องมือของมาซาคิจิและบังคับให้ซ่อมปืน 20 กระบอกภายในสามวัน</p></div>}</section><aside className="roll-side"><div className="cost-banner"><SengokuIcon name="credit" tone="ochre" /><div><strong>{rollResolved ? "ทอยครั้งนี้ใช้ 1 เครดิต" : "ยืนยันเพื่อทอย · ใช้ 1 เครดิต"}</strong><span>{rollResolved ? "รับผลและอ่านต่อไม่ใช้เครดิตเพิ่ม" : "ดูตัวอย่าง แก้ความเข้าใจ หรือเปลี่ยนวิธีได้ฟรี"}</span></div></div><div className="dice-breakdown"><span className="dice-symbol">⚄ ⚂</span><div><small>2d12</small><strong>{rollResolved ? "14" : "ยังไม่ทอย"}</strong></div><div><small>โบนัสรวม</small><strong>+6</strong></div><div><small>DN</small><strong className="risk-number">20</strong></div></div>{rollResolved ? <><div className="memory-impact"><h3>สิ่งที่โลกจดจำ</h3><p><span>+</span> ข่าว: บัญชีข้าวมีการปลอมแปลง</p><p><span>!</span> หนี้บุญคุณ: มาซาคิจิติดหนี้เจ้า 1 ครั้ง</p><p><span>!</span> ความร้อน: ผู้คุมด่านจับตาตัวละคร</p></div><Button className="df-button df-button--primary" onClick={() => setRollResolved(false)}>เริ่มตัวอย่างใหม่ <RotateCcw size={17} /></Button></> : <><Button className="df-button df-button--primary" onClick={resolve}>ยืนยันเพื่อทอย · ใช้ 1 เครดิต <ArrowRight size={17} /></Button><Button className="df-button df-button--ghost">แก้ความเข้าใจ</Button><button className="why-button"><CircleAlert size={15} /> ทำไมถึงใช้ค่านี้</button></>}</aside></div></div>;
+function GameView({ credits, useCredit, currentLog, setCurrentLog, setAutoSaveLog, onSave, setPage }: { credits: number; useCredit: (message: string) => boolean; currentLog: number; setCurrentLog: (value: number) => void; setAutoSaveLog: (value: number) => void; onSave: () => void; setPage: (page: PageId) => void }) {
+  const [mode, setMode] = useState<"roll" | "estimate">("roll");
+  const [action, setAction] = useState("ข้าจะรายงานสถานการณ์ที่โกดังเอจิยะ และขอเงื่อนไขคุ้มครองมาซาคิจิ");
+  const [rolled, setRolled] = useState(false);
+  const rollAction = () => {
+    if (!useCredit("ทอยแล้ว · ใช้ 1 เครดิต · Auto Save ถูกอัปเดต")) return;
+    const nextLog = currentLog + 1;
+    setCurrentLog(nextLog);
+    setAutoSaveLog(nextLog);
+    setRolled(true);
+  };
+  return <div className="page game-view"><div className="game-toolbar"><div><SectionKicker>PLAYING · LOG {currentLog}</SectionKicker><strong>ค่ายไซกะ · โรงซ่อมปืน</strong></div><div className="game-toolbar__actions"><button onClick={onSave}><SengokuIcon name="log" size={15} tone="ochre" /> เซฟเกม</button><button onClick={() => setPage("load")}><SengokuIcon name="document" size={15} tone="navy" /> โหลดเกม</button><span className="credit-inline"><SengokuIcon name="credit" size={15} tone="ochre" /> {credits}</span></div></div>{rolled && <div className="quick-log"><span>LOG {currentLog}</span><strong>เจรจาเรื่องโกดังเอจิยะ</strong><i>ใช้: ปัญญา · เจรจาต่อรอง · ข้ออ้างเชิงช่าง</i><i>ผล 17 / ความยากสูง</i><b>สำเร็จมีราคาตามมา</b></div>}<section className="game-paper"><div className="game-paper__header"><span><SengokuIcon name="memory" tone="vermilion" /> ฉาก: ค่ายไซกะ · โรงซ่อมปืน</span><button onClick={() => setPage("log")}><SengokuIcon name="log" size={16} tone="navy" /> บันทึกเหตุการณ์</button></div><div className="game-story"><p>เสียงเขม่าควันและกลิ่นดินปืนอบอ้าวในค่ายไซกะลอยคลุ้ง กันทาโร่ก้มมองตราสัญลักษณ์ในมือด้วยสายตานิ่งขรึม ก่อนจะหรี่ตาจ้องหน้าซาเนฟุยุอย่างไม่วางใจ</p><p>“ช่างหล่อระฆังเร่ร่อนเรอะ... ฟังดูมีเหตุผล แต่ที่นี่คือไซกะ ไม่ใช่ถิ่นของพวกโอดะ”</p><p>มาซาคิจิถูกพาตัวไปคุมที่โรงซ่อมปืน เขาต้องซ่อมลำกล้องปืนคาบศิลา 20 กระบอกให้เสร็จภายในสามวัน ขณะเดียวกัน โทคิจิย้ำว่างานปืน 30 กระบอกจากซะไกยังค้างอยู่</p>{rolled && <><div className="inline-result"><SectionKicker>ผลหลังทอย</SectionKicker><p>กันทาโร่ยอมฟังรายงานของเจ้า แต่ขอให้เจ้ารับผิดชอบงานขนย้ายปืนด้วยตนเอง เพื่อพิสูจน์ว่าเรื่องโกดังเอจิยะไม่ใช่คำลวง</p></div><p>กันทาโร่หันกลับมามองเจ้า “พูดต่อสิ ซาเนฟุยุ... ถ้าเจ้ารู้ว่าปืนของเราอยู่ที่ใด ก็จงพาเราไปเอามันกลับมา”</p></>}</div><div className="action-dock"><div className="action-tabs"><button className={mode === "roll" ? "active" : ""} onClick={() => setMode("roll")}>ทอยตามการกระทำ</button><button className={mode === "estimate" ? "active" : ""} onClick={() => setMode("estimate")}>ประเมินความยาก</button></div><label className="action-field"><span>เจ้าจะทำอย่างไรต่อ?</span><textarea value={action} onChange={(event) => setAction(event.target.value)} /></label>{mode === "roll" ? <div className="action-dock__bottom"><p>ระบบจะคำนวณแกนทอยและโบนัสเบื้องหลัง แล้วสรุปผลใน LOG หลังทอย</p><Button className="df-button df-button--primary" onClick={rollAction}>ทอยตามการกระทำ · ใช้ 1 เครดิต <ArrowRight size={17} /></Button></div> : <div className="estimate-panel"><div><small>ระดับความยาก</small><strong>ยาก</strong></div><div><small>ผลรวมโดยประมาณที่ต้องผ่าน</small><strong>17+</strong></div><div><small>กลไกที่โลกจะตรวจ</small><span>ความน่าเชื่อถือของคำรายงาน · พยาน · สถานะผู้คุม</span></div><p><EyeOff size={15} /> โหมดนี้ไม่เฉลยแกนทอย ความชำนาญ หรือโบนัสที่ระบบจะเลือกใช้</p><Button className="df-button df-button--primary" onClick={() => setMode("roll")}>กลับไปทอยตามการกระทำ <ArrowRight size={17} /></Button></div>}</div></section></div>;
+}
+
+function LoadGameView({ autoSaveLog, manualSaveLog, namedSaveLog, onLoad }: { autoSaveLog: number; manualSaveLog: number; namedSaveLog: number | null; onLoad: (log: number, type: string) => void }) {
+  const slots = [{ type: "AUTO SAVE", icon: "memory", tone: "teal", log: autoSaveLog, title: "ออกจากฉากล่าสุด", note: "บันทึกอัตโนมัติเมื่อออกจากแอปหรือเหตุการณ์เปลี่ยน · ล่าสุด", action: "โหลด Auto Save" }, { type: "MANUAL SAVE", icon: "log", tone: "ochre", log: manualSaveLog, title: "เถ้าควันเหนือคิโนะกาวะ", note: "บันทึกด้วยมือ · เก็บไว้ที่จุดก่อนเหตุการณ์ตรวจตรา", action: "โหลด Manual Save" }, ...(namedSaveLog ? [{ type: "SAVE SLOT 2", icon: "document", tone: "navy", log: namedSaveLog, title: "บันทึกสำรอง", note: "ช่องบันทึกที่สร้างเพิ่มจากหน้าเซฟเกม", action: "โหลด Save Slot 2" }] : [])] as const;
+  return <div className="page save-page"><div className="page-heading"><div><SectionKicker>LOAD GAME</SectionKicker><h1>เลือกบันทึกที่ต้องการกลับไป</h1><p>Auto Save เก็บจุดที่เจ้าอยู่ล่าสุด ส่วน Manual Save เก็บจุดที่เจ้าตั้งใจเก็บไว้ต่างหาก</p></div><div className="save-legend"><span className="legend-auto">● Auto Save</span><span className="legend-manual">◆ Manual Save</span></div></div><div className="save-slots">{slots.map((slot) => <article className={`save-slot save-slot--${slot.type === "AUTO SAVE" ? "auto" : "manual"}`} key={slot.type}><SengokuIcon name={slot.icon as SengokuIconName} size={23} tone={slot.tone as "teal" | "ochre" | "navy"} /><div><small>{slot.type} · LOG {slot.log}</small><h2>{slot.title}</h2><p>{slot.note}</p></div><Button className="df-button df-button--ghost" onClick={() => onLoad(slot.log, slot.type)}>โหลด <ArrowRight size={16} /></Button></article>)}</div><div className="save-explainer"><CircleAlert size={17} /><p><strong>ตัวอย่างการทำงาน:</strong> ถ้า Manual Save ล่าสุดอยู่ที่ LOG 1 แต่เจ้าเล่นต่อถึง LOG 3 แล้วออกจากแอป ระบบจะมี Auto Save ที่ LOG 3 ให้เลือกเสมอ โดยไม่เขียนทับ Manual Save</p></div></div>;
+}
+
+function SaveGameView({ currentLog, manualSaveLog, autoSaveLog, namedSaveLog, onOverwrite, onSaveAsNew, setPage }: { currentLog: number; manualSaveLog: number; autoSaveLog: number; namedSaveLog: number | null; onOverwrite: () => void; onSaveAsNew: () => void; setPage: (page: PageId) => void }) {
+  return <div className="page save-page"><div className="page-heading"><div><SectionKicker>SAVE GAME</SectionKicker><h1>บันทึกตรงนี้ ก่อนเรื่องจะเดินต่อ</h1><p>ตอนนี้เจ้าอยู่ที่ LOG {currentLog} การบันทึกด้วยมือจะไม่ทำลาย Auto Save ล่าสุด</p></div><GhostLink onClick={() => setPage("play")}>กลับไปเล่นเกม</GhostLink></div><div className="save-management"><article className="save-slot save-slot--manual"><SengokuIcon name="log" size={23} tone="ochre" /><div><small>MANUAL SAVE · LOG {manualSaveLog}</small><h2>เถ้าควันเหนือคิโนะกาวะ</h2><p>บันทึกปกติปัจจุบัน · เลือกบันทึกทับได้เมื่อเจ้าพร้อม</p></div><Button className="df-button df-button--primary" onClick={onOverwrite}>บันทึกทับที่ LOG {currentLog}</Button></article><article className="save-slot save-slot--new"><SengokuIcon name="document" size={23} tone="navy" /><div><small>{namedSaveLog ? `SAVE SLOT 2 · LOG ${namedSaveLog}` : "SAVE SLOT 2 · ว่าง"}</small><h2>{namedSaveLog ? "บันทึกสำรอง" : "สร้างบันทึกใหม่"}</h2><p>{namedSaveLog ? "ช่องนี้จะถูกเขียนทับเมื่อกดบันทึกใหม่อีกครั้ง" : "เก็บจุดปัจจุบันแยกจาก Manual Save เพื่อย้อนกลับภายหลัง"}</p></div><Button className="df-button df-button--ghost" onClick={onSaveAsNew}>{namedSaveLog ? `เขียนทับ LOG ${currentLog}` : `บันทึกใหม่ที่ LOG ${currentLog}`}</Button></article><article className="save-slot save-slot--auto"><SengokuIcon name="memory" size={23} tone="teal" /><div><small>AUTO SAVE · LOG {autoSaveLog}</small><h2>จุดล่าสุดของการเล่น</h2><p>ระบบอัปเดตเมื่อเหตุการณ์จบ เมื่อออกจากหน้าเล่น หรือเมื่อปิดแอป</p></div><span className="save-lock">ระบบจัดการ</span></article></div></div>;
 }
 
 function LogView({ readerMode, setReaderMode }: { readerMode: boolean; setReaderMode: (value: boolean) => void }) {
