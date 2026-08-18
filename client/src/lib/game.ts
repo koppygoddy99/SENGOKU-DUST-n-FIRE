@@ -120,6 +120,7 @@ export type WorldMemory = {
 
 export type RollPreview = {
   action: string;
+  isRiskOnly?: boolean;
   intent: string;
   method: string;
   axis: AxisId;

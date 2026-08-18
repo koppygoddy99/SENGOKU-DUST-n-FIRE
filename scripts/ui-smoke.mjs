@@ -19,10 +19,10 @@ await page.getByRole("button", { name: "Continue" }).click();
 await page.getByRole("button", { name: "Continue" }).click();
 await page.getByRole("button", { name: "Continue" }).click();
 await page.getByRole("button", { name: "BEGIN WITH 50 CREDITS" }).click();
-await page.getByRole("button", { name: "ANALYZE ACTION" }).waitFor();
+await page.getByRole("button", { name: "ASK THE GM" }).waitFor();
 
 await page.locator("textarea").fill("ข้าจะใช้บัญชีผลผลิตขอเวลาเจรจากับเสมียน");
-await page.getByRole("button", { name: "ANALYZE ACTION" }).click();
+await page.getByRole("button", { name: "ASK THE GM" }).click();
 await page.getByText("CONFIRM & ROLL · 1 CREDIT").click();
 await page.waitForTimeout(150);
 await page.getByText("49", { exact: true }).first().waitFor();
@@ -34,7 +34,7 @@ await page.getByText("MANUAL SAVE · LEAF 2").waitFor();
 
 await page.getByRole("button", { name: "Load Game" }).click();
 await page.getByRole("button", { name: "LOAD" }).nth(1).click();
-await page.getByRole("button", { name: "ANALYZE ACTION" }).waitFor();
+await page.getByRole("button", { name: "ASK THE GM" }).waitFor();
 
 await page.locator(".nav-list").getByRole("button", { name: "Campaign Log" }).click();
 await page.getByText("Reader Mode").first().waitFor();

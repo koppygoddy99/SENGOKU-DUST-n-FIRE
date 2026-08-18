@@ -6,6 +6,9 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, ArrowRight, BookOpen, Check, ChevronRight, Eye, EyeOff, Languages, Menu, Moon, PanelLeftClose, PanelLeftOpen, Plus, RotateCcw, Search, Sun, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { startLogin } from "@/const";
+import { trpc } from "@/lib/trpc";
 import { SengokuIcon, type SengokuIconName } from "@/components/SengokuIcon";
 import {
   AXES,
@@ -74,6 +77,39 @@ function titleCase(value: string) {
   return value.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
+function toGMContext(game: GameState) {
+  const mission = game.missions.find((entry) => entry.state === "active" || entry.state === "offered");
+  return {
+    campaign: game.campaign,
+    character: {
+      name: game.character.name,
+      occupation: game.character.occupation,
+      origin: game.character.origin,
+      strengths: game.character.strength,
+      weakness: game.character.weakness,
+      attributes: game.character.attributes,
+      masteries: game.character.masteries.map((entry) => ({ name: entry.label, level: entry.level, source: entry.origin })),
+    },
+    currentScene: {
+      title: game.currentScene.title,
+      location: game.currentScene.location,
+      summary: game.currentScene.body.join("\n\n"),
+      pressure: game.currentScene.pressure,
+      declaredChoices: game.currentScene.suggestedActions,
+    },
+    activeMission: mission ? { title: mission.title, giver: mission.issuer, objective: mission.request, deadline: mission.deadline, reward: mission.reward } : undefined,
+    socialState: {
+      honor: game.character.social.honor,
+      influence: game.character.social.influence,
+      stain: game.character.social.stain,
+      rumors: game.memories.filter((entry) => entry.kind === "news").slice(-4).map((entry) => entry.detail),
+      oaths: game.memories.filter((entry) => entry.kind === "oath").slice(-4).map((entry) => entry.detail),
+      debts: game.memories.filter((entry) => entry.kind === "debt").slice(-4).map((entry) => entry.detail),
+    },
+    recentMemories: game.memories.slice(-8).map((entry) => ({ title: entry.title, detail: entry.detail, tone: entry.tone })),
+  };
+}
+
 const navItems: { id: PageId; en: string; th: string; icon: SengokuIconName }[] = [
   { id: "home", en: "Chronicle", th: "พงศาวดาร", icon: "home" },
   { id: "play", en: "Play", th: "เล่นฉาก", icon: "sword" },
@@ -97,6 +133,13 @@ function GhostLink({ children, onClick }: { children: React.ReactNode; onClick?:
 }
 
 export default function Home() {
+  // The useAuth hook provides authentication state.
+  // To implement login/logout, call logout(), or start login from an event
+  // handler: onClick={() => startLogin()} (imported from "@/const"). Never call
+  // startLogin() during render (no href={startLogin()}) — it mints a one-time
+  // nonce cookie and must run only at the moment of navigation.
+  const { user, loading, isAuthenticated } = useAuth();
+
   const [page, setPage] = useState<PageId>("home");
   const [game, setGame] = useState<GameState>(seedGame);
   const [saves, setSaves] = useState<SaveLeaves>({ manual: null, leaf2: null, leaf3: null });
@@ -154,6 +197,7 @@ export default function Home() {
       <button className="brand" onClick={() => open("home")} aria-label="Dust and Fire home"><span className="brand-mark"><span /><span /></span><span className="brand-copy"><strong>Dust &amp; Fire</strong><small>SENGOKU STORIES</small></span></button>
       <div className="topbar__context"><span>{game.campaign.year}</span><span className="topbar__dot">•</span><span>{language === "en" ? game.campaign.season : seasonThai[game.campaign.season]}</span><span className="topbar__dot">•</span><span>{game.campaign.region}</span></div>
       <button className="credit-chip" onClick={() => open("settings")}><SengokuIcon name="credit" size={16} tone="ochre" /><span>{label(language, "Credits", "เครดิต")}</span><strong>{game.credits}</strong></button>
+      {!loading && <button className={`gm-account-chip ${isAuthenticated ? "is-signed-in" : ""}`} onClick={() => !isAuthenticated && startLogin()}>{isAuthenticated ? <><span className="gm-account-chip__dot" />{user?.name || label(language, "GM access", "สิทธิ์ใช้ GM")}</> : <><SengokuIcon name="relation" size={15} tone="teal" />{label(language, "AI GM · Sign in", "AI GM · เข้าสู่ระบบ")}</>}</button>}
       <div className="topbar-language" aria-label="Language selection"><button className={language === "en" ? "active" : ""} onClick={() => setLanguage("en")}>EN</button><button className={language === "th" ? "active" : ""} onClick={() => setLanguage("th")}>TH</button></div>
       <button className="mobile-menu" onClick={() => setMenuOpen((value) => !value)} aria-label="Open menu">{menuOpen ? <X size={21} /> : <Menu size={21} />}</button>
     </header>
@@ -173,7 +217,7 @@ export default function Home() {
     <main className="main-content">
       {page === "home" && <HomeView game={game} language={language} open={open} />}
       {page === "start" && <StartView language={language} onStart={beginNew} />}
-      {page === "play" && <PlayView game={game} language={language} open={open} onUpdate={updateGame} />}
+      {page === "play" && <PlayView game={game} language={language} open={open} onUpdate={updateGame} isAuthenticated={isAuthenticated} onLogin={startLogin} />}
       {page === "missions" && <MissionsView game={game} language={language} onUpdate={updateGame} open={open} />}
       {page === "market" && <MarketView game={game} language={language} onUpdate={updateGame} />}
       {page === "character" && <CharacterView game={game} language={language} open={open} />}
@@ -232,32 +276,68 @@ function StepControls({ previous, next, nextLabel }: { previous?: () => void; ne
   return <div className="credit-confirm">{previous ? <Button className="df-button df-button--ghost" onClick={previous}><ArrowLeft size={17} /> Back</Button> : <span />}{nextLabel ? <Button className="df-button df-button--primary" onClick={next}>{nextLabel} <ArrowRight size={17} /></Button> : <Button className="df-button df-button--primary" onClick={next}>Continue <ArrowRight size={17} /></Button>}</div>;
 }
 
-function PlayView({ game, language, open, onUpdate }: { game: GameState; language: Language; open: (page: PageId) => void; onUpdate: (game: GameState, message: string) => void }) {
+function PlayView({ game, language, open, onUpdate, isAuthenticated, onLogin }: { game: GameState; language: Language; open: (page: PageId) => void; onUpdate: (game: GameState, message: string) => void; isAuthenticated: boolean; onLogin: () => void }) {
   const [action, setAction] = useState("");
   const [preview, setPreview] = useState<RollPreview | null>(null);
   const [spendMomentum, setSpendMomentum] = useState(false);
+  const [gmNote, setGmNote] = useState("");
+  const analyzeGM = trpc.gm.analyze.useMutation();
+  const resolveGM = trpc.gm.resolve.useMutation();
   const lastRoll = game.rolls.at(-1);
-  const analyze = (full: boolean) => { if (!action.trim()) return; const parsed = parseAction(action, game); setPreview(full ? parsed : { ...parsed, mastery: undefined, contextBonus: 0, contextReason: undefined }); };
+  const localPreview = (full: boolean) => {
+    const parsed = parseAction(action, game);
+    setPreview(full ? { ...parsed, isRiskOnly: false } : { ...parsed, isRiskOnly: true, mastery: undefined, contextBonus: 0, contextReason: undefined });
+  };
+  const analyze = (full: boolean) => {
+    if (!action.trim()) return;
+    if (!full || !isAuthenticated) {
+      localPreview(full);
+      if (full && !isAuthenticated) setGmNote(label(language, "Local rules preview. Sign in to consult the AI GM for a contextual reading.", "นี่คือการวิเคราะห์จากกติกาในเครื่อง เข้าสู่ระบบเพื่อให้ AI GM อ่านบริบทของเรื่อง"));
+      return;
+    }
+    setGmNote(label(language, "The GM is reading the campaign record…", "AI GM กำลังอ่านระเบียนแคมเปญ…"));
+    analyzeGM.mutate({ action, language, context: toGMContext(game) }, {
+      onSuccess: (answer) => {
+        const fallback = parseAction(action, game);
+        const mastery = answer.suggestedMastery ? game.character.masteries.find((entry) => entry.label.toLowerCase().includes(answer.suggestedMastery!.toLowerCase()) || answer.suggestedMastery!.toLowerCase().includes(entry.label.toLowerCase())) : undefined;
+        setPreview({ ...fallback, isRiskOnly: false, intent: answer.intentSummary, method: answer.confirmation, axis: answer.axis, mastery, contextBonus: answer.contextBonus, contextReason: answer.contextReason, difficulty: answer.difficulty as RollPreview["difficulty"], risks: [answer.risk], witnesses: [answer.historicalFence] });
+        setGmNote(label(language, "AI GM interpretation ready. You may revise the action before the roll.", "AI GM อ่านการกระทำเสร็จแล้ว แก้ประโยคได้ก่อนยืนยันการทอย"));
+      },
+      onError: () => { localPreview(true); setGmNote(label(language, "The GM could not be reached, so the local rules engine prepared a safe preview instead.", "ติดต่อ AI GM ไม่ได้ ระบบกติกาในเครื่องจึงเตรียมการวิเคราะห์สำรองให้")); },
+    });
+  };
   const resolve = () => {
     if (!preview || game.credits <= 0) return;
-    const fullPreview = parseAction(action, game);
-    const record = resolveRoll(fullPreview, game, spendMomentum);
+    const record = resolveRoll(preview, game, spendMomentum);
     const resolved = applyRoll(game, record);
-    onUpdate({ ...resolved, credits: game.credits - 1 }, `${record.summary} · Auto Save updated at Leaf ${record.tick}`);
-    setPreview(null); setAction(""); setSpendMomentum(false);
+    const localCommit = () => { onUpdate({ ...resolved, credits: game.credits - 1 }, `${record.summary} · Auto Save updated at Leaf ${record.tick}`); setPreview(null); setAction(""); setSpendMomentum(false); };
+    if (!isAuthenticated) { localCommit(); return; }
+    setGmNote(label(language, "The GM is recording the consequence…", "AI GM กำลังจดผลที่ตามมา…"));
+    resolveGM.mutate({ language, context: toGMContext(game), action, roll: { outcome: record.outcome, total: record.total, difficulty: record.difficulty, summary: record.summary, consequence: record.consequence ?? null } }, {
+      onSuccess: (answer) => {
+        const withNarration: GameState = {
+          ...resolved,
+          currentScene: { ...resolved.currentScene, title: answer.sceneTitle, body: answer.narration, prompt: answer.missionNote, suggestedActions: answer.nextChoices },
+          memories: [...resolved.memories, { id: `gm-memory-${Date.now()}`, kind: "news", title: answer.memory.title, detail: answer.memory.detail, tone: answer.memory.tone, tick: resolved.tick }],
+        };
+        onUpdate({ ...withNarration, credits: game.credits - 1 }, `${record.summary} · AI GM recorded the next leaf`);
+        setPreview(null); setAction(""); setSpendMomentum(false); setGmNote("");
+      },
+      onError: () => { setGmNote(label(language, "The GM response was unavailable; the deterministic result was saved locally.", "AI GM ยังตอบไม่ได้ จึงบันทึกผลจากกติกาที่ตายตัวไว้ในเครื่อง")); localCommit(); },
+    });
   };
   return <div className="page game-view"><div className="game-toolbar"><div><SectionKicker>{label(language, `PLAYING · LEAF ${game.tick}`, `กำลังเล่น · หน้าที่ ${game.tick}`)}</SectionKicker><strong>{game.campaign.title} · {game.currentScene.location}</strong></div><div className="game-toolbar__actions"><button onClick={() => open("save")}><SengokuIcon name="log" size={15} tone="ochre" /> {label(language, "Save", "เซฟ")}</button><button onClick={() => open("load")}><SengokuIcon name="document" size={15} tone="navy" /> {label(language, "Load", "โหลด")}</button><span className="credit-inline"><SengokuIcon name="credit" size={15} tone="ochre" /> {game.credits}</span></div></div>
     {lastRoll && <div className="quick-log"><span>LEAF {lastRoll.tick}</span><strong>{lastRoll.summary}</strong><i>2d12: {lastRoll.dice.join(" + ")} · {lastRoll.total} / DN {lastRoll.difficulty}</i><i>{lastRoll.momentumSpent ? "+2 momentum spent" : "no momentum"}</i><b>{titleCase(lastRoll.outcome)}</b></div>}
     <section className="game-paper"><div className="game-paper__header"><span><SengokuIcon name="memory" tone="vermilion" /> {game.currentScene.title}</span><button onClick={() => open("log")}><SengokuIcon name="log" size={16} tone="navy" /> {label(language, "Campaign Log", "บันทึกเรื่องราว")}</button></div><div className="scene-context"><SengokuIcon name="history" tone="ochre" /><span>{game.currentScene.publicContext}</span></div><div className="game-story">{game.currentScene.body.map((paragraph, index) => <p key={`${game.currentScene.id}-${index}`}>{paragraph}</p>)}<p className="reader-question">{game.currentScene.prompt}</p></div><div className="scene-suggestions">{game.currentScene.suggestedActions.map((suggestion) => <button key={suggestion} onClick={() => setAction(suggestion)}>{suggestion}<ArrowRight size={14} /></button>)}</div>
-      <div className="action-dock"><div className="action-tabs"><button className={!preview ? "active" : ""} onClick={() => setPreview(null)}>{label(language, "Your action", "การกระทำของเจ้า")}</button><button className={preview ? "active" : ""} onClick={() => action.trim() && analyze(true)}>{label(language, "Confirm the roll", "ยืนยันก่อนทอย")}</button></div><label className="action-field"><span>{label(language, "Say what you will do in one sentence", "บอกสิ่งที่เจ้าจะทำเพียงหนึ่งประโยค")}</span><textarea value={action} placeholder={label(language, "For example: I will use the ledger to ask the scribe for time.", "ตัวอย่าง: ข้าจะใช้บัญชีข้าวขอเวลาเจรจากับเสมียน") } onChange={(event) => { setAction(event.target.value); setPreview(null); }} /></label>
-      {!preview ? <div className="action-dock__bottom"><p>{label(language, "Assess risk shows only the pressure. Analyze action reveals the rule interpretation you may correct once before rolling.", "ประเมินความยากจะแสดงเพียงแรงกดดัน ส่วนวิเคราะห์การกระทำจะแสดงความเข้าใจของระบบเพื่อให้แก้ได้หนึ่งครั้งก่อนทอย")}</p><div className="action-actions"><Button className="df-button df-button--ghost" onClick={() => analyze(false)} disabled={!action.trim()}><EyeOff size={16} /> {label(language, "ASSESS RISK", "ประเมินความยาก")}</Button><Button className="df-button df-button--primary" onClick={() => analyze(true)} disabled={!action.trim()}><Eye size={16} /> {label(language, "ANALYZE ACTION", "วิเคราะห์การกระทำ")}</Button></div></div> : <RollPreviewPanel preview={preview} language={language} momentum={game.character.vitals.momentum} spendMomentum={spendMomentum} setSpendMomentum={setSpendMomentum} onCancel={() => setPreview(null)} onResolve={resolve} />}</div></section>
+      <div className="action-dock"><div className="action-tabs"><button className={!preview ? "active" : ""} onClick={() => setPreview(null)}>{label(language, "Your action", "การกระทำของเจ้า")}</button><button className={preview ? "active" : ""} onClick={() => action.trim() && analyze(true)}>{label(language, "Confirm the roll", "ยืนยันก่อนทอย")}</button></div><div className={`gm-consult ${isAuthenticated ? "is-ready" : ""}`}><span><SengokuIcon name="relation" tone={isAuthenticated ? "teal" : "ochre"} /> {isAuthenticated ? label(language, "AI GM will read this campaign record before you roll.", "AI GM จะอ่านระเบียนแคมเปญนี้ก่อนเจ้ายืนยันการทอย") : label(language, "Local rules are playable now. Sign in to ask the AI GM for a contextual ruling.", "กติกาในเครื่องเล่นได้ทันที เข้าสู่ระบบเพื่อขอคำวินิจฉัยจาก AI GM")}</span>{!isAuthenticated && <button onClick={onLogin}>{label(language, "SIGN IN FOR AI GM", "เข้าสู่ระบบเพื่อใช้ AI GM")}</button>}</div>{gmNote && <p className="gm-note">{gmNote}</p>}<label className="action-field"><span>{label(language, "Say what you will do in one sentence", "บอกสิ่งที่เจ้าจะทำเพียงหนึ่งประโยค")}</span><textarea value={action} placeholder={label(language, "For example: I will use the ledger to ask the scribe for time.", "ตัวอย่าง: ข้าจะใช้บัญชีข้าวขอเวลาเจรจากับเสมียน") } onChange={(event) => { setAction(event.target.value); setPreview(null); setGmNote(""); }} /></label>
+      {!preview ? <div className="action-dock__bottom"><p>{label(language, "Assess risk shows only the pressure. Analyze action asks the GM for a contextual interpretation that you may correct once before rolling.", "ประเมินความยากจะแสดงเพียงแรงกดดัน ส่วนวิเคราะห์การกระทำจะให้ GM อ่านบริบทเพื่อให้แก้ได้หนึ่งครั้งก่อนทอย")}</p><div className="action-actions"><Button className="df-button df-button--ghost" onClick={() => analyze(false)} disabled={!action.trim() || analyzeGM.isPending}><EyeOff size={16} /> {label(language, "ASSESS RISK", "ประเมินความยาก")}</Button><Button className="df-button df-button--primary" onClick={() => analyze(true)} disabled={!action.trim() || analyzeGM.isPending}><Eye size={16} /> {analyzeGM.isPending ? label(language, "GM IS READING…", "GM กำลังอ่าน…") : label(language, "ASK THE GM", "ถาม AI GM")}</Button></div></div> : <RollPreviewPanel preview={preview} language={language} momentum={game.character.vitals.momentum} spendMomentum={spendMomentum} setSpendMomentum={setSpendMomentum} onCancel={() => setPreview(null)} onResolve={resolve} isResolving={resolveGM.isPending} />}</div></section>
   </div>;
 }
 
-function RollPreviewPanel({ preview, language, momentum, spendMomentum, setSpendMomentum, onCancel, onResolve }: { preview: RollPreview; language: Language; momentum: number; spendMomentum: boolean; setSpendMomentum: (value: boolean) => void; onCancel: () => void; onResolve: () => void }) {
+function RollPreviewPanel({ preview, language, momentum, spendMomentum, setSpendMomentum, onCancel, onResolve, isResolving }: { preview: RollPreview; language: Language; momentum: number; spendMomentum: boolean; setSpendMomentum: (value: boolean) => void; onCancel: () => void; onResolve: () => void; isResolving: boolean }) {
   const axis = AXES.find((entry) => entry.id === preview.axis);
-  const isRiskOnly = !preview.mastery;
-  return <div className="roll-preview-panel"><div className="preview-grid"><div><small>{label(language, "Intent", "เจตนา")}</small><strong>{preview.intent}</strong></div><div><small>{label(language, "Method", "วิธี")}</small><strong>{preview.method}</strong></div><div><small>{label(language, "Difficulty", "ระดับความยาก")}</small><strong>DN {preview.difficulty}</strong></div>{!isRiskOnly && <><div><small>{label(language, "Axis", "แกนทอย")}</small><strong>{language === "en" ? axis?.en : axis?.th}</strong></div><div><small>{label(language, "Mastery", "ความชำนาญ")}</small><strong>{preview.mastery?.label ?? label(language, "None", "ไม่มี") } +{preview.mastery?.level ?? 0}</strong></div><div><small>{label(language, "Context", "โบนัสบริบท")}</small><strong>{preview.contextReason ? `${preview.contextReason} +${preview.contextBonus}` : label(language, "No bonus", "ไม่มีโบนัส")}</strong></div></>}</div><div className="risk-strip"><CircleList title={label(language, "Visible risks", "ความเสี่ยงที่เห็น")} values={preview.risks} /><CircleList title={label(language, "Witnesses", "พยาน")} values={preview.witnesses} /></div>{isRiskOnly ? <div className="credit-confirm"><p>{label(language, "Risk assessment does not reveal which trait or mastery the engine would use. Choose Analyze Action when ready to verify that interpretation.", "การประเมินความยากจะไม่เฉลยแกนหรือความชำนาญ กดวิเคราะห์การกระทำเมื่อพร้อมตรวจความเข้าใจของระบบ")}</p><Button className="df-button df-button--ghost" onClick={onCancel}>{label(language, "REVISE ACTION", "แก้การกระทำ")}</Button></div> : <div className="roll-confirmation"><label className="momentum-check"><input type="checkbox" checked={spendMomentum} disabled={momentum <= 0} onChange={(event) => setSpendMomentum(event.target.checked)} /><span>{label(language, "Spend 1 Momentum for +2 after the roll", "ใช้แรงฮึด 1 เพื่อ +2 หลังทอย") } · {momentum}/2</span></label><div className="action-actions"><Button className="df-button df-button--ghost" onClick={onCancel}>{label(language, "REVISE", "แก้ความเข้าใจ")}</Button><Button className="df-button df-button--primary" onClick={onResolve}>{label(language, "CONFIRM & ROLL · 1 CREDIT", "ยืนยันและทอย · 1 เครดิต")} <ArrowRight size={16} /></Button></div></div>}</div>;
+  const isRiskOnly = Boolean(preview.isRiskOnly);
+  return <div className="roll-preview-panel"><div className="preview-grid"><div><small>{label(language, "Intent", "เจตนา")}</small><strong>{preview.intent}</strong></div><div><small>{label(language, "Method", "วิธี")}</small><strong>{preview.method}</strong></div><div><small>{label(language, "Difficulty", "ระดับความยาก")}</small><strong>DN {preview.difficulty}</strong></div>{!isRiskOnly && <><div><small>{label(language, "Axis", "แกนทอย")}</small><strong>{language === "en" ? axis?.en : axis?.th}</strong></div><div><small>{label(language, "Mastery", "ความชำนาญ")}</small><strong>{preview.mastery?.label ?? label(language, "None", "ไม่มี") } +{preview.mastery?.level ?? 0}</strong></div><div><small>{label(language, "Context", "โบนัสบริบท")}</small><strong>{preview.contextReason ? `${preview.contextReason} +${preview.contextBonus}` : label(language, "No bonus", "ไม่มีโบนัส")}</strong></div></>}</div><div className="risk-strip"><CircleList title={label(language, "Visible risks", "ความเสี่ยงที่เห็น")} values={preview.risks} /><CircleList title={label(language, "Witnesses", "พยาน")} values={preview.witnesses} /></div>{isRiskOnly ? <div className="credit-confirm"><p>{label(language, "Risk assessment does not reveal which trait or mastery the engine would use. Choose Analyze Action when ready to verify that interpretation.", "การประเมินความยากจะไม่เฉลยแกนหรือความชำนาญ กดวิเคราะห์การกระทำเมื่อพร้อมตรวจความเข้าใจของระบบ")}</p><Button className="df-button df-button--ghost" onClick={onCancel}>{label(language, "REVISE ACTION", "แก้การกระทำ")}</Button></div> : <div className="roll-confirmation"><label className="momentum-check"><input type="checkbox" checked={spendMomentum} disabled={momentum <= 0 || isResolving} onChange={(event) => setSpendMomentum(event.target.checked)} /><span>{label(language, "Spend 1 Momentum for +2 after the roll", "ใช้แรงฮึด 1 เพื่อ +2 หลังทอย") } · {momentum}/2</span></label><div className="action-actions"><Button className="df-button df-button--ghost" onClick={onCancel} disabled={isResolving}>{label(language, "REVISE", "แก้ความเข้าใจ")}</Button><Button className="df-button df-button--primary" onClick={onResolve} disabled={isResolving}>{isResolving ? label(language, "GM RECORDING…", "GM กำลังบันทึก…") : label(language, "CONFIRM & ROLL · 1 CREDIT", "ยืนยันและทอย · 1 เครดิต")} <ArrowRight size={16} /></Button></div></div>}</div>;
 }
 
 function CircleList({ title, values }: { title: string; values: string[] }) { return <div><small>{title}</small>{values.map((value) => <span key={value}>• {value}</span>)}</div>; }
