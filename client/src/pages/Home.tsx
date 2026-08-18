@@ -2,7 +2,7 @@
  * Ledger of Ash design reminder:
  * Narrative area comes before mechanics. Show traceable costs, persistent memory, and Sengoku-ledger motifs.
  */
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
@@ -11,8 +11,11 @@ import {
   CircleAlert,
   Eye,
   EyeOff,
+  Languages,
   Menu,
   Moon,
+  PanelLeftClose,
+  PanelLeftOpen,
   RotateCcw,
   Search,
   SlidersHorizontal,
@@ -24,25 +27,94 @@ import { Switch } from "@/components/ui/switch";
 import { SengokuIcon, type SengokuIconName } from "@/components/SengokuIcon";
 
 type PageId = "home" | "play" | "start" | "load" | "save" | "character" | "log" | "archive" | "settings" | "icons";
+type Language = "en" | "th";
 
-const navItems: { id: PageId; label: string; icon: SengokuIconName }[] = [
-  { id: "home", label: "หน้าหลัก", icon: "home" },
-  { id: "play", label: "เล่นเกม", icon: "sword" },
-  { id: "start", label: "NEW GAME 1", icon: "start" },
-  { id: "load", label: "LOAD GAME", icon: "document" },
-  { id: "save", label: "เซฟเกม", icon: "log" },
-  { id: "character", label: "ตัวละคร", icon: "character" },
-  { id: "log", label: "บันทึก LOG", icon: "log" },
-  { id: "archive", label: "คลังโลก", icon: "archive" },
-  { id: "settings", label: "ตั้งค่า", icon: "settings" },
-  { id: "icons", label: "ตราและไอคอน", icon: "icon" },
+const navItems: { id: PageId; en: string; th: string; icon: SengokuIconName }[] = [
+  { id: "home", en: "Home", th: "หน้าหลัก", icon: "home" },
+  { id: "play", en: "Play", th: "เล่นเกม", icon: "sword" },
+  { id: "start", en: "New Game 1", th: "เกมใหม่ 1", icon: "start" },
+  { id: "load", en: "Load Game", th: "โหลดเกม", icon: "document" },
+  { id: "save", en: "Save Game", th: "เซฟเกม", icon: "log" },
+  { id: "character", en: "Character", th: "ตัวละคร", icon: "character" },
+  { id: "log", en: "Campaign Log", th: "บันทึกแคมเปญ", icon: "log" },
+  { id: "archive", en: "World Archive", th: "คลังโลก", icon: "archive" },
+  { id: "settings", en: "Settings", th: "ตั้งค่า", icon: "settings" },
+  { id: "icons", en: "Seals & Icons", th: "ตราและไอคอน", icon: "icon" },
 ];
 
 const statePills = [
-  { label: "คำสัตย์ต่อหมู่บ้าน", tone: "teal" },
-  { label: "หนี้บุญคุณ", tone: "ochre" },
-  { label: "ถูกจับตา", tone: "vermilion" },
+  { en: "Village Oath", th: "คำสัตย์ต่อหมู่บ้าน", tone: "teal" },
+  { en: "Debt of Favor", th: "หนี้บุญคุณ", tone: "ochre" },
+  { en: "Under Watch", th: "ถูกจับตา", tone: "vermilion" },
 ];
+
+const uiTranslations: Record<string, string> = {
+  "ตัวละครของฉัน": "My Character",
+  "ข้อมูลสำคัญเห็นทันที รายละเอียดกดดูได้ เหตุผลของโบนัสไม่เคยถูกซ่อน": "Key facts appear at once. Details stay available, and every bonus has a visible reason.",
+  "ดูบันทึกที่เกี่ยวข้อง": "View related entries",
+  "อาชิงารุ · พลทหารชั้นต้น · ค่ายชายแดนมิกาวะ": "Ashigaru · Infantry · Mikawa Border Camp",
+  "เลือด": "Health",
+  "ขวัญ": "Resolve",
+  "แรงส่ง": "Momentum",
+  "ภาพรวม": "Overview",
+  "แกนทอย": "Traits",
+  "ความชำนาญ": "Masteries",
+  "ของพก": "Carried Items",
+  "สถานะ": "States",
+  "ดูตัวอย่างการใช้": "View use cases",
+  "ที่มา": "Origin",
+  "สถานะที่กำลังมีผล": "Active states",
+  "ข้อมูลลับยังไม่แสดง จนกว่าตัวละครจะมีทางรู้": "Secret information remains hidden until the character has a way to know it.",
+  "สร้างแคมเปญที่หนึ่ง": "Create Campaign One",
+  "เริ่มเรื่องให้ชัด": "Begin with a clear premise",
+  "หนึ่งบัญชีมีหลายแคมเปญได้ เลือกบริบทของเรื่องนี้ก่อน แล้วระบบจึงช่วยสร้างตัวละครที่อยู่ในโลกนี้ได้จริง": "One account can hold many campaigns. Set this story's context first, then build a character who belongs in this world.",
+  "เครดิตคงเหลือ": "Credits remaining",
+  "ตั้งชื่อแคมเปญ": "Name the campaign",
+  "เรื่องราวบทใหม่ของเจ้า": "Your next story",
+  "กำหนดบริบท": "Set the context",
+  "ปี ฤดู ภูมิภาค": "Year, season, region",
+  "สร้างตัวละคร": "Create the character",
+  "พิมพ์เองหรือเลือกสาย": "Write freely or choose a path",
+  "ชื่อแคมเปญ": "Campaign name",
+  "ฤดูกาล": "Season",
+  "ภูมิภาค": "Region",
+  "รูปแบบการสร้างตัวละคร": "Character creation",
+  "ผู้เล่นไม่แจกแต้มเอง": "Players do not assign numbers themselves",
+  "พิมพ์ตัวละครเอง": "Write a character freely",
+  "เลือกอาชีพเริ่มต้น 10 สาย": "Choose from 10 starting paths",
+  "ตั้งค่า": "Settings",
+  "ปรับหน้ากระดาษให้เข้ากับการอ่านของเจ้า โดยไม่เปลี่ยนข้อมูลหรือกติกาของแคมเปญ": "Adjust your reading experience without changing campaign data or rules.",
+  "โหมดสี": "Appearance",
+  "ขนาดตัวอักษร": "Text size",
+  "สีตราเน้น": "Seal accent",
+  "ค่าเริ่มต้นของ LOG": "Campaign Log default",
+  "เครดิตและประวัติการใช้": "Credits & usage history",
+  "บันทึกตรงนี้ ก่อนเรื่องจะเดินต่อ": "Save before the story moves on",
+  "กลับไปเล่นเกม": "Return to Play",
+  "เลือกบันทึกที่ต้องการกลับไป": "Choose a record to return to",
+  "อ่านใน LOG": "Read in Campaign Log",
+  "คลังโลก": "World Archive",
+  "ค้นคลังโลก": "Search Archive",
+  "สิ่งที่ต้องจำตอนนี้": "What matters now",
+  "บันทึก LOG · เหตุการณ์ตามเวลา": "Campaign Log · events in order",
+  "Reader Mode · อ่านเรื่องโดยไม่ต้องอ่านตัวเลข": "Reader Mode · story without numbers",
+  "เหตุการณ์ก่อนหน้า": "Previous entry",
+  "เหตุการณ์ถัดไป": "Next entry",
+  "ทั้งหมด": "All",
+  "บทสนทนา": "Dialogue",
+  "การทอย": "Rolls",
+  "ความทรงจำโลก": "World memory",
+  "ค้นเหตุการณ์": "Search entries",
+  "บันทึกเหตุการณ์": "Campaign Log",
+  "เซฟเกม": "Save Game",
+  "โหลดเกม": "Load Game",
+  "เจ้าจะทำอย่างไรต่อ?": "What will you do next?",
+  "ทอยตามการกระทำ": "Roll the action",
+  "ประเมินความยาก": "Estimate difficulty",
+  "ระดับความยาก": "Difficulty",
+  "ผลรวมโดยประมาณที่ต้องผ่าน": "Estimated target",
+  "กลไกที่โลกจะตรวจ": "What the world will test",
+};
 
 function SectionKicker({ children }: { children: React.ReactNode }) {
   return <div className="section-kicker">{children}</div>;
@@ -64,11 +136,30 @@ export default function Home() {
   const [fontSize, setFontSize] = useState<"small" | "normal" | "large">("normal");
   const [accent, setAccent] = useState<"vermilion" | "ochre" | "teal">("vermilion");
   const [menuOpen, setMenuOpen] = useState(false);
-  const [notice, setNotice] = useState("ต้นแบบ UI/UX · ข้อมูลทุกอย่างเป็นตัวอย่าง");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [language, setLanguage] = useState<Language>("en");
+  const [notice, setNotice] = useState("UI/UX prototype · all data is illustrative");
   const [currentLog, setCurrentLog] = useState(3);
   const [manualSaveLog, setManualSaveLog] = useState(1);
   const [autoSaveLog, setAutoSaveLog] = useState(3);
   const [namedSaveLog, setNamedSaveLog] = useState<number | null>(null);
+
+  useEffect(() => {
+    document.documentElement.lang = language;
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    const nodes: Text[] = [];
+    let node: Node | null;
+    while ((node = walker.nextNode())) nodes.push(node as Text);
+    nodes.forEach((textNode) => {
+      const parent = textNode.parentElement;
+      const current = textNode.textContent?.trim();
+      if (!parent || !current || parent.closest("textarea, input, option")) return;
+      const source = parent.dataset.localeSource ?? current;
+      if (!parent.dataset.localeSource && uiTranslations[source]) parent.dataset.localeSource = source;
+      const translation = uiTranslations[parent.dataset.localeSource ?? ""];
+      if (translation) textNode.textContent = language === "en" ? translation : parent.dataset.localeSource ?? current;
+    });
+  }, [language, page]);
 
   const useCredit = (message: string) => {
     if (credits <= 0) {
@@ -101,6 +192,7 @@ export default function Home() {
     darkMode ? "theme-dark" : "",
     `font-${fontSize}`,
     `accent-${accent}`,
+    sidebarCollapsed ? "sidebar-collapsed" : "",
   ].join(" ");
 
   return (
@@ -111,21 +203,25 @@ export default function Home() {
           <span className="brand-copy"><strong>Dust &amp; Fire</strong><small>SENGOKU STORIES</small></span>
         </button>
         <div className="topbar__context">
-          <span>ค.ศ. 1578</span><span className="topbar__dot">•</span><span>ฤดูร้อน</span><span className="topbar__dot">•</span><span>มิกาวะ</span>
+          <span>{language === "en" ? "1578" : "ค.ศ. 1578"}</span><span className="topbar__dot">•</span><span>{language === "en" ? "Summer" : "ฤดูร้อน"}</span><span className="topbar__dot">•</span><span>{language === "en" ? "Mikawa" : "มิกาวะ"}</span>
         </div>
         <button className="credit-chip" onClick={() => setPage("settings")}>
           <SengokuIcon name="credit" size={16} tone="ochre" />
-          <span>เครดิต</span><strong>{credits}</strong>
+          <span>{language === "en" ? "Credits" : "เครดิต"}</span><strong>{credits}</strong>
         </button>
+        <div className="topbar-language" aria-label="Language selection"><button className={language === "en" ? "active" : ""} onClick={() => setLanguage("en")}>EN</button><button className={language === "th" ? "active" : ""} onClick={() => setLanguage("th")}>TH</button></div>
         <button className="mobile-menu" onClick={() => setMenuOpen((value) => !value)} aria-label="เปิดเมนู">
           {menuOpen ? <X size={21} /> : <Menu size={21} />}
         </button>
       </header>
 
-      <aside className={`sidebar ${menuOpen ? "sidebar--open" : ""}`}>
+      <aside className={`sidebar ${menuOpen ? "sidebar--open" : ""} ${sidebarCollapsed ? "sidebar--collapsed" : ""}`}>
+        <button className="sidebar-toggle" onClick={() => setSidebarCollapsed((value) => !value)} aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}>
+          {sidebarCollapsed ? <PanelLeftOpen size={17} /> : <PanelLeftClose size={17} />}
+        </button>
         <div className="sidebar__identity">
           <div className="mon-avatar">佐</div>
-          <div><strong>ซาเนฟุยุ</strong><span>อาชิงารุ · พลทหารชั้นต้น</span></div>
+          <div className="sidebar__identity-copy"><strong>{language === "en" ? "Sanefuyu" : "ซาเนฟุยุ"}</strong><span>{language === "en" ? "Ashigaru · Infantry" : "อาชิงารุ · พลทหารชั้นต้น"}</span></div>
         </div>
         <nav className="nav-list" aria-label="เมนูหลัก">
           {navItems.map((item) => (
@@ -133,26 +229,28 @@ export default function Home() {
               key={item.id}
               className={`nav-item ${page === item.id ? "nav-item--active" : ""}`}
               onClick={() => { setPage(item.id); setMenuOpen(false); }}
+              title={language === "en" ? item.en : item.th}
             >
               <SengokuIcon name={item.icon} size={16} tone={page === item.id ? "vermilion" : "navy"} />
-              <span>{item.label}</span>
+              <span className="nav-item__label">{language === "en" ? item.en : item.th}</span>
             </button>
           ))}
         </nav>
         <div className="sidebar__vitals">
-          <div className="vital"><span>เลือด</span><strong>6/6</strong><i className="bar bar--red"><b style={{ width: "100%" }} /></i></div>
-          <div className="vital"><span>ขวัญ</span><strong>5/6</strong><i className="bar bar--ochre"><b style={{ width: "83%" }} /></i></div>
-          <div className="vital"><span>แรงส่ง</span><strong>0/2</strong><i className="bar bar--teal"><b style={{ width: "0%" }} /></i></div>
+          <div className="vital"><span>{language === "en" ? "Health" : "เลือด"}</span><strong>6/6</strong><i className="bar bar--red"><b style={{ width: "100%" }} /></i></div>
+          <div className="vital"><span>{language === "en" ? "Resolve" : "ขวัญ"}</span><strong>5/6</strong><i className="bar bar--ochre"><b style={{ width: "83%" }} /></i></div>
+          <div className="vital"><span>{language === "en" ? "Momentum" : "แรงส่ง"}</span><strong>0/2</strong><i className="bar bar--teal"><b style={{ width: "0%" }} /></i></div>
         </div>
         <div className="sidebar__states">
-          <small>สถานะที่มีผล</small>
-          {statePills.map((state) => <span key={state.label} className={`state-pill state-pill--${state.tone}`}>{state.label}</span>)}
+          <small>{language === "en" ? "Active states" : "สถานะที่มีผล"}</small>
+          {statePills.map((state) => <span key={state.en} className={`state-pill state-pill--${state.tone}`}>{language === "en" ? state.en : state.th}</span>)}
         </div>
+        <div className="sidebar__language"><Languages size={15} /><button className={language === "en" ? "active" : ""} onClick={() => setLanguage("en")}>EN</button><span>/</span><button className={language === "th" ? "active" : ""} onClick={() => setLanguage("th")}>TH</button></div>
         <div className="sidebar__notice">{notice}</div>
       </aside>
 
       <main className="main-content">
-        {page === "home" && <HomeView setPage={setPage} credits={credits} />}
+        {page === "home" && <HomeView setPage={setPage} credits={credits} language={language} />}
         {page === "play" && <GameView credits={credits} useCredit={useCredit} currentLog={currentLog} setCurrentLog={setCurrentLog} setAutoSaveLog={setAutoSaveLog} onSave={saveManual} setPage={setPage} />}
         {page === "start" && <StartView credits={credits} useCredit={useCredit} setPage={setPage} />}
         {page === "load" && <LoadGameView autoSaveLog={autoSaveLog} manualSaveLog={manualSaveLog} namedSaveLog={namedSaveLog} onLoad={loadGame} />}
@@ -160,14 +258,15 @@ export default function Home() {
         {page === "character" && <CharacterView setPage={setPage} />}
         {page === "log" && <LogView readerMode={readerMode} setReaderMode={setReaderMode} />}
         {page === "archive" && <ArchiveView setPage={setPage} />}
-        {page === "settings" && <SettingsView darkMode={darkMode} setDarkMode={setDarkMode} fontSize={fontSize} setFontSize={setFontSize} accent={accent} setAccent={setAccent} />}
+        {page === "settings" && <SettingsView darkMode={darkMode} setDarkMode={setDarkMode} fontSize={fontSize} setFontSize={setFontSize} accent={accent} setAccent={setAccent} language={language} setLanguage={setLanguage} />}
         {page === "icons" && <IconLibraryView />}
       </main>
     </div>
   );
 }
 
-function HomeView({ setPage, credits }: { setPage: (page: PageId) => void; credits: number }) {
+function HomeView({ setPage, credits, language }: { setPage: (page: PageId) => void; credits: number; language: Language }) {
+  const en = language === "en";
   return (
     <div className="page home-view">
       <section className="hero-ledger">
@@ -175,8 +274,8 @@ function HomeView({ setPage, credits }: { setPage: (page: PageId) => void; credi
         <div className="hero-ledger__seal">火</div>
         <div>
           <SectionKicker>CAMPAIGN JOURNAL</SectionKicker>
-          <h1>เกียรติอยู่บนธง<br/>ความจริงอยู่ใต้เถ้า</h1>
-          <p>เลือกทางเข้าของเจ้า แล้วกลับมาสู่เรื่องราวที่โลกยังจดจำไว้</p>
+          <h1>{en ? <>Honor on the banner.<br/>Truth under ash.</> : <>เกียรติอยู่บนธง<br/>ความจริงอยู่ใต้เถ้า</>}</h1>
+          <p>{en ? "Choose where to enter, then return to the story the world still remembers." : "เลือกทางเข้าของเจ้า แล้วกลับมาสู่เรื่องราวที่โลกยังจดจำไว้"}</p>
         </div>
         <div className="hero-ledger__actions">
           <Button className="df-button df-button--primary" onClick={() => setPage("start")}><SengokuIcon name="start" size={17} tone="ink" /> NEW GAME 1 <ArrowRight size={18} /></Button>
@@ -185,26 +284,26 @@ function HomeView({ setPage, credits }: { setPage: (page: PageId) => void; credi
       </section>
       <section className="home-grid">
         <button className="continue-panel" onClick={() => setPage("play")}>
-          <div className="continue-panel__top"><SectionKicker>THE CURRENT LEAF</SectionKicker><span className="save-dot">บันทึกแล้ว</span></div>
-          <h2>ค่ายไซกะ · โรงซ่อมปืน</h2>
-          <p>มาซาคิจิถูกคุมตัวไว้ งานปืน 30 กระบอกยังค้างอยู่ และกันทาโร่กำลังรอคำตอบของเจ้า</p>
-          <span className="continue-panel__link">กลับไปเล่นฉากนี้ <ArrowRight size={17} /></span>
+          <div className="continue-panel__top"><SectionKicker>THE CURRENT LEAF</SectionKicker><span className="save-dot">{en ? "SAVED" : "บันทึกแล้ว"}</span></div>
+          <h2>{en ? "Saika Camp · Gun Workshop" : "ค่ายไซกะ · โรงซ่อมปืน"}</h2>
+          <p>{en ? "Masakichi is under guard. Thirty guns remain unaccounted for, and Gantaro is waiting for your answer." : "มาซาคิจิถูกคุมตัวไว้ งานปืน 30 กระบอกยังค้างอยู่ และกันทาโร่กำลังรอคำตอบของเจ้า"}</p>
+          <span className="continue-panel__link">{en ? "Return to this scene" : "กลับไปเล่นฉากนี้"} <ArrowRight size={17} /></span>
         </button>
         <div className="campaign-card">
           <SectionKicker>CONTEXT MARGIN</SectionKicker>
           <dl>
-            <div><dt>เวลา</dt><dd>ค.ศ. 1578 · ฤดูร้อน</dd></div>
-            <div><dt>สถานที่ล่าสุด</dt><dd>ค่ายชายแดนมิกาวะ</dd></div>
-            <div><dt>สิ่งที่ต้องจำ</dt><dd>เส้นตายซ่อมปืน 3 วัน</dd></div>
-            <div><dt>เครดิตคงเหลือ</dt><dd className="credit-inline"><SengokuIcon name="credit" size={15} tone="ochre" /> {credits}</dd></div>
+            <div><dt>{en ? "Time" : "เวลา"}</dt><dd>{en ? "1578 · Summer" : "ค.ศ. 1578 · ฤดูร้อน"}</dd></div>
+            <div><dt>{en ? "Last location" : "สถานที่ล่าสุด"}</dt><dd>{en ? "Mikawa border camp" : "ค่ายชายแดนมิกาวะ"}</dd></div>
+            <div><dt>{en ? "Remember" : "สิ่งที่ต้องจำ"}</dt><dd>{en ? "3 days to repair the guns" : "เส้นตายซ่อมปืน 3 วัน"}</dd></div>
+            <div><dt>{en ? "Credits" : "เครดิตคงเหลือ"}</dt><dd className="credit-inline"><SengokuIcon name="credit" size={15} tone="ochre" /> {credits}</dd></div>
           </dl>
         </div>
       </section>
       <section className="shortcut-row">
-        <button onClick={() => setPage("save")}><SengokuIcon name="log" tone="ochre" /><span><strong>เซฟเกม</strong><small>บันทึกใหม่ บันทึกทับ และ Auto Save</small></span><ChevronRight size={18} /></button>
-        <button onClick={() => setPage("character")}><SengokuIcon name="character" tone="navy" /><span><strong>ตัวละครของฉัน</strong><small>แกนทอย ความชำนาญ สถานะ</small></span><ChevronRight size={18} /></button>
-        <button onClick={() => setPage("log")}><SengokuIcon name="log" tone="teal" /><span><strong>บันทึก LOG</strong><small>อ่านตามเวลา หรือ Reader Mode</small></span><ChevronRight size={18} /></button>
-        <button onClick={() => setPage("archive")}><SengokuIcon name="archive" tone="vermilion" /><span><strong>คลังโลก</strong><small>ผู้คน ภารกิจ ข่าว และพยาน</small></span><ChevronRight size={18} /></button>
+        <button onClick={() => setPage("save")}><SengokuIcon name="log" tone="ochre" /><span><strong>{en ? "Save Game" : "เซฟเกม"}</strong><small>{en ? "New save, overwrite, and Auto Save" : "บันทึกใหม่ บันทึกทับ และ Auto Save"}</small></span><ChevronRight size={18} /></button>
+        <button onClick={() => setPage("character")}><SengokuIcon name="character" tone="navy" /><span><strong>{en ? "Character" : "ตัวละครของฉัน"}</strong><small>{en ? "Traits, masteries, and states" : "แกนทอย ความชำนาญ สถานะ"}</small></span><ChevronRight size={18} /></button>
+        <button onClick={() => setPage("log")}><SengokuIcon name="log" tone="teal" /><span><strong>{en ? "Campaign Log" : "บันทึก LOG"}</strong><small>{en ? "Timeline and Reader Mode" : "อ่านตามเวลา หรือ Reader Mode"}</small></span><ChevronRight size={18} /></button>
+        <button onClick={() => setPage("archive")}><SengokuIcon name="archive" tone="vermilion" /><span><strong>{en ? "World Archive" : "คลังโลก"}</strong><small>{en ? "People, missions, news, and witnesses" : "ผู้คน ภารกิจ ข่าว และพยาน"}</small></span><ChevronRight size={18} /></button>
       </section>
     </div>
   );
@@ -233,7 +332,7 @@ function StartView({ credits, useCredit, setPage }: { credits: number; useCredit
 
 function CharacterView({ setPage }: { setPage: (page: PageId) => void }) {
   const stats = [["กาย", "แรง อึด แบก ยื้อ", 3, "sword"], ["มือ", "อาวุธ งานช่าง งานละเอียด", 3, "document"], ["ไหว", "หลบ ลวง สังเกต", 2, "compass"], ["ปัญญา", "บัญชี เอกสาร แผน", 1, "history"], ["ใจ", "ต้านกลัว รักษาคำสัตย์", 3, "memory"]] as const;
-  return <div className="page character-view"><div className="page-heading"><div><SectionKicker>CHARACTER DOSSIER</SectionKicker><h1>ตัวละครของฉัน</h1><p>ข้อมูลสำคัญเห็นทันที รายละเอียดกดดูได้ เหตุผลของโบนัสไม่เคยถูกซ่อน</p></div><GhostLink onClick={() => setPage("log")}>ดูบันทึกที่เกี่ยวข้อง</GhostLink></div><section className="dossier-header"><div className="dossier-name"><span className="mon-avatar mon-avatar--large">佐</span><div><h2>ซาเนฟุยุ</h2><p>อาชิงารุ · พลทหารชั้นต้น · ค่ายชายแดนมิกาวะ</p></div></div><div className="dossier-resources"><span>เลือด <strong>6/6</strong></span><span>ขวัญ <strong>5/6</strong></span><span>แรงส่ง <strong>0/2</strong></span><span>เครดิต <strong>2</strong></span></div></section><div className="character-columns"><section><div className="tab-strip"><button className="active">ภาพรวม</button><button>แกนทอย</button><button>ความชำนาญ</button><button>ของพก</button><button>สถานะ</button></div><div className="stat-grid">{stats.map(([label, text, value, icon]) => <div className="stat-cell" key={label}><SengokuIcon name={icon as SengokuIconName} tone="navy" /><strong>{label}</strong><b>{value}</b><small>{text}</small><button>ดูตัวอย่างการใช้</button></div>)}</div><div className="mastery-list"><div className="list-title"><span>ความชำนาญ</span><span>โบนัส</span><span>ที่มา</span></div>{[["เจรจาต่อรอง", "+2", "อาชีพและประสบการณ์"], ["อ่านตราประทับ", "+2", "จุดเด่น"], ["เอาตัวรอดในค่าย", "+1", "ภูมิหลัง"], ["ปฐมพยาบาล", "+1", "เรียนรู้จากผู้รู้"]].map((row) => <div className="mastery-row" key={row[0]}><span><SengokuIcon name="memory" size={15} tone="ochre" />{row[0]}</span><strong>{row[1]}</strong><small>{row[2]}</small><button>ที่มา</button></div>)}</div></section><aside className="status-rail"><SectionKicker>สถานะที่กำลังมีผล</SectionKicker>{statePills.map((state) => <div className={`status-row status-row--${state.tone}`} key={state.label}><span className="status-dot" /> <strong>{state.label}</strong><small>{state.tone === "vermilion" ? "เสี่ยง" : state.tone === "ochre" ? "ภาระหน้าที่" : "ผูกพัน"}</small></div>)}<div className="status-note"><SengokuIcon name="relation" tone="teal" />ข้อมูลลับยังไม่แสดง จนกว่าตัวละครจะมีทางรู้</div></aside></div></div>;
+  return <div className="page character-view"><div className="page-heading"><div><SectionKicker>CHARACTER DOSSIER</SectionKicker><h1>ตัวละครของฉัน</h1><p>ข้อมูลสำคัญเห็นทันที รายละเอียดกดดูได้ เหตุผลของโบนัสไม่เคยถูกซ่อน</p></div><GhostLink onClick={() => setPage("log")}>ดูบันทึกที่เกี่ยวข้อง</GhostLink></div><section className="dossier-header"><div className="dossier-name"><span className="mon-avatar mon-avatar--large">佐</span><div><h2>ซาเนฟุยุ</h2><p>อาชิงารุ · พลทหารชั้นต้น · ค่ายชายแดนมิกาวะ</p></div></div><div className="dossier-resources"><span>เลือด <strong>6/6</strong></span><span>ขวัญ <strong>5/6</strong></span><span>แรงส่ง <strong>0/2</strong></span><span>เครดิต <strong>2</strong></span></div></section><div className="character-columns"><section><div className="tab-strip"><button className="active">ภาพรวม</button><button>แกนทอย</button><button>ความชำนาญ</button><button>ของพก</button><button>สถานะ</button></div><div className="stat-grid">{stats.map(([label, text, value, icon]) => <div className="stat-cell" key={label}><SengokuIcon name={icon as SengokuIconName} tone="navy" /><strong>{label}</strong><b>{value}</b><small>{text}</small><button>ดูตัวอย่างการใช้</button></div>)}</div><div className="mastery-list"><div className="list-title"><span>ความชำนาญ</span><span>โบนัส</span><span>ที่มา</span></div>{[["เจรจาต่อรอง", "+2", "อาชีพและประสบการณ์"], ["อ่านตราประทับ", "+2", "จุดเด่น"], ["เอาตัวรอดในค่าย", "+1", "ภูมิหลัง"], ["ปฐมพยาบาล", "+1", "เรียนรู้จากผู้รู้"]].map((row) => <div className="mastery-row" key={row[0]}><span><SengokuIcon name="memory" size={15} tone="ochre" />{row[0]}</span><strong>{row[1]}</strong><small>{row[2]}</small><button>ที่มา</button></div>)}</div></section><aside className="status-rail"><SectionKicker>สถานะที่กำลังมีผล</SectionKicker>{statePills.map((state) => <div className={`status-row status-row--${state.tone}`} key={state.en}><span className="status-dot" /> <strong>{state.th}</strong><small>{state.tone === "vermilion" ? "เสี่ยง" : state.tone === "ochre" ? "ภาระหน้าที่" : "ผูกพัน"}</small></div>)}<div className="status-note"><SengokuIcon name="relation" tone="teal" />ข้อมูลลับยังไม่แสดง จนกว่าตัวละครจะมีทางรู้</div></aside></div></div>;
 }
 
 function GameView({ credits, useCredit, currentLog, setCurrentLog, setAutoSaveLog, onSave, setPage }: { credits: number; useCredit: (message: string) => boolean; currentLog: number; setCurrentLog: (value: number) => void; setAutoSaveLog: (value: number) => void; onSave: () => void; setPage: (page: PageId) => void }) {
@@ -268,8 +367,9 @@ function ArchiveView({ setPage }: { setPage: (page: PageId) => void }) {
   return <div className="page archive-view"><div className="page-heading"><div><SectionKicker>WORLD ARCHIVE</SectionKicker><h1>คลังโลก</h1><p>ค้นสิ่งที่ตัวละครมีสิทธิ์รู้ และเห็นเฉพาะร่องรอยที่ยังมีผลต่อการเลือกครั้งต่อไป</p></div><button className="search-button"><Search size={17} /> ค้นคลังโลก</button></div><div className="archive-summary"><div><strong>สิ่งที่ต้องจำตอนนี้</strong><p>เส้นตายซ่อมปืนเหลือ 3 วัน · กันทาโร่ยังระแวง · ข่าวบัญชีข้าวยังไม่ถูกเปิดเผย</p></div><button onClick={() => setPage("log")}>อ่านใน LOG <ArrowRight size={17} /></button></div><div className="archive-grid">{categories.map(([title, text, icon, tone]) => <button className="archive-card" key={title}><SengokuIcon name={icon as SengokuIconName} tone={tone as "teal" | "vermilion" | "ochre" | "navy"} /><div><h2>{title}</h2><p>{text}</p></div><ChevronRight size={18} /></button>)}</div></div>;
 }
 
-function SettingsView({ darkMode, setDarkMode, fontSize, setFontSize, accent, setAccent }: { darkMode: boolean; setDarkMode: (value: boolean) => void; fontSize: "small" | "normal" | "large"; setFontSize: (value: "small" | "normal" | "large") => void; accent: "vermilion" | "ochre" | "teal"; setAccent: (value: "vermilion" | "ochre" | "teal") => void }) {
-  return <div className="page settings-view"><div className="page-heading"><div><SectionKicker>PREFERENCES</SectionKicker><h1>ตั้งค่า</h1><p>ปรับหน้ากระดาษให้เข้ากับการอ่านของเจ้า โดยไม่เปลี่ยนข้อมูลหรือกติกาของแคมเปญ</p></div><SengokuIcon name="settings" size={28} tone="vermilion" /></div><section className="settings-sheet"><div className="setting-row"><div><SengokuIcon name="settings" tone="navy" /><strong>โหมดสี</strong><small>สลับหน้ากระดาษสว่างกับหมึกยามค่ำ</small></div><span className="setting-value"><Sun size={16} /> <Switch checked={darkMode} onCheckedChange={setDarkMode} /> <Moon size={16} /></span></div><div className="setting-row"><div><SengokuIcon name="document" tone="ochre" /><strong>ขนาดตัวอักษร</strong><small>ใช้กับหน้าฉาก LOG และ Reader Mode</small></div><div className="segmented"><button className={fontSize === "small" ? "active" : ""} onClick={() => setFontSize("small")}>เล็ก</button><button className={fontSize === "normal" ? "active" : ""} onClick={() => setFontSize("normal")}>ปกติ</button><button className={fontSize === "large" ? "active" : ""} onClick={() => setFontSize("large")}>ใหญ่</button></div></div><div className="setting-row"><div><SengokuIcon name="icon" tone="vermilion" /><strong>สีตราเน้น</strong><small>ใช้กับปุ่มหลัก สถานะสำคัญ และรอยชาดของแคมเปญ</small></div><div className="color-options"><button className={`color-dot color-dot--vermilion ${accent === "vermilion" ? "active" : ""}`} onClick={() => setAccent("vermilion")} /><button className={`color-dot color-dot--ochre ${accent === "ochre" ? "active" : ""}`} onClick={() => setAccent("ochre")} /><button className={`color-dot color-dot--teal ${accent === "teal" ? "active" : ""}`} onClick={() => setAccent("teal")} /></div></div><div className="setting-row"><div><SengokuIcon name="log" tone="teal" /><strong>ค่าเริ่มต้นของ LOG</strong><small>เริ่มต้นที่ Reader Mode เพื่ออ่านเหมือนนิยาย</small></div><Switch defaultChecked /></div><div className="setting-row setting-row--disabled"><div><SengokuIcon name="history" tone="navy" /><strong>ภาษา</strong><small>ภาษาไทยกำลังใช้งานอยู่ · ตัวเลือกภาษาอื่นจะเพิ่มภายหลัง</small></div><button disabled>เร็ว ๆ นี้</button></div><div className="setting-row setting-row--disabled"><div><SengokuIcon name="credit" tone="ochre" /><strong>เครดิตและประวัติการใช้</strong><small>ต้นแบบแสดงค่าเครดิตเพื่อกำหนด UX ยังไม่เชื่อมระบบชำระเงินจริง</small></div><button disabled>ดูตัวอย่าง</button></div></section></div>;
+function SettingsView({ darkMode, setDarkMode, fontSize, setFontSize, accent, setAccent, language, setLanguage }: { darkMode: boolean; setDarkMode: (value: boolean) => void; fontSize: "small" | "normal" | "large"; setFontSize: (value: "small" | "normal" | "large") => void; accent: "vermilion" | "ochre" | "teal"; setAccent: (value: "vermilion" | "ochre" | "teal") => void; language: Language; setLanguage: (value: Language) => void }) {
+  const en = language === "en";
+  return <div className="page settings-view"><div className="page-heading"><div><SectionKicker>PREFERENCES</SectionKicker><h1>{en ? "Settings" : "ตั้งค่า"}</h1><p>{en ? "Adjust how the campaign ledger reads without changing its rules or records." : "ปรับหน้ากระดาษให้เข้ากับการอ่านของเจ้า โดยไม่เปลี่ยนข้อมูลหรือกติกาของแคมเปญ"}</p></div><SengokuIcon name="settings" size={28} tone="vermilion" /></div><section className="settings-sheet"><div className="setting-row"><div><SengokuIcon name="settings" tone="navy" /><strong>{en ? "Appearance" : "โหมดสี"}</strong><small>{en ? "Switch between paper daylight and night ink." : "สลับหน้ากระดาษสว่างกับหมึกยามค่ำ"}</small></div><span className="setting-value"><Sun size={16} /> <Switch checked={darkMode} onCheckedChange={setDarkMode} /> <Moon size={16} /></span></div><div className="setting-row"><div><SengokuIcon name="document" tone="ochre" /><strong>{en ? "Text size" : "ขนาดตัวอักษร"}</strong><small>{en ? "Used across scenes, the Campaign Log, and Reader Mode." : "ใช้กับหน้าฉาก LOG และ Reader Mode"}</small></div><div className="segmented"><button className={fontSize === "small" ? "active" : ""} onClick={() => setFontSize("small")}>{en ? "Small" : "เล็ก"}</button><button className={fontSize === "normal" ? "active" : ""} onClick={() => setFontSize("normal")}>{en ? "Normal" : "ปกติ"}</button><button className={fontSize === "large" ? "active" : ""} onClick={() => setFontSize("large")}>{en ? "Large" : "ใหญ่"}</button></div></div><div className="setting-row"><div><Languages size={18} /><strong>{en ? "Language" : "ภาษา"}</strong><small>{en ? "English is the default. Thai is available now; more languages can be added later." : "English เป็นภาษาเริ่มต้น · สลับเป็นภาษาไทยได้แล้ว และเพิ่มภาษาอื่นภายหลังได้"}</small></div><div className="segmented"><button className={language === "en" ? "active" : ""} onClick={() => setLanguage("en")}>English</button><button className={language === "th" ? "active" : ""} onClick={() => setLanguage("th")}>ไทย</button></div></div><div className="setting-row"><div><SengokuIcon name="icon" tone="vermilion" /><strong>{en ? "Seal accent" : "สีตราเน้น"}</strong><small>{en ? "Used for primary actions, significant states, and campaign scars." : "ใช้กับปุ่มหลัก สถานะสำคัญ และรอยชาดของแคมเปญ"}</small></div><div className="color-options"><button className={`color-dot color-dot--vermilion ${accent === "vermilion" ? "active" : ""}`} onClick={() => setAccent("vermilion")} /><button className={`color-dot color-dot--ochre ${accent === "ochre" ? "active" : ""}`} onClick={() => setAccent("ochre")} /><button className={`color-dot color-dot--teal ${accent === "teal" ? "active" : ""}`} onClick={() => setAccent("teal")} /></div></div><div className="setting-row"><div><SengokuIcon name="log" tone="teal" /><strong>{en ? "Campaign Log default" : "ค่าเริ่มต้นของ LOG"}</strong><small>{en ? "Start in Reader Mode to read the campaign like a novel." : "เริ่มต้นที่ Reader Mode เพื่ออ่านเหมือนนิยาย"}</small></div><Switch defaultChecked /></div><div className="setting-row setting-row--disabled"><div><SengokuIcon name="credit" tone="ochre" /><strong>{en ? "Credits & usage history" : "เครดิตและประวัติการใช้"}</strong><small>{en ? "The prototype shows credit UX only; it does not connect to payments." : "ต้นแบบแสดงค่าเครดิตเพื่อกำหนด UX ยังไม่เชื่อมระบบชำระเงินจริง"}</small></div><button disabled>{en ? "Preview" : "ดูตัวอย่าง"}</button></div></section></div>;
 }
 
 function IconLibraryView() {
