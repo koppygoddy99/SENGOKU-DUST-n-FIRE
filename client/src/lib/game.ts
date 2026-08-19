@@ -289,13 +289,19 @@ export function createCharacter(draft: CharacterDraft): Character {
 }
 
 function openingScene(character: Character, campaign: CampaignContext, mission: Mission): Scene {
+  const seasonDetail: Record<Season, string> = {
+    Spring: "ไอชื้นจากฝนต้นปีเกาะอยู่ตามขอบผ้าและร่องไม้",
+    Summer: "ความร้อนที่สะสมอยู่บนหลังคาไม้ทำให้กลิ่นเหงื่อ ม้า และข้าวเก่าหนักกว่าปกติ",
+    Autumn: "กลิ่นฟางแห้งและฝุ่นจากเกวียนเก็บเกี่ยวลอยปะปนอยู่ในอากาศ",
+    Winter: "ลมหายใจของผู้คนลอยขาวอยู่เหนือพื้นดินแข็ง และทุกคนพูดสั้นกว่าปกติเพราะความหนาว",
+  };
   return {
     id: `scene-${campaign.id}-opening`, chapter: "Leaf 01", title: mission.title, location: campaign.location,
     publicContext: `เนื้อหานี้เป็นเรื่องสมมติใน ${campaign.region} ค.ศ. ${campaign.year} · ${campaign.season} โดยใช้แรงกดดันของสงครามและเส้นทางเป็นบริบท ไม่ใช่การยืนยันว่า NPC นี้มีอยู่จริง.`,
     body: [
-      `ลมจากเส้นทางหลักพากลิ่นควันและเสียงคนเถียงเรื่องข้าวมาถึง ${campaign.location} คนของ ${mission.issuer} ตามหา ${character.name} เพราะชื่อของเจ้าถูกพูดถึงในเรื่องที่ไม่มีใครอยากรับผิดชอบคนเดียว.`,
-      `“${mission.request}” เขาพูดสั้น ๆ แล้วเว้นจังหวะให้เจ้าเห็นผู้คนที่กำลังฟังอยู่. “${mission.pressure}”`,
-      `งานนี้ไม่ใช่คำสั่งที่มีทางเดียว เจ้าจะต่อรอง ใช้สิ่งที่มี หรือหาทางให้คนอื่นรับภาระแทนก็ได้ แต่เส้นตายคือ ${mission.deadline}.`,
+      `${seasonDetail[campaign.season]} ที่ ${campaign.location} ผู้คนพยายามทำงานของตนต่อไปเหมือนไม่มีสิ่งใดผิดปกติ ทว่าเมื่อ ${character.name} ปรากฏตัว บทสนทนาเรื่องข้าว ค่าผ่านทาง และข่าวจากเส้นทางหลักกลับขาดหายทีละเสียง เหลือเพียงเสียงไม้ล้อเกวียนครูดกับพื้นและสายตาที่แสร้งมองไปทางอื่น. ${character.origin} ทำให้เจ้ารู้ดีว่าความเงียบแบบนี้ไม่ได้หมายถึงการให้อภัย มันคือเวลาที่คนกำลังรอฟังว่าใครจะเป็นคนแบกรับความผิดก่อน.`,
+      `${mission.issuer} ยืนอยู่ใต้ชายคาที่หลบแดดได้เพียงครึ่งเดียว เสื้อผ้าของเขามีรอยฝุ่นติดตามชายแขนและท่าทีเคร่งกว่าคนที่มาขอแรงทั่วไป เขาไม่ได้เรียกชื่อเจ้าดัง ๆ เพียงขยับปลายคางให้เข้าใกล้ แล้วกล่าวว่า “${mission.request}” ก่อนเว้นวรรคพอให้เจ้าเห็นคนงานสองคนหยุดมืออยู่ข้างลังไม้. “${mission.pressure}” น้ำเสียงนั้นไม่ได้ขอร้อง หากแต่วางภาระลงตรงหน้าเหมือนวางดาบที่ยังไม่ตัดสินใจว่าจะชักหรือเก็บคืน.`,
+      `เจ้ามีสิ่งที่คนอื่นไม่มีอยู่บ้าง — ${character.strength} — แต่ก็มีเรื่องที่ทำให้ทุกคำตอบต้องคิดให้รอบคอบ: ${character.weakness}. งานนี้อาจเปิดทางให้เจ้ากับ ${mission.issuer} หรืออาจผูกชื่อของเจ้าเข้ากับเรื่องที่ไม่ควรถูกจดจำ ผู้มอบงานไม่ยื่นเงื่อนไขเพิ่ม เขาเพียงปล่อยให้เส้นตาย ${mission.deadline} หนักอยู่ระหว่างพวกเจ้า ราวกับทุกคนในที่นั้นรู้ดีว่าหากช้าไปเพียงนิดเดียว คนอื่นจะเลือกเรื่องแทนเจ้า.`,
     ],
     speaker: mission.issuer, prompt: "เจ้าจะทำอย่างไรต่อ?", pressure: mission.pressure, suggestedActions: mission.options,
   };
@@ -305,16 +311,17 @@ export function createGameState(context: CampaignContext, draft: CharacterDraft)
   const character = createCharacter(draft);
   const template = templateById(draft.templateId);
   const mission: Mission = { ...template.mission, id: `mission-${Date.now()}`, state: "offered" as MissionState };
+  const opening = openingScene(character, context, mission);
   return {
     schemaVersion: 2,
     credits: 50,
     campaign: context,
     character,
     community: { food: 4, labor: 3, voice: 2, safety: 3, cohesion: 4, lastChange: "กองกำลังเดินผ่านเส้นทางหลัก" },
-    currentScene: openingScene(character, context, mission),
+    currentScene: opening,
     missions: [mission],
     market: buildMarket(context.season),
-    memories: [{ id: `memory-${Date.now()}`, kind: "news", title: "งานแรกมาถึง", detail: `${mission.issuer} ขอให้ ${character.name} ช่วย: ${mission.request}`, tick: 1, tone: "teal" }],
+    memories: [{ id: `memory-${Date.now()}`, kind: "news", title: opening.title, detail: opening.body.join("\n\n"), tick: 1, tone: "teal" }],
     rolls: [],
     tick: 1,
   };
@@ -384,6 +391,20 @@ const outcomeCopy: Record<Outcome, { label: string; narrative: string; consequen
   failure_with_consequence: { label: "ไม่สำเร็จ", narrative: "โลกไม่ยอมให้แผนนี้ผ่านไปอย่างเงียบ ๆ เรื่องจึงเดินต่อด้วยราคาที่จับต้องได้.", consequence: "เกิดข้อครหาหรือแรงกดดันฉากใหม่" },
 };
 
+function localOutcomeNarration(preview: RollPreview, state: GameState, outcome: Outcome, consequence: string) {
+  const speaker = state.currentScene.speaker || state.missions[0]?.issuer || "ผู้มอบงาน";
+  const first = `${preview.intent} ไม่ได้หายไปในความเงียบของ ${state.currentScene.location} ผู้คนที่อยู่ใกล้ที่สุดต่างรับรู้ว่าคำตัดสินใจนั้นมีน้ำหนัก เพราะ ${state.currentScene.pressure} ยังแขวนอยู่เหนือทุกคนเหมือนควันจางที่ไม่มีลมพอจะพัดให้พ้นไป.`;
+  const middle = outcome === "failure_with_consequence"
+    ? `${speaker} ไม่ได้ตอบในทันที เขาปล่อยให้ความอึดอัดทำงานแทนคำตำหนิอยู่ครู่หนึ่งก่อนกล่าวว่า “ถ้าจะกู้เรื่องนี้กลับมา เจ้าต้องให้หลักฐาน ไม่ใช่เพียงคำพูด” คนที่อยู่ข้างหลังเขาขยับตัวหลบสายตา ราวกับไม่มีใครอยากเป็นพยานให้ความผิดพลาดของเจ้า.`
+    : `${speaker} มองเจ้าด้วยสายตาที่ระวังมากกว่าเดิม แล้วตอบช้า ๆ ว่า “ข้าจะให้ทางเจ้าเดินต่อ แต่จำไว้ว่าทางที่เปิดขึ้นเพราะชื่อของเจ้า ย่อมปิดลงเพราะชื่อนั้นได้เช่นกัน” ไม่มีใครปรบมือให้ผลลัพธ์นี้ ทว่าท่าทีของคนรอบข้างเปลี่ยนจากการรอดูเป็นการคำนวณ.`;
+  const last = outcome === "decisive_success"
+    ? `ผลของการกระทำเปิดช่องให้เรื่องขยับไปไกลกว่าที่ผู้คนคาดไว้ แต่ ${consequence} จึงไม่ได้เป็นของขวัญเปล่า ๆ หากเป็นสิ่งที่ผูกเจ้ากับคนและสถานที่นี้แน่นขึ้น.`
+    : outcome === "failure_with_consequence"
+      ? `ความผิดพลาดยังไม่ใช่จุดจบ แต่ ${consequence} ทำให้ทางเดิมใช้ไม่ได้อีกต่อไป ก่อนการตัดสินใจครั้งถัดไป เจ้าต้องเลือกว่าจะยอมเสียบางอย่างเพื่อซื้อเวลา หรือยอมให้คนอื่นเขียนคำอธิบายแทน.`
+      : `สิ่งที่เจ้าต้องการเกิดขึ้นเพียงส่วนหนึ่ง และ ${consequence} ก็ถูกทิ้งไว้ในฉากเหมือนรอยเท้าที่ฝนยังลบไม่ทัน มันจะตามเจ้าไปในตอนที่ผู้คนเริ่มคิดว่าตนเองได้ประโยชน์จากเรื่องนี้เช่นกัน.`;
+  return [first, middle, last].join("\n\n");
+}
+
 export function resolveRoll(preview: RollPreview, state: GameState, spendMomentum: boolean): RollRecord {
   const dice: [number, number] = [Math.floor(Math.random() * 12) + 1, Math.floor(Math.random() * 12) + 1];
   const axisValue = state.character.attributes[preview.axis];
@@ -402,7 +423,7 @@ export function resolveRoll(preview: RollPreview, state: GameState, spendMomentu
     outcome,
     momentumSpent,
     summary: `${copy.label}: ${preview.intent}`,
-    narrative: copy.narrative,
+    narrative: localOutcomeNarration(preview, state, outcome, copy.consequence),
     reward: outcome === "failure_with_consequence" ? undefined : "ความคืบหน้าของภารกิจและทางเลือกใหม่",
     consequence: copy.consequence,
     tick: state.tick + 1,

@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ invokeLLM: vi.fn() }));
 vi.mock("./_core/llm", () => ({ invokeLLM: mocks.invokeLLM }));
 
-import { analyzeWithGM, resolveWithGM } from "./gm";
+import { analyzeWithGM, resolveWithGM, withGMResponseTimeout } from "./gm";
 
 const context = {
   campaign: { title: "Test record", year: 1578, season: "Summer", region: "Mikawa", location: "River gate", warShadow: 3, day: 1 },
@@ -15,6 +15,10 @@ const context = {
 };
 
 describe("AI GM structured contracts", () => {
+  it("fails fast when a model response exceeds the configured waiting window", async () => {
+    await expect(withGMResponseTimeout(new Promise<never>(() => undefined), 1)).rejects.toThrow("AI GM did not respond before the time limit.");
+  });
+
   it("normalizes model difficulty to a canonical roll tier", async () => {
     mocks.invokeLLM.mockResolvedValueOnce({ choices: [{ message: { content: JSON.stringify({ intentSummary: "Buy time with the ledger.", axis: "mind", suggestedMastery: "Watchful eye", difficulty: 16, contextBonus: 1, contextReason: "The clerk recognizes the ledger.", risk: "The witness may repeat your name.", confirmation: "You cite the ledger and ask for time.", historicalFence: "This is fictional play context, not a historical claim." }) } }] });
     const result = await analyzeWithGM({ action: "I show the ledger and ask the clerk for time.", language: "en", context });
@@ -39,10 +43,14 @@ describe("AI GM structured contracts", () => {
   });
 
   it("accepts a constrained post-roll scene and memory", async () => {
-    mocks.invokeLLM.mockResolvedValueOnce({ choices: [{ message: { content: JSON.stringify({ sceneTitle: "The clerk remembers", narration: ["The clerk weighs the paper in silence.", "A witness takes note of your name."], nextChoices: ["Follow the boatman", "Question the witness"], memory: { title: "A name in the margin", detail: "The clerk and witness now recognize Sato.", tone: "ochre" }, missionNote: "The passage is open, but only until dusk.", historicalFence: "This scene is fictional play context." }) } }] });
+    mocks.invokeLLM.mockResolvedValueOnce({ choices: [{ message: { content: JSON.stringify({ sceneTitle: "The clerk remembers", narration: ["The clerk weighs the ledger against his palm while rainwater gathers beneath the gate. Sato hears the boatman shift his weight behind him and realizes that every face in the line is waiting to see whether the paper will become shelter or evidence.", "The clerk lifts his eyes at last and says, \"You may pass for now, but I will remember the hand that brought this account.\" His voice is quiet, yet the witness beside the post straightens as if the name has already been copied into a margin.", "The rope across the landing is lowered just far enough for one boat to leave before dusk. Sato gains the crossing, but the clerk keeps the ledger's seal in view, turning a moment of mercy into a debt that can be called upon when the river road grows dangerous."], nextChoices: ["Leave with the boatman before dusk", "Ask the witness what was written down", "Find who supplied the sealed ledger"], memory: { title: "A name in the margin", detail: "The clerk allowed Sato to cross, but the witness and the river gate now remember whose hands carried the ledger.", tone: "ochre" }, missionNote: "The passage is open until dusk, but the ledger has made your name part of the gate's record.", historicalFence: "This scene is fictional play context." }) } }] });
     const result = await resolveWithGM({ language: "en", context, action: "I show the ledger and ask the clerk for time.", roll: { outcome: "success_with_cost", total: 17, difficulty: 14, summary: "The clerk accepts the ledger.", consequence: "A witness remembers your name." } });
-    expect(result.nextChoices).toHaveLength(2);
+    expect(result.narration).toHaveLength(3);
+    expect(result.narration.every((paragraph) => paragraph.length >= 120)).toBe(true);
+    expect(result.nextChoices).toHaveLength(3);
     expect(result.memory.tone).toBe("ochre");
+    const request = mocks.invokeLLM.mock.calls.at(-1)?.[0];
+    expect(String(request?.messages?.[1]?.content ?? "")).toContain("Return exactly 3 substantial prose paragraphs");
   });
 
   it("prioritizes Thai market, document, checkpoint, and war context cards", async () => {

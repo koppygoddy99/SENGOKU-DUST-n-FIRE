@@ -6,6 +6,14 @@ const languageSchema = z.enum(["en", "th"]);
 const axisSchema = z.enum(["body", "hand", "wit", "mind", "heart"]);
 const toneSchema = z.enum(["navy", "teal", "vermilion", "ochre"]);
 const historicalStatusSchema = z.enum(["fact-supported", "contextual-play", "campaign-fiction", "insufficient-evidence"]);
+const GM_RESPONSE_TIMEOUT_MS = 45_000;
+
+export function withGMResponseTimeout<T>(operation: Promise<T>, timeoutMs = GM_RESPONSE_TIMEOUT_MS): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("AI GM did not respond before the time limit.")), timeoutMs);
+    operation.then((value) => { clearTimeout(timer); resolve(value); }, (error: unknown) => { clearTimeout(timer); reject(error); });
+  });
+}
 
 const contextSchema = z.object({
   campaign: z.object({ title: z.string().max(120), year: z.number().int().min(1454).max(1616), season: z.string().max(20), region: z.string().max(80), location: z.string().max(160), warShadow: z.number().int().min(0).max(6), day: z.number().int().min(1).max(366) }),
@@ -39,9 +47,9 @@ const analyzeResultSchema = z.object({
 
 const resolveResultSchema = z.object({
   sceneTitle: z.string().min(2).max(160),
-  narration: z.array(z.string().min(8).max(1200)).min(2).max(5),
-  nextChoices: z.array(z.string().min(2).max(180)).min(2).max(4),
-  memory: z.object({ title: z.string().min(2).max(160), detail: z.string().min(2).max(420), tone: toneSchema }),
+  narration: z.array(z.string().min(120).max(1100)).length(3),
+  nextChoices: z.array(z.string().min(2).max(180)).length(3),
+  memory: z.object({ title: z.string().min(2).max(160), detail: z.string().min(2).max(520), tone: toneSchema }),
   missionNote: z.string().min(2).max(300),
   historicalFence: z.string().min(2).max(320),
   historicalStatus: historicalStatusSchema.default("campaign-fiction"),
@@ -74,7 +82,7 @@ const resolveOutputSchema = {
 const systemRules = `You are the AI Game Master for Dust & Fire: Sengoku Stories, an original historical-fiction tabletop role-playing game.
 You interpret player intent and narrate consequences; you never roll dice, change player resources, invent bonuses above +2, or override the deterministic 2d12 engine.
 The five axes are exactly: body (Prowess), hand (Craft), wit (Instinct), mind (Judgment), heart (Resolve). Difficulty is a threshold from 5 to 30; recommend a number but the client rounds it to a canonical tier.
-The player says what they do in one sentence. Be concise, severe, and story-first. Keep fictional NPCs and events clearly fictional. Never assert invented history as fact. You will receive a Historical Brief selected from curated fact cards. Use it only within its stated era, region, and confidence boundary. Do not turn a structural fact into a universal law, do not invent a historical event, and label campaign invention or insufficient evidence in historicalFence. Set historicalStatus exactly as follows: fact-supported only for a specific statement directly supported by the supplied Brief; contextual-play when a structural fact informs a fictional scene; campaign-fiction when the scene detail is invented for the campaign; insufficient-evidence when a requested historical detail exceeds the supplied Brief.
+For action analysis, be concise. For resolved narration, write a complete, vivid scene rather than a summary, a moral, or a generic transition. Keep fictional NPCs and events clearly fictional. Never assert invented history as fact. You will receive a Historical Brief selected from curated fact cards. Use it only within its stated era, region, and confidence boundary. Do not turn a structural fact into a universal law, do not invent a historical event, and label campaign invention or insufficient evidence in historicalFence. Set historicalStatus exactly as follows: fact-supported only for a specific statement directly supported by the supplied Brief; contextual-play when a structural fact informs a fictional scene; campaign-fiction when the scene detail is invented for the campaign; insufficient-evidence when a requested historical detail exceeds the supplied Brief.
 Respect the user's language selection. In Thai, use natural Thai with a Sengoku-war chronicle tone, not royal language. In English, use precise literary English. For suggestedMastery, provide only the exact mastery name from the supplied character data, or null; never put an explanation in that field. Output only JSON matching the schema.`;
 
 function getTextContent(value: string | unknown[]): string {
@@ -122,9 +130,9 @@ function normalizeResolveCandidate(value: unknown) {
   return {
     ...candidate,
     sceneTitle: truncate(candidate.sceneTitle, 160),
-    narration: Array.isArray(candidate.narration) ? candidate.narration.slice(0, 5).map((paragraph) => truncate(paragraph, 1200)) : candidate.narration,
-    nextChoices: Array.isArray(candidate.nextChoices) ? candidate.nextChoices.slice(0, 4).map((choice) => truncate(choice, 180)) : candidate.nextChoices,
-    memory: memoryRecord ? { ...memoryRecord, title: truncate(memoryRecord.title, 160), detail: truncate(memoryRecord.detail, 420) } : candidate.memory,
+    narration: Array.isArray(candidate.narration) ? candidate.narration.slice(0, 3).map((paragraph) => truncate(paragraph, 1100)) : candidate.narration,
+    nextChoices: Array.isArray(candidate.nextChoices) ? candidate.nextChoices.slice(0, 3).map((choice) => truncate(choice, 180)) : candidate.nextChoices,
+    memory: memoryRecord ? { ...memoryRecord, title: truncate(memoryRecord.title, 160), detail: truncate(memoryRecord.detail, 520) } : candidate.memory,
     missionNote: truncate(candidate.missionNote, 300),
     historicalFence: truncate(candidate.historicalFence, 320),
   };
@@ -187,21 +195,36 @@ function historicalBrief(context: ContextForHistory, action: string) {
 
 export async function analyzeWithGM(input: z.infer<typeof analyzeInputSchema>) {
   const history = historicalBrief(input.context, input.action);
-  const response = await invokeLLM({
+  const response = await withGMResponseTimeout(invokeLLM({
     model: "gpt-5-mini",
     messages: [{ role: "system", content: systemRules }, { role: "user", content: `Analyze this declared action before any dice are rolled.\n\nHistorical Brief:\n${history.briefing}\n\nGame Context:\n${JSON.stringify(input)}` }],
     outputSchema: analyzeOutputSchema,
-  });
+  }));
   const parsed = analyzeResultSchema.parse(normalizeAnalysisCandidate(JSON.parse(getTextContent(response.choices[0]?.message.content ?? ""))));
   return { ...parsed, difficulty: canonicalDifficulty(parsed.difficulty), historicalFactIds: history.factIds };
 }
 
 export async function resolveWithGM(input: z.infer<typeof resolveInputSchema>) {
   const history = historicalBrief(input.context, input.action);
-  const response = await invokeLLM({
+  const response = await withGMResponseTimeout(invokeLLM({
     model: "gpt-5-mini",
-    messages: [{ role: "system", content: systemRules }, { role: "user", content: `Narrate the resolved roll. The total, outcome, and consequence are final rules output; do not alter them.\n\nHistorical Brief:\n${history.briefing}\n\nGame Context:\n${JSON.stringify(input)}` }],
+    messages: [{ role: "system", content: systemRules }, { role: "user", content: `Narrate the resolved roll. The total, outcome, and consequence are final rules output; do not alter them.
+
+Narrative standard for this response:
+- Return exactly 3 substantial prose paragraphs in narration. Each paragraph must be 120–1100 characters. Write roughly 500–1,800 Thai characters in total: vivid enough to read as a scene, but not a chapter.
+- Paragraph 1 grounds the immediate aftermath through 1–2 concrete sensory or physical details that arise naturally from the supplied location, season, pressure, and the player's action. Do not use stock filler such as "the story moves on" or generic wagon-and-rumor imagery unless the context specifically supports it.
+- Paragraph 2 makes the outcome visible in another person's body language, speech, or decision. Use one short, characterful line of dialogue only when it earns its place. Let rank, obligation, suspicion, debt, and public attention shape the exchange.
+- Paragraph 3 lands one tangible consequence and leaves a specific pressure or opening for the next choice. It must not ask the player a direct question; nextChoices handles choices separately.
+- Use the character's name where natural; do not repeat "เจ้า" mechanically. Keep invented people and events inside campaign fiction. Never invent precise local custom, historical offices, or legal effects beyond the Historical Brief.
+- Do not mention dice, DN, rules, stats, AI, prompts, credits, or historical labels inside narration.
+- nextChoices must be exactly 3 short, concrete actions that follow from this scene. memory must record the consequential change, not summarize the whole scene.
+
+Historical Brief:
+${history.briefing}
+
+Game Context:
+${JSON.stringify(input)}` }],
     outputSchema: resolveOutputSchema,
-  });
+  }));
   return { ...resolveResultSchema.parse(normalizeResolveCandidate(JSON.parse(getTextContent(response.choices[0]?.message.content ?? "")))), historicalFactIds: history.factIds };
 }
