@@ -116,4 +116,11 @@ describe("UI Preview click flow", () => {
     fireEvent.click(screen.getAllByRole("button", { name: "Exchange history" })[0]);
     expect(screen.getByText("กันทาโร่ลากซาเนฟุยุขึ้นจากน้ำ")).toBeTruthy();
   });
+
+  it("returns to the Campaign Overview page from the Campaign Sidebar", () => {
+    render(<Home />);
+    fireEvent.click(screen.getByRole("button", { name: "Campaign Overview" }));
+    expect(screen.getByRole("heading", { name: /Honor on the banner/i })).toBeTruthy();
+    expect(screen.getByText(/current leaf/i)).toBeTruthy();
+  });
 });

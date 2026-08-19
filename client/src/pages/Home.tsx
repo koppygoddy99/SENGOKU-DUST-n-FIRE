@@ -136,6 +136,7 @@ const campaignNavItems: { id: PageId; en: string; th: string; icon: SengokuIconN
   { id: "obligations", en: "Credit, debts & favors", th: "เครดิต / หนี้ / บุญคุณ", icon: "memory" },
   { id: "exchanges", en: "Exchange history", th: "ประวัติการแลกเปลี่ยน", icon: "log" },
   { id: "character", en: "Character", th: "ตัวละคร", icon: "character" },
+  { id: "home", en: "Campaign Overview", th: "ภาพรวมแคมเปญ", icon: "archive" },
   { id: "log", en: "Campaign Log", th: "บันทึกเรื่องราว", icon: "log" },
   { id: "archive", en: "World Archive", th: "คลังโลก", icon: "archive" },
   { id: "save", en: "Save Game", th: "เซฟเกม", icon: "log" },
