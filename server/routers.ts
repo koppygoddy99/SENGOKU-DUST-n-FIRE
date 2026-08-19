@@ -1,8 +1,16 @@
 import { COOKIE_NAME } from "@shared/const";
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
+import { getUserTrialCredits, spendUserTrialCredits } from "./db";
 import { analyzeWithGM, analyzeInputSchema, resolveInputSchema, resolveWithGM } from "./gm";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
+
+async function requireGMTrialCredit(userId: number) {
+  const credits = await getUserTrialCredits(userId);
+  if (credits < 1) throw new TRPCError({ code: "BAD_REQUEST", message: "No AI GM credits remain" });
+}
 
 export const appRouter = router({
     // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
@@ -18,8 +26,22 @@ export const appRouter = router({
     }),
   }),
   gm: router({
-    analyze: protectedProcedure.input(analyzeInputSchema).mutation(async ({ input }) => ({ mode: "ai" as const, ...(await analyzeWithGM(input)) })),
-    resolve: protectedProcedure.input(resolveInputSchema).mutation(async ({ input }) => ({ mode: "ai" as const, ...(await resolveWithGM(input)) })),
+    analyze: protectedProcedure.input(analyzeInputSchema).mutation(async ({ ctx, input }) => {
+      await requireGMTrialCredit(ctx.user.id);
+      return { mode: "ai" as const, ...(await analyzeWithGM(input)) };
+    }),
+    resolve: protectedProcedure.input(resolveInputSchema).mutation(async ({ ctx, input }) => {
+      await requireGMTrialCredit(ctx.user.id);
+      return { mode: "ai" as const, ...(await resolveWithGM(input)) };
+    }),
+  }),
+  profile: router({
+    credits: protectedProcedure.query(async ({ ctx }) => ({ credits: await getUserTrialCredits(ctx.user.id) })),
+    spendCredit: protectedProcedure.input(z.object({ amount: z.number().int().min(1).max(5) })).mutation(async ({ ctx, input }) => {
+      const credits = await spendUserTrialCredits(ctx.user.id, input.amount);
+      if (credits === null) throw new TRPCError({ code: "BAD_REQUEST", message: "No AI GM credits remain" });
+      return { credits };
+    }),
   }),
 
   // TODO: add feature routers here, e.g.

@@ -8,6 +8,8 @@ const user = { id: 1, openId: "ui-gm-test", name: "GM Test", email: "gm@example.
 await page.route("**/api/trpc/**", async (route) => {
   const url = route.request().url();
   const data = url.includes("auth.me") ? user
+    : url.includes("profile.credits") ? { credits: 50 }
+    : url.includes("profile.spendCredit") ? { credits: 49 }
     : url.includes("gm.analyze") ? { mode: "ai", intentSummary: "Use the rice ledger to make the clerk listen.", axis: "mind", suggestedMastery: null, difficulty: 14, contextBonus: 1, contextReason: "The ledger is visible.", risk: "A witness may remember your name.", confirmation: "You present the ledger and ask for time.", historicalFence: "This is fictional play context." }
     : url.includes("gm.resolve") ? { mode: "ai", sceneTitle: "The clerk keeps the ledger", narration: ["The clerk turns one page, then another, and lets the silence do its work.", "He grants you a moment, but the guard at the door has already begun to remember your face."], nextChoices: ["Follow the boatman", "Question the witness"], memory: { title: "A name in the margin", detail: "The clerk and the guard now remember Sato.", tone: "ochre" }, missionNote: "The path is open only until dusk.", historicalFence: "This is fictional play context." }
     : null;

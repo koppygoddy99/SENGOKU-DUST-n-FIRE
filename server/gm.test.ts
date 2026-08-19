@@ -21,6 +21,21 @@ describe("AI GM structured contracts", () => {
     expect(result.difficulty).toBe(14);
     expect(result.axis).toBe("mind");
     expect(result.contextBonus).toBe(1);
+    expect(result.historicalFactIds).toContain("oaths-documents-and-witnesses");
+    expect(mocks.invokeLLM).toHaveBeenLastCalledWith(expect.objectContaining({
+      messages: expect.arrayContaining([expect.objectContaining({ content: expect.stringContaining("Historical Brief:") })]),
+    }));
+    const request = mocks.invokeLLM.mock.calls.at(-1)?.[0];
+    const historicalBrief = String(request?.messages?.[1]?.content ?? "");
+    expect(historicalBrief).toContain('"id":"oaths-documents-and-witnesses"');
+    expect(historicalBrief).not.toContain("[object Object]");
+  });
+
+  it("clamps numeric analysis output to the game-rule boundaries", async () => {
+    mocks.invokeLLM.mockResolvedValueOnce({ choices: [{ message: { content: JSON.stringify({ intentSummary: "Buy time with the ledger.", axis: "mind", suggestedMastery: null, difficulty: 99, contextBonus: -2, contextReason: "The clerk recognizes the ledger.", risk: "The witness may repeat your name.", confirmation: "You cite the ledger and ask for time.", historicalFence: "This is fictional play context, not a historical claim." }) } }] });
+    const result = await analyzeWithGM({ action: "I show the ledger and ask the clerk for time.", language: "en", context });
+    expect(result.difficulty).toBe(22);
+    expect(result.contextBonus).toBe(0);
   });
 
   it("accepts a constrained post-roll scene and memory", async () => {
@@ -28,5 +43,30 @@ describe("AI GM structured contracts", () => {
     const result = await resolveWithGM({ language: "en", context, action: "I show the ledger and ask the clerk for time.", roll: { outcome: "success_with_cost", total: 17, difficulty: 14, summary: "The clerk accepts the ledger.", consequence: "A witness remembers your name." } });
     expect(result.nextChoices).toHaveLength(2);
     expect(result.memory.tone).toBe("ochre");
+  });
+
+  it("prioritizes Thai market, document, checkpoint, and war context cards", async () => {
+    mocks.invokeLLM.mockResolvedValueOnce({ choices: [{ message: { content: JSON.stringify({ intentSummary: "Present the rice ledger at the checkpoint market.", axis: "mind", suggestedMastery: null, difficulty: 14, contextBonus: 0, contextReason: "The account can be checked.", risk: "The soldiers may hold the document.", confirmation: "You present the ledger.", historicalFence: "The historical context is limited to the supplied fact cards." }) } }] });
+    const result = await analyzeWithGM({ action: "ข้าจะยื่นบัญชีข้าวที่ตลาดหน้าด่านให้เสมียนดู ก่อนทหารจะตรวจตรา", language: "th", context });
+    expect(result.historicalFactIds).toContain("oaths-documents-and-witnesses");
+    expect(result.historicalFactIds).toContain("plural-payment-media");
+    expect(result.historicalFactIds).toContain("war-is-negotiated-labour");
+    expect(result.historicalFactIds).toContain("market-rights-and-brokers");
+    expect(result.historicalFactIds).not.toContain("documentary-credit");
+  });
+
+  it("preserves the four historical boundary labels in structured AI GM output", async () => {
+    const boundaries = {
+      "fact-supported": "The supplied source supports this specific historical condition.",
+      "contextual-play": "The social structure is historical; this named scene is campaign fiction.",
+      "campaign-fiction": "This event and its people are invented for the campaign.",
+      "insufficient-evidence": "The supplied sources do not establish this specific local claim.",
+    } as const;
+    for (const [historicalStatus, historicalFence] of Object.entries(boundaries) as Array<[keyof typeof boundaries, string]>) {
+      mocks.invokeLLM.mockResolvedValueOnce({ choices: [{ message: { content: JSON.stringify({ intentSummary: "Assess the claim carefully.", axis: "mind", suggestedMastery: null, difficulty: 14, contextBonus: 0, contextReason: "The account is limited to supplied evidence.", risk: "The scene may need a fictional boundary.", confirmation: "Proceed with the evidence boundary.", historicalFence, historicalStatus }) } }] });
+      const result = await analyzeWithGM({ action: "ข้าจะถามเสมียนถึงที่มาของบัญชีนี้", language: "th", context });
+      expect(result.historicalStatus).toBe(historicalStatus);
+      expect(result.historicalFence).toBe(historicalFence);
+    }
   });
 });

@@ -3,11 +3,16 @@ import { describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   analyzeWithGM: vi.fn(),
   resolveWithGM: vi.fn(),
+  getUserTrialCredits: vi.fn(),
 }));
 
 vi.mock("./gm", async (importOriginal) => {
   const original = await importOriginal<typeof import("./gm")>();
   return { ...original, analyzeWithGM: mocks.analyzeWithGM, resolveWithGM: mocks.resolveWithGM };
+});
+vi.mock("./db", async (importOriginal) => {
+  const original = await importOriginal<typeof import("./db")>();
+  return { ...original, getUserTrialCredits: mocks.getUserTrialCredits };
 });
 
 import { appRouter } from "./routers";
@@ -32,6 +37,7 @@ function authContext(): TrpcContext {
 
 describe("gm router", () => {
   it("serves structured analysis to an authenticated caller", async () => {
+    mocks.getUserTrialCredits.mockResolvedValueOnce(50);
     mocks.analyzeWithGM.mockResolvedValueOnce({ intentSummary: "Ask the clerk for time.", axis: "mind", suggestedMastery: null, difficulty: 14, contextBonus: 1, contextReason: "The ledger is visible.", risk: "The witness may remember you.", confirmation: "Show the ledger and ask.", historicalFence: "Fictional context." });
     const result = await appRouter.createCaller(authContext()).gm.analyze({ action: "I show the ledger and ask for time.", language: "en", context });
     expect(result.mode).toBe("ai");
@@ -40,10 +46,17 @@ describe("gm router", () => {
   });
 
   it("serves a resolved scene to an authenticated caller", async () => {
+    mocks.getUserTrialCredits.mockResolvedValueOnce(49);
     mocks.resolveWithGM.mockResolvedValueOnce({ sceneTitle: "The clerk waits", narration: ["The clerk reads in silence.", "The gate stays open a moment longer."], nextChoices: ["Follow the boatman", "Question the witness"], memory: { title: "A name in the margin", detail: "The witness remembers Sato.", tone: "ochre" }, missionNote: "The passage is open until dusk.", historicalFence: "Fictional context." });
     const result = await appRouter.createCaller(authContext()).gm.resolve({ language: "en", context, action: "I show the ledger and ask for time.", roll: { outcome: "success_with_cost", total: 16, difficulty: 14, summary: "The clerk listens.", consequence: "A witness remembers you." } });
     expect(result.sceneTitle).toBe("The clerk waits");
     expect(result.memory.tone).toBe("ochre");
     expect(mocks.resolveWithGM).toHaveBeenCalledOnce();
+  });
+
+  it("refuses an AI GM request when the authenticated account has no credits", async () => {
+    mocks.getUserTrialCredits.mockResolvedValueOnce(0);
+    await expect(appRouter.createCaller(authContext()).gm.analyze({ action: "I show the ledger and ask for time.", language: "en", context })).rejects.toMatchObject({ message: "No AI GM credits remain" });
+    expect(mocks.analyzeWithGM).toHaveBeenCalledOnce();
   });
 });

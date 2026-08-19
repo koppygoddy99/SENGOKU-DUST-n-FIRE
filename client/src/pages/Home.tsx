@@ -139,6 +139,7 @@ export default function Home() {
   // startLogin() during render (no href={startLogin()}) — it mints a one-time
   // nonce cookie and must run only at the moment of navigation.
   const { user, loading, isAuthenticated } = useAuth();
+  const accountCredits = trpc.profile.credits.useQuery(undefined, { enabled: isAuthenticated, retry: false });
 
   const [page, setPage] = useState<PageId>("home");
   const [game, setGame] = useState<GameState>(seedGame);
@@ -179,6 +180,11 @@ export default function Home() {
   }, [accent, darkMode, fontSize, game, language, readerMode, saves, storageReady]);
 
   useEffect(() => { document.documentElement.lang = language; }, [language]);
+  useEffect(() => {
+    const credits = accountCredits.data?.credits;
+    if (!isAuthenticated || typeof credits !== "number") return;
+    setGame((current) => current.credits === credits ? current : { ...current, credits });
+  }, [accountCredits.data?.credits, isAuthenticated]);
 
   const appClass = ["app-shell", darkMode ? "theme-dark" : "", `font-${fontSize}`, `accent-${accent}`, sidebarCollapsed ? "sidebar-collapsed" : ""].join(" ");
   const updateGame = (next: GameState, message: string) => { setGame(next); setNotice(message); };
@@ -217,7 +223,7 @@ export default function Home() {
     <main className="main-content">
       {page === "home" && <HomeView game={game} language={language} open={open} />}
       {page === "start" && <StartView language={language} onStart={beginNew} />}
-      {page === "play" && <PlayView game={game} language={language} open={open} onUpdate={updateGame} isAuthenticated={isAuthenticated} onLogin={startLogin} />}
+      {page === "play" && <PlayView game={game} language={language} open={open} onUpdate={updateGame} isAuthenticated={isAuthenticated} onLogin={startLogin} onAccountCreditChange={() => accountCredits.refetch()} />}
       {page === "missions" && <MissionsView game={game} language={language} onUpdate={updateGame} open={open} />}
       {page === "market" && <MarketView game={game} language={language} onUpdate={updateGame} />}
       {page === "character" && <CharacterView game={game} language={language} open={open} />}
@@ -276,13 +282,14 @@ function StepControls({ previous, next, nextLabel }: { previous?: () => void; ne
   return <div className="credit-confirm">{previous ? <Button className="df-button df-button--ghost" onClick={previous}><ArrowLeft size={17} /> Back</Button> : <span />}{nextLabel ? <Button className="df-button df-button--primary" onClick={next}>{nextLabel} <ArrowRight size={17} /></Button> : <Button className="df-button df-button--primary" onClick={next}>Continue <ArrowRight size={17} /></Button>}</div>;
 }
 
-function PlayView({ game, language, open, onUpdate, isAuthenticated, onLogin }: { game: GameState; language: Language; open: (page: PageId) => void; onUpdate: (game: GameState, message: string) => void; isAuthenticated: boolean; onLogin: () => void }) {
+function PlayView({ game, language, open, onUpdate, isAuthenticated, onLogin, onAccountCreditChange }: { game: GameState; language: Language; open: (page: PageId) => void; onUpdate: (game: GameState, message: string) => void; isAuthenticated: boolean; onLogin: () => void; onAccountCreditChange: () => void }) {
   const [action, setAction] = useState("");
   const [preview, setPreview] = useState<RollPreview | null>(null);
   const [spendMomentum, setSpendMomentum] = useState(false);
   const [gmNote, setGmNote] = useState("");
   const analyzeGM = trpc.gm.analyze.useMutation();
   const resolveGM = trpc.gm.resolve.useMutation();
+  const spendCredit = trpc.profile.spendCredit.useMutation();
   const lastRoll = game.rolls.at(-1);
   const localPreview = (full: boolean) => {
     const parsed = parseAction(action, game);
@@ -320,8 +327,17 @@ function PlayView({ game, language, open, onUpdate, isAuthenticated, onLogin }: 
           currentScene: { ...resolved.currentScene, title: answer.sceneTitle, body: answer.narration, prompt: answer.missionNote, suggestedActions: answer.nextChoices },
           memories: [...resolved.memories, { id: `gm-memory-${Date.now()}`, kind: "news", title: answer.memory.title, detail: answer.memory.detail, tone: answer.memory.tone, tick: resolved.tick }],
         };
-        onUpdate({ ...withNarration, credits: game.credits - 1 }, `${record.summary} · AI GM recorded the next leaf`);
-        setPreview(null); setAction(""); setSpendMomentum(false); setGmNote("");
+        spendCredit.mutate({ amount: 1 }, {
+          onSuccess: ({ credits }) => {
+            onUpdate({ ...withNarration, credits }, `${record.summary} · AI GM recorded the next leaf`);
+            onAccountCreditChange();
+            setPreview(null); setAction(""); setSpendMomentum(false); setGmNote("");
+          },
+          onError: () => {
+            onUpdate({ ...resolved, credits: 0 }, label(language, "No account AI GM credits remain; the deterministic result was saved locally.", "เครดิต AI GM ของบัญชีหมดแล้ว จึงบันทึกผลจากกติกาไว้ในเครื่อง"));
+            setPreview(null); setAction(""); setSpendMomentum(false); setGmNote("");
+          },
+        });
       },
       onError: () => { setGmNote(label(language, "The GM response was unavailable; the deterministic result was saved locally.", "AI GM ยังตอบไม่ได้ จึงบันทึกผลจากกติกาที่ตายตัวไว้ในเครื่อง")); localCommit(); },
     });

@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq, gte, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -87,6 +87,29 @@ export async function getUserByOpenId(openId: string) {
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
 
   return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getUserTrialCredits(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is unavailable");
+  const result = await db.select({ credits: users.trialCredits }).from(users).where(eq(users.id, userId)).limit(1);
+  return result[0]?.credits ?? 0;
+}
+
+export async function spendUserTrialCredits(userId: number, amount: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is unavailable");
+  if (!Number.isInteger(amount) || amount < 1) throw new Error("Credit amount must be a positive integer");
+
+  return db.transaction(async (tx) => {
+    const updated = await tx.update(users)
+      .set({ trialCredits: sql`${users.trialCredits} - ${amount}` })
+      .where(and(eq(users.id, userId), gte(users.trialCredits, amount)));
+    const affectedRows = (updated as unknown as [{ affectedRows?: number }])[0]?.affectedRows ?? 0;
+    if (affectedRows !== 1) return null;
+    const result = await tx.select({ credits: users.trialCredits }).from(users).where(eq(users.id, userId)).limit(1);
+    return result[0]?.credits ?? null;
+  });
 }
 
 // TODO: add feature queries here as your schema grows.
