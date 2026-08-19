@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from "react";
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -83,8 +83,10 @@ describe("UI Preview click flow", () => {
     expect(screen.getByText(/UI PREVIEW · LEAF/i)).toBeTruthy();
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "I will show the rice ledger to the clerk." } });
     fireEvent.click(screen.getByRole("button", { name: /analyze locally/i }));
+    expect(screen.getAllByText(/LOCAL TRIAL/i).length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole("button", { name: /confirm & roll/i }));
     expect(screen.getAllByText(/LEAF 2/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("50").length).toBeGreaterThan(0);
     expect(mocks.gmAnalyzeMutate).not.toHaveBeenCalled();
     expect(mocks.gmResolveMutate).not.toHaveBeenCalled();
     expect(mocks.spendCreditMutate).not.toHaveBeenCalled();
@@ -122,5 +124,24 @@ describe("UI Preview click flow", () => {
     fireEvent.click(screen.getByRole("button", { name: "Campaign Overview" }));
     expect(screen.getByRole("heading", { name: /Honor on the banner/i })).toBeTruthy();
     expect(screen.getByText(/current leaf/i)).toBeTruthy();
+  });
+
+  it("falls back to Local Trial without spending a credit when an AI GM resolution fails", async () => {
+    mocks.gmAnalyzeMutate.mockImplementation((_input, callbacks) => callbacks.onSuccess({ intentSummary: "Show the rice ledger", suggestedMastery: null, axis: "mind", contextBonus: 0, contextReason: "The clerk can inspect the ledger", difficulty: 14, risk: "The clerk may remember the request", confirmation: "Show the ledger before the clerk", historicalStatus: "campaign-fiction", historicalFence: "This is campaign fiction." }));
+    mocks.gmResolveMutate.mockImplementation((_input, callbacks) => callbacks.onError(new Error("provider exhausted")));
+    render(<Home forceUiPreviewMode={false} />);
+    fireEvent.click(screen.getByRole("button", { name: "Play" }));
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "I will show the rice ledger to the clerk." } });
+    fireEvent.click(screen.getByRole("button", { name: /ask the gm/i }));
+    fireEvent.click(screen.getByRole("button", { name: /confirm & roll/i }));
+    expect(screen.getByText(/AI GM was unavailable/i)).toBeTruthy();
+    expect(screen.getAllByText(/LEAF 2/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("50").length).toBeGreaterThan(0);
+    expect(mocks.spendCreditMutate).not.toHaveBeenCalled();
+    await waitFor(() => {
+      const saved = JSON.parse(window.localStorage.getItem("dust-fire-local-game-v3-saika") ?? "{}");
+      expect(saved.game.tick).toBe(2);
+      expect(saved.game.rolls).toHaveLength(1);
+    });
   });
 });

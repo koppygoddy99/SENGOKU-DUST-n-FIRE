@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { applyRoll, createGameState, parseAction, resolveRoll } from "../lib/game";
-import { openLocalPreview, shouldFetchProfileCredits, shouldUseLocalRules } from "./Home";
+import { gmUnavailableLocalTrialNotice, openLocalPreview, saveLocalTrialResult, shouldFetchProfileCredits, shouldUseLocalRules } from "./Home";
 
 const campaign = { id: "preview-campaign", title: "Ash over Kinokawa", year: 1578, season: "Summer" as const, region: "Mikawa", location: "ตลาดหน้าด่าน", warShadow: 3, day: 1 };
 const draft = { name: "ซาโตะ", identity: "", templateId: "ronin", freeformOccupation: "", origin: "ชายแดน", strength: "อ่านเส้นทางหนีได้ไว", weakness: "ติดหนี้คนเรือ", answers: {} };
@@ -27,5 +27,13 @@ describe("UI Preview local-only flow", () => {
     const restoredFromLoad = JSON.parse(JSON.stringify(manualSave));
     expect(restoredFromLoad.tick).toBe(afterPlay.tick);
     expect(restoredFromLoad.rolls[0].id).toBe(afterPlay.rolls[0].id);
+  });
+
+  it("keeps credits and gives a clear local-trial notice when the AI GM is unavailable", () => {
+    const startingGame = createGameState(campaign, draft);
+    const saved = saveLocalTrialResult({ ...startingGame, tick: 2 }, startingGame.credits);
+    expect(saved.credits).toBe(startingGame.credits);
+    expect(gmUnavailableLocalTrialNotice("en", "Roll recorded")).toContain("AI GM unavailable");
+    expect(gmUnavailableLocalTrialNotice("th", "บันทึกผลแล้ว")).toContain("ไม่หักเครดิต AI");
   });
 });
