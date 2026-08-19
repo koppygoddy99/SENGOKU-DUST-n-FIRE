@@ -19,4 +19,4 @@ The local opening scene and deterministic fallback now follow the same three-par
 
 ## Live-model status
 
-The live smoke script was attempted on 2026-08-19. It produced no model response after 90 seconds and was stopped. A 45-second server-side time limit now sends the existing UI fallback path instead of leaving a player waiting indefinitely. The quality of the revised prompt with a live response is therefore still pending a successful provider response.
+The live smoke script was attempted repeatedly on 2026-08-19. The provider produced no model response after the available waiting window. The server now issues an abort signal at 45 seconds and prevents retry backoff after that signal; the existing UI error path falls back to deterministic local narration. The quality of the revised prompt with a live response is therefore pending a successful provider response, but a player is no longer meant to wait for an unbounded request.

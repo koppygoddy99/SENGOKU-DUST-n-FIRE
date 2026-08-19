@@ -69,6 +69,7 @@ export type InvokeParams = {
   model?: string;
   thinking?: Record<string, unknown>;
   reasoning?: Record<string, unknown>;
+  signal?: AbortSignal;
 };
 
 export type ToolCall = {
@@ -326,6 +327,7 @@ const fetchWithBackoff = async (
       await sleep(computeBackoffDelay(attempt, retryAfterMs));
     } catch (error) {
       lastError = error;
+      if (init.signal?.aborted) throw error;
       if (attempt === RETRY_MAX_RETRIES) throw error;
       console.warn(
         `LLM request retry ${attempt + 1}/${RETRY_MAX_RETRIES} after network error`
@@ -354,6 +356,7 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
     model,
     thinking,
     reasoning,
+    signal,
     maxTokens,
     max_tokens,
   } = params;
@@ -403,6 +406,7 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
 
   const response = await fetchWithBackoff(resolveApiUrl(), {
     method: "POST",
+    signal,
     headers: {
       "content-type": "application/json",
       authorization: `Bearer ${ENV.forgeApiKey}`,

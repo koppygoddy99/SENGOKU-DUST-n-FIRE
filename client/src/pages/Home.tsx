@@ -81,6 +81,18 @@ export function splitStoryParagraphs(story: string) {
   return story.split(/\n\s*\n/).map((paragraph) => paragraph.trim()).filter(Boolean);
 }
 
+export function shouldUseLocalRules(uiPreviewMode: boolean, isAuthenticated: boolean) {
+  return uiPreviewMode || !isAuthenticated;
+}
+
+export function shouldFetchProfileCredits(uiPreviewMode: boolean, isAuthenticated: boolean) {
+  return isAuthenticated && !uiPreviewMode;
+}
+
+export function openLocalPreview(open: (page: PageId) => void) {
+  open("play");
+}
+
 export function historicalStatusLabel(status: NonNullable<RollPreview["historical"]>["status"], language: Language) {
   const labels = {
     "fact-supported": ["Fact-supported", "มีหลักฐานรองรับ"],
@@ -171,7 +183,8 @@ export default function Home() {
   // startLogin() during render (no href={startLogin()}) — it mints a one-time
   // nonce cookie and must run only at the moment of navigation.
   const { user, loading, isAuthenticated } = useAuth();
-  const accountCredits = trpc.profile.credits.useQuery(undefined, { enabled: isAuthenticated, retry: false });
+  const uiPreviewMode = true;
+  const accountCredits = trpc.profile.credits.useQuery(undefined, { enabled: shouldFetchProfileCredits(uiPreviewMode, isAuthenticated), retry: false });
 
   const [page, setPage] = useState<PageId>("home");
   const [game, setGame] = useState<GameState>(seedGame);
@@ -215,7 +228,7 @@ export default function Home() {
   useEffect(() => { document.documentElement.lang = language; }, [language]);
   useEffect(() => {
     const credits = accountCredits.data?.credits;
-    if (!isAuthenticated || typeof credits !== "number") return;
+    if (!shouldFetchProfileCredits(uiPreviewMode, isAuthenticated) || typeof credits !== "number") return;
     setGame((current) => current.credits === credits ? current : { ...current, credits });
   }, [accountCredits.data?.credits, isAuthenticated]);
 
@@ -237,7 +250,8 @@ export default function Home() {
       <button className="brand" onClick={() => open("home")} aria-label="Dust and Fire home"><span className="brand-mark"><span /><span /></span><span className="brand-copy"><strong>Dust &amp; Fire</strong><small>SENGOKU STORIES</small></span></button>
       <div className="topbar__context"><span>{game.campaign.year}</span><span className="topbar__dot">•</span><span>{language === "en" ? game.campaign.season : seasonThai[game.campaign.season]}</span><span className="topbar__dot">•</span><span>{game.campaign.region}</span></div>
       <button className="credit-chip" onClick={() => open("settings")}><SengokuIcon name="credit" size={16} tone="ochre" /><span>{label(language, "Credits", "เครดิต")}</span><strong>{game.credits}</strong></button>
-      {!loading && <button className={`gm-account-chip ${isAuthenticated ? "is-signed-in" : ""}`} onClick={() => !isAuthenticated && startLogin()}>{isAuthenticated ? <><span className="gm-account-chip__dot" />{user?.name || label(language, "GM access", "สิทธิ์ใช้ GM")}</> : <><SengokuIcon name="relation" size={15} tone="teal" />{label(language, "AI GM · Sign in", "AI GM · เข้าสู่ระบบ")}</>}</button>}
+      <span className="ui-preview-chip"><span />{label(language, "UI PREVIEW · LOCAL", "ทดลอง UI · ในเครื่อง")}</span>
+      {!loading && !uiPreviewMode && <button className={`gm-account-chip ${isAuthenticated ? "is-signed-in" : ""}`} onClick={() => !isAuthenticated && startLogin()}>{isAuthenticated ? <><span className="gm-account-chip__dot" />{user?.name || label(language, "GM access", "สิทธิ์ใช้ GM")}</> : <><SengokuIcon name="relation" size={15} tone="teal" />{label(language, "AI GM · Sign in", "AI GM · เข้าสู่ระบบ")}</>}</button>}
       <div className="topbar-language" aria-label="Language selection"><button className={language === "en" ? "active" : ""} onClick={() => setLanguage("en")}>EN</button><button className={language === "th" ? "active" : ""} onClick={() => setLanguage("th")}>TH</button></div>
       <button className="mobile-menu" onClick={() => setMenuOpen((value) => !value)} aria-label="Open menu">{menuOpen ? <X size={21} /> : <Menu size={21} />}</button>
     </header>
@@ -255,9 +269,9 @@ export default function Home() {
       <div className="sidebar__notice">{notice}</div>
     </aside>
     <main className={`main-content ${page === "play" ? "main-content--play" : ""}`}>
-      {page === "home" && <HomeView game={game} language={language} open={open} />}
+      {page === "home" && <HomeView game={game} language={language} open={open} uiPreviewMode={uiPreviewMode} />}
       {page === "start" && <StartView language={language} onStart={beginNew} />}
-      {page === "play" && <PlayView game={game} language={language} open={open} onUpdate={updateGame} isAuthenticated={isAuthenticated} onLogin={startLogin} onAccountCreditChange={() => accountCredits.refetch()} />}
+      {page === "play" && <PlayView game={game} language={language} open={open} onUpdate={updateGame} isAuthenticated={isAuthenticated} uiPreviewMode={uiPreviewMode} onLogin={startLogin} onAccountCreditChange={() => accountCredits.refetch()} />}
       {page === "missions" && <MissionsView game={game} language={language} onUpdate={updateGame} open={open} />}
       {page === "market" && <MarketView game={game} language={language} onUpdate={updateGame} />}
       {page === "character" && <CharacterView game={game} language={language} open={open} />}
@@ -274,12 +288,12 @@ function Vital({ label, value, percent, tone }: { label: string; value: string; 
   return <div className="vital"><span>{label}</span><strong>{value}</strong><i className={`bar bar--${tone}`}><b style={{ width: `${Math.max(0, Math.min(100, percent))}%` }} /></i></div>;
 }
 
-function HomeView({ game, language, open }: { game: GameState; language: Language; open: (page: PageId) => void }) {
+function HomeView({ game, language, open, uiPreviewMode }: { game: GameState; language: Language; open: (page: PageId) => void; uiPreviewMode: boolean }) {
   const activeMission = game.missions.find((mission) => mission.state !== "resolved") ?? game.missions[0];
   return <div className="page home-view">
     <aside className="home-ledger-spine" aria-label="Campaign ledger spine"><div className="home-ledger-spine__folio">FOLIO {String(game.tick).padStart(2, "0")}</div><div className="home-ledger-spine__seal">火</div><div className="home-ledger-spine__record"><small>{label(language, "ACTIVE LEAF", "หน้าที่เปิดอยู่")}</small><strong>{game.currentScene.title}</strong></div><div className="home-ledger-spine__record"><small>{label(language, "PLACE", "สถานที่")}</small><strong>{game.campaign.region}</strong></div><button onClick={() => open("log")}><BookOpen size={15} /> {label(language, "RECORD", "บันทึก")}</button></aside>
     <div className="home-leaf">
-      <section className="hero-ledger"><div className="hero-ledger__spine"><span>LEAF {String(game.tick).padStart(2, "0")}</span><i /></div><div className="hero-ledger__seal">火</div><div><SectionKicker>{label(language, "CAMPAIGN RECORD", "ระเบียนแคมเปญ")}</SectionKicker><h1>{language === "en" ? <>Honor on the banner.<br />Truth under ash.</> : <>เกียรติอยู่บนธง<br />ความจริงอยู่ใต้เถ้า</>}</h1><p>{label(language, "A local-first campaign: each roll leaves a record, a cost, or a door open for the next scene.", "เรื่องราวเก็บอยู่ในเครื่องนี้ ทุกการทอยจะทิ้งบันทึก ราคา หรือประตูบานใหม่ไว้ให้ฉากถัดไป")}</p></div><div className="hero-ledger__actions"><Button className="df-button df-button--primary" onClick={() => open("play")}><SengokuIcon name="sword" size={17} tone="ink" /> {label(language, "ANSWER THE CURRENT LEAF", "ตอบในหน้าปัจจุบัน")} <ArrowRight size={18} /></Button><Button className="df-button df-button--ghost" onClick={() => open("start")}><Plus size={16} /> {label(language, "NEW CAMPAIGN", "เริ่มแคมเปญใหม่")}</Button></div></section>
+      <section className="hero-ledger"><div className="hero-ledger__spine"><span>LEAF {String(game.tick).padStart(2, "0")}</span><i /></div><div className="hero-ledger__seal">火</div><div><SectionKicker>{label(language, "CAMPAIGN RECORD", "ระเบียนแคมเปญ")}</SectionKicker><h1>{language === "en" ? <>Honor on the banner.<br />Truth under ash.</> : <>เกียรติอยู่บนธง<br />ความจริงอยู่ใต้เถ้า</>}</h1><p>{label(language, "A local-first campaign: each roll leaves a record, a cost, or a door open for the next scene.", "เรื่องราวเก็บอยู่ในเครื่องนี้ ทุกการทอยจะทิ้งบันทึก ราคา หรือประตูบานใหม่ไว้ให้ฉากถัดไป")}</p></div><div className="hero-ledger__actions"><Button className="df-button df-button--primary" onClick={() => openLocalPreview(open)}><SengokuIcon name="sword" size={17} tone="ink" /> {uiPreviewMode ? label(language, "TRY UI PREVIEW", "ลองกดเล่น UI") : label(language, "ANSWER THE CURRENT LEAF", "ตอบในหน้าปัจจุบัน")} <ArrowRight size={18} /></Button><Button className="df-button df-button--ghost" onClick={() => open("start")}><Plus size={16} /> {label(language, "NEW CAMPAIGN", "เริ่มแคมเปญใหม่")}</Button></div></section>
       <section className="home-grid"><button className="continue-panel" onClick={() => open("play")}><div className="continue-panel__top"><SectionKicker>{label(language, "THE CURRENT LEAF", "หน้าปัจจุบัน")}</SectionKicker><span className="save-dot">AUTO SAVED</span></div><h2>{game.currentScene.title}</h2><p>{game.currentScene.body[0]}</p><span className="continue-panel__link">{label(language, "Read and answer the leaf", "อ่านและตอบในหน้าปัจจุบัน")} <ArrowRight size={17} /></span></button><div className="campaign-card"><SectionKicker>{label(language, "MARGIN NOTE", "บันทึกขอบหน้า")}</SectionKicker><dl><div><dt>{label(language, "Time", "เวลา")}</dt><dd>{game.campaign.year} · {language === "en" ? game.campaign.season : seasonThai[game.campaign.season]}</dd></div><div><dt>{label(language, "Place", "สถานที่")}</dt><dd>{game.campaign.location}</dd></div><div><dt>{label(language, "Burden", "ภาระ")}</dt><dd>{activeMission?.deadline}</dd></div><div><dt>{label(language, "Credits", "เครดิต")}</dt><dd className="credit-inline"><SengokuIcon name="credit" size={15} tone="ochre" /> {game.credits}</dd></div></dl></div></section>
       <section className="shortcut-row"><Shortcut icon="compass" tone="ochre" title={label(language, "Mission Ledger", "บัญชีภารกิจ")} note={activeMission?.title ?? label(language, "No active mission", "ยังไม่มีภารกิจ")} onClick={() => open("missions")} /><Shortcut icon="character" tone="navy" title={label(language, "Character Dossier", "แฟ้มตัวละคร")} note={game.character.occupation} onClick={() => open("character")} /><Shortcut icon="log" tone="teal" title={label(language, "Campaign Record", "ระเบียนเรื่องราว")} note={`${game.memories.length + game.rolls.length} ${label(language, "recorded changes", "รายการที่บันทึก")}`} onClick={() => open("log")} /><Shortcut icon="archive" tone="navy" title={label(language, "World Index", "ดัชนีโลก")} note={label(language, "People, resources, and memories", "ผู้คน ทรัพยากร และความทรงจำ")} onClick={() => open("archive")} /></section>
     </div>
@@ -316,7 +330,7 @@ function StepControls({ previous, next, nextLabel }: { previous?: () => void; ne
   return <div className="credit-confirm">{previous ? <Button className="df-button df-button--ghost" onClick={previous}><ArrowLeft size={17} /> Back</Button> : <span />}{nextLabel ? <Button className="df-button df-button--primary" onClick={next}>{nextLabel} <ArrowRight size={17} /></Button> : <Button className="df-button df-button--primary" onClick={next}>Continue <ArrowRight size={17} /></Button>}</div>;
 }
 
-function PlayView({ game, language, open, onUpdate, isAuthenticated, onLogin, onAccountCreditChange }: { game: GameState; language: Language; open: (page: PageId) => void; onUpdate: (game: GameState, message: string) => void; isAuthenticated: boolean; onLogin: () => void; onAccountCreditChange: () => void }) {
+function PlayView({ game, language, open, onUpdate, isAuthenticated, uiPreviewMode, onLogin, onAccountCreditChange }: { game: GameState; language: Language; open: (page: PageId) => void; onUpdate: (game: GameState, message: string) => void; isAuthenticated: boolean; uiPreviewMode: boolean; onLogin: () => void; onAccountCreditChange: () => void }) {
   const [action, setAction] = useState("");
   const [preview, setPreview] = useState<RollPreview | null>(null);
   const [spendMomentum, setSpendMomentum] = useState(false);
@@ -324,6 +338,8 @@ function PlayView({ game, language, open, onUpdate, isAuthenticated, onLogin, on
   const analyzeGM = trpc.gm.analyze.useMutation();
   const resolveGM = trpc.gm.resolve.useMutation();
   const spendCredit = trpc.profile.spendCredit.useMutation();
+  const localRulesOnly = shouldUseLocalRules(uiPreviewMode, isAuthenticated);
+  const canConsultGM = !localRulesOnly;
   const lastRoll = game.rolls.at(-1);
   const localPreview = (full: boolean) => {
     const parsed = parseAction(action, game);
@@ -331,9 +347,10 @@ function PlayView({ game, language, open, onUpdate, isAuthenticated, onLogin, on
   };
   const analyze = (full: boolean) => {
     if (!action.trim()) return;
-    if (!full || !isAuthenticated) {
+    if (!full || localRulesOnly) {
       localPreview(full);
-      if (full && !isAuthenticated) setGmNote(label(language, "Local rules preview. Sign in to consult the AI GM for a contextual reading.", "นี่คือการวิเคราะห์จากกติกาในเครื่อง เข้าสู่ระบบเพื่อให้ AI GM อ่านบริบทของเรื่อง"));
+      if (full && uiPreviewMode) setGmNote(label(language, "UI Preview uses the local 2d12 rules only. No AI request is sent.", "โหมดทดลอง UI ใช้กติกา 2d12 ในเครื่องเท่านั้น และไม่ส่งคำขอ AI"));
+      else if (full) setGmNote(label(language, "Local rules preview. Sign in to consult the AI GM for a contextual reading.", "นี่คือการวิเคราะห์จากกติกาในเครื่อง เข้าสู่ระบบเพื่อให้ AI GM อ่านบริบทของเรื่อง"));
       return;
     }
     setGmNote(label(language, "The GM is reading the campaign record…", "AI GM กำลังอ่านระเบียนแคมเปญ…"));
@@ -352,7 +369,7 @@ function PlayView({ game, language, open, onUpdate, isAuthenticated, onLogin, on
     const record = resolveRoll(preview, game, spendMomentum);
     const resolved = applyRoll(game, record);
     const localCommit = () => { onUpdate({ ...resolved, credits: game.credits - 1 }, `${record.summary} · Auto Save updated at Leaf ${record.tick}`); setPreview(null); setAction(""); setSpendMomentum(false); };
-    if (!isAuthenticated) { localCommit(); return; }
+    if (localRulesOnly) { localCommit(); return; }
     setGmNote(label(language, "The GM is recording the consequence…", "AI GM กำลังจดผลที่ตามมา…"));
     resolveGM.mutate({ language, context: toGMContext(game), action, roll: { outcome: record.outcome, total: record.total, difficulty: record.difficulty, summary: record.summary, consequence: record.consequence ?? null } }, {
       onSuccess: (answer) => {
@@ -378,12 +395,12 @@ function PlayView({ game, language, open, onUpdate, isAuthenticated, onLogin, on
       onError: () => { setGmNote(label(language, "The GM response was unavailable; the deterministic result was saved locally.", "AI GM ยังตอบไม่ได้ จึงบันทึกผลจากกติกาที่ตายตัวไว้ในเครื่อง")); localCommit(); },
     });
   };
-  return <div className="page game-view"><div className="game-toolbar"><div><SectionKicker>{label(language, `PLAYING · LEAF ${game.tick}`, `กำลังเล่น · หน้าที่ ${game.tick}`)}</SectionKicker><strong>{game.campaign.title} · {game.currentScene.location}</strong></div><div className="game-toolbar__actions"><button onClick={() => open("save")}><SengokuIcon name="log" size={15} tone="ochre" /> {label(language, "Save", "เซฟ")}</button><button onClick={() => open("load")}><SengokuIcon name="document" size={15} tone="navy" /> {label(language, "Load", "โหลด")}</button><span className="credit-inline"><SengokuIcon name="credit" size={15} tone="ochre" /> {game.credits}</span></div></div>
+  return <div className="page game-view"><div className="game-toolbar"><div><SectionKicker>{label(language, `${uiPreviewMode ? "UI PREVIEW" : "PLAYING"} · LEAF ${game.tick}`, `${uiPreviewMode ? "ทดลอง UI" : "กำลังเล่น"} · หน้าที่ ${game.tick}`)}</SectionKicker><strong>{game.campaign.title} · {game.currentScene.location}</strong></div><div className="game-toolbar__actions"><button onClick={() => open("save")}><SengokuIcon name="log" size={15} tone="ochre" /> {label(language, "Save", "เซฟ")}</button><button onClick={() => open("load")}><SengokuIcon name="document" size={15} tone="navy" /> {label(language, "Load", "โหลด")}</button><span className="credit-inline"><SengokuIcon name="credit" size={15} tone="ochre" /> {game.credits}</span></div></div>
     {lastRoll && <div className="quick-log"><span>LEAF {lastRoll.tick}</span><strong>{lastRoll.summary}</strong><i>2d12: {lastRoll.dice.join(" + ")} · {lastRoll.total} / DN {lastRoll.difficulty}</i><i>{lastRoll.momentumSpent ? "+2 momentum spent" : "no momentum"}</i><b>{titleCase(lastRoll.outcome)}</b></div>}
     {game.historicalBoundary?.tick === game.tick && <HistoricalBoundaryPanel historical={game.historicalBoundary} language={language} resolved />}
     <section className="game-paper"><div className="game-paper__header"><span><SengokuIcon name="memory" tone="vermilion" /> {game.currentScene.title}</span><button onClick={() => open("log")}><SengokuIcon name="log" size={16} tone="navy" /> {label(language, "Campaign Log", "บันทึกเรื่องราว")}</button></div><div className="scene-context"><SengokuIcon name="history" tone="ochre" /><span>{game.currentScene.publicContext}</span></div><div className="game-story">{game.currentScene.body.map((paragraph, index) => <p key={`${game.currentScene.id}-${index}`}>{paragraph}</p>)}<p className="reader-question">{game.currentScene.prompt}</p></div><div className="scene-suggestions">{game.currentScene.suggestedActions.map((suggestion) => <button key={suggestion} onClick={() => setAction(suggestion)}>{suggestion}<ArrowRight size={14} /></button>)}</div>
-      <div className="action-dock"><div className="action-tabs"><button className={!preview ? "active" : ""} onClick={() => setPreview(null)}>{label(language, "Your action", "การกระทำของเจ้า")}</button><button className={preview ? "active" : ""} onClick={() => action.trim() && analyze(true)}>{label(language, "Confirm the roll", "ยืนยันก่อนทอย")}</button></div><div className={`gm-consult ${isAuthenticated ? "is-ready" : ""}`}><span><SengokuIcon name="relation" tone={isAuthenticated ? "teal" : "ochre"} /> {isAuthenticated ? label(language, "AI GM will read this campaign record before you roll.", "AI GM จะอ่านระเบียนแคมเปญนี้ก่อนเจ้ายืนยันการทอย") : label(language, "Local rules are playable now. Sign in to ask the AI GM for a contextual ruling.", "กติกาในเครื่องเล่นได้ทันที เข้าสู่ระบบเพื่อขอคำวินิจฉัยจาก AI GM")}</span>{!isAuthenticated && <button onClick={onLogin}>{label(language, "SIGN IN FOR AI GM", "เข้าสู่ระบบเพื่อใช้ AI GM")}</button>}</div>{gmNote && <p className="gm-note">{gmNote}</p>}<label className="action-field"><span>{label(language, "Say what you will do in one sentence", "บอกสิ่งที่เจ้าจะทำเพียงหนึ่งประโยค")}</span><textarea value={action} placeholder={label(language, "For example: I will use the ledger to ask the scribe for time.", "ตัวอย่าง: ข้าจะใช้บัญชีข้าวขอเวลาเจรจากับเสมียน") } onChange={(event) => { setAction(event.target.value); setPreview(null); setGmNote(""); }} /></label>
-      {!preview ? <div className="action-dock__bottom"><p>{label(language, "Assess risk shows only the pressure. Analyze action asks the GM for a contextual interpretation that you may correct once before rolling.", "ประเมินความยากจะแสดงเพียงแรงกดดัน ส่วนวิเคราะห์การกระทำจะให้ GM อ่านบริบทเพื่อให้แก้ได้หนึ่งครั้งก่อนทอย")}</p><div className="action-actions"><Button className="df-button df-button--ghost" onClick={() => analyze(false)} disabled={!action.trim() || analyzeGM.isPending}><EyeOff size={16} /> {label(language, "ASSESS RISK", "ประเมินความยาก")}</Button><Button className="df-button df-button--primary" onClick={() => analyze(true)} disabled={!action.trim() || analyzeGM.isPending}><Eye size={16} /> {analyzeGM.isPending ? label(language, "GM IS READING…", "GM กำลังอ่าน…") : label(language, "ASK THE GM", "ถาม AI GM")}</Button></div></div> : <RollPreviewPanel preview={preview} language={language} momentum={game.character.vitals.momentum} spendMomentum={spendMomentum} setSpendMomentum={setSpendMomentum} onCancel={() => setPreview(null)} onResolve={resolve} isResolving={resolveGM.isPending} />}</div></section>
+      <div className="action-dock"><div className="action-tabs"><button className={!preview ? "active" : ""} onClick={() => setPreview(null)}>{label(language, "Your action", "การกระทำของเจ้า")}</button><button className={preview ? "active" : ""} onClick={() => action.trim() && analyze(true)}>{label(language, "Confirm the roll", "ยืนยันก่อนทอย")}</button></div><div className={`gm-consult ${uiPreviewMode || canConsultGM ? "is-ready" : ""}`}><span><SengokuIcon name="relation" tone={uiPreviewMode || canConsultGM ? "teal" : "ochre"} /> {uiPreviewMode ? label(language, "UI Preview is active: actions, rolls, Log, Save, and Load run locally. No AI request is sent.", "กำลังทดลอง UI: การกระทำ การทอย LOG เซฟ และโหลดทำงานในเครื่อง โดยไม่ส่งคำขอ AI") : canConsultGM ? label(language, "AI GM will read this campaign record before you roll.", "AI GM จะอ่านระเบียนแคมเปญนี้ก่อนเจ้ายืนยันการทอย") : label(language, "Local rules are playable now. Sign in to ask the AI GM for a contextual ruling.", "กติกาในเครื่องเล่นได้ทันที เข้าสู่ระบบเพื่อขอคำวินิจฉัยจาก AI GM")}</span>{!uiPreviewMode && !isAuthenticated && <button onClick={onLogin}>{label(language, "SIGN IN FOR AI GM", "เข้าสู่ระบบเพื่อใช้ AI GM")}</button>}</div>{gmNote && <p className="gm-note">{gmNote}</p>}<label className="action-field"><span>{label(language, "Say what you will do in one sentence", "บอกสิ่งที่เจ้าจะทำเพียงหนึ่งประโยค")}</span><textarea value={action} placeholder={label(language, "For example: I will use the ledger to ask the scribe for time.", "ตัวอย่าง: ข้าจะใช้บัญชีข้าวขอเวลาเจรจากับเสมียน") } onChange={(event) => { setAction(event.target.value); setPreview(null); setGmNote(""); }} /></label>
+      {!preview ? <div className="action-dock__bottom"><p>{label(language, "Assess risk shows only the pressure. Analyze action asks the GM for a contextual interpretation that you may correct once before rolling.", "ประเมินความยากจะแสดงเพียงแรงกดดัน ส่วนวิเคราะห์การกระทำจะให้ GM อ่านบริบทเพื่อให้แก้ได้หนึ่งครั้งก่อนทอย")}</p><div className="action-actions"><Button className="df-button df-button--ghost" onClick={() => analyze(false)} disabled={!action.trim() || analyzeGM.isPending}><EyeOff size={16} /> {label(language, "ASSESS RISK", "ประเมินความยาก")}</Button><Button className="df-button df-button--primary" onClick={() => analyze(true)} disabled={!action.trim() || analyzeGM.isPending}><Eye size={16} /> {analyzeGM.isPending ? label(language, "GM IS READING…", "GM กำลังอ่าน…") : uiPreviewMode ? label(language, "ANALYZE LOCALLY", "วิเคราะห์ในเครื่อง") : label(language, "ASK THE GM", "ถาม AI GM")}</Button></div></div> : <RollPreviewPanel preview={preview} language={language} momentum={game.character.vitals.momentum} spendMomentum={spendMomentum} setSpendMomentum={setSpendMomentum} onCancel={() => setPreview(null)} onResolve={resolve} isResolving={resolveGM.isPending} />}</div></section>
   </div>;
 }
 

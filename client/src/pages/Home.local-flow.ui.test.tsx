@@ -1,0 +1,57 @@
+// @vitest-environment jsdom
+import React from "react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+const mocks = vi.hoisted(() => ({
+  creditsQuery: vi.fn(() => ({ data: undefined, refetch: vi.fn() })),
+  gmAnalyzeMutate: vi.fn(),
+  gmResolveMutate: vi.fn(),
+  spendCreditMutate: vi.fn(),
+  gmAnalyze: vi.fn(),
+  gmResolve: vi.fn(),
+  spendCredit: vi.fn(),
+}));
+
+mocks.gmAnalyze.mockReturnValue({ mutate: mocks.gmAnalyzeMutate, isPending: false });
+mocks.gmResolve.mockReturnValue({ mutate: mocks.gmResolveMutate, isPending: false });
+mocks.spendCredit.mockReturnValue({ mutate: mocks.spendCreditMutate, isPending: false });
+
+vi.mock("@/_core/hooks/useAuth", () => ({ useAuth: () => ({ user: { name: "UI Tester" }, loading: false, isAuthenticated: true }) }));
+vi.mock("@/const", () => ({ startLogin: vi.fn() }));
+vi.mock("@/lib/trpc", () => ({ trpc: { profile: { credits: { useQuery: mocks.creditsQuery }, spendCredit: { useMutation: mocks.spendCredit } }, gm: { analyze: { useMutation: mocks.gmAnalyze }, resolve: { useMutation: mocks.gmResolve } } } }));
+
+import Home from "./Home";
+
+describe("UI Preview click flow", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    vi.clearAllMocks();
+  });
+  afterEach(cleanup);
+
+  it("moves from Campaign 1 through Play, local roll, Log, Save, and Load without GM or credit backend calls", () => {
+    render(<Home />);
+    expect(mocks.creditsQuery).toHaveBeenCalledWith(undefined, expect.objectContaining({ enabled: false }));
+
+    fireEvent.click(screen.getByRole("button", { name: /try ui preview/i }));
+    expect(screen.getByText(/UI PREVIEW · LEAF/i)).toBeTruthy();
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "I will show the rice ledger to the clerk." } });
+    fireEvent.click(screen.getByRole("button", { name: /analyze locally/i }));
+    fireEvent.click(screen.getByRole("button", { name: /confirm & roll/i }));
+    expect(screen.getAllByText(/LEAF 2/i).length).toBeGreaterThan(0);
+    expect(mocks.gmAnalyzeMutate).not.toHaveBeenCalled();
+    expect(mocks.gmResolveMutate).not.toHaveBeenCalled();
+    expect(mocks.spendCreditMutate).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Campaign Log" })[0]);
+    expect(screen.getAllByText("Reader Mode").length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole("button", { name: "Save Game" }));
+    expect(screen.getByText("Save the leaf before it turns")).toBeTruthy();
+    fireEvent.click(screen.getAllByRole("button", { name: "SAVE HERE" })[0]);
+    fireEvent.click(screen.getByRole("button", { name: "Load Game" }));
+    expect(screen.getByText("Return to a recorded leaf")).toBeTruthy();
+    fireEvent.click(screen.getAllByRole("button", { name: "LOAD" })[1]);
+    expect(screen.getByText(/UI PREVIEW · LEAF/i)).toBeTruthy();
+  });
+});

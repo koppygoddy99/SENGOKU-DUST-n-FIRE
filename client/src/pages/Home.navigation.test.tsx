@@ -16,6 +16,7 @@ describe("Campaign 1 navigation", () => {
     const html = renderToStaticMarkup(<CampaignNavigation campaignTitle="Ash over Kinokawa" language="en" page="play" expanded onToggle={() => undefined} onOpen={() => undefined} />);
     expect(html).toContain('aria-expanded="true"');
     ["Play", "Missions", "Market", "Character", "Campaign Log", "World Archive", "Save Game", "Load Game"].forEach((item) => expect(html).toContain(`>${item}<`));
+    ["Play", "Campaign Log", "Save Game", "Load Game"].forEach((item) => expect(html).toContain(`>${item}<`));
     expect(html).toContain("nav-item nav-item--child nav-item--active");
   });
 });

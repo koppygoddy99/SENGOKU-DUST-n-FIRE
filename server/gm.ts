@@ -8,10 +8,17 @@ const toneSchema = z.enum(["navy", "teal", "vermilion", "ochre"]);
 const historicalStatusSchema = z.enum(["fact-supported", "contextual-play", "campaign-fiction", "insufficient-evidence"]);
 const GM_RESPONSE_TIMEOUT_MS = 45_000;
 
-export function withGMResponseTimeout<T>(operation: Promise<T>, timeoutMs = GM_RESPONSE_TIMEOUT_MS): Promise<T> {
-  return new Promise<T>((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error("AI GM did not respond before the time limit.")), timeoutMs);
-    operation.then((value) => { clearTimeout(timer); resolve(value); }, (error: unknown) => { clearTimeout(timer); reject(error); });
+export function withGMResponseTimeout<T>(operation: (signal: AbortSignal) => Promise<T>, timeoutMs = GM_RESPONSE_TIMEOUT_MS): Promise<T> {
+  const controller = new AbortController();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const deadline = new Promise<T>((_resolve, reject) => {
+    timer = setTimeout(() => {
+      controller.abort();
+      reject(new Error("AI GM did not respond before the time limit."));
+    }, timeoutMs);
+  });
+  return Promise.race([operation(controller.signal), deadline]).finally(() => {
+    if (timer) clearTimeout(timer);
   });
 }
 
@@ -195,10 +202,11 @@ function historicalBrief(context: ContextForHistory, action: string) {
 
 export async function analyzeWithGM(input: z.infer<typeof analyzeInputSchema>) {
   const history = historicalBrief(input.context, input.action);
-  const response = await withGMResponseTimeout(invokeLLM({
+  const response = await withGMResponseTimeout((signal) => invokeLLM({
     model: "gpt-5-mini",
     messages: [{ role: "system", content: systemRules }, { role: "user", content: `Analyze this declared action before any dice are rolled.\n\nHistorical Brief:\n${history.briefing}\n\nGame Context:\n${JSON.stringify(input)}` }],
     outputSchema: analyzeOutputSchema,
+    signal,
   }));
   const parsed = analyzeResultSchema.parse(normalizeAnalysisCandidate(JSON.parse(getTextContent(response.choices[0]?.message.content ?? ""))));
   return { ...parsed, difficulty: canonicalDifficulty(parsed.difficulty), historicalFactIds: history.factIds };
@@ -206,7 +214,7 @@ export async function analyzeWithGM(input: z.infer<typeof analyzeInputSchema>) {
 
 export async function resolveWithGM(input: z.infer<typeof resolveInputSchema>) {
   const history = historicalBrief(input.context, input.action);
-  const response = await withGMResponseTimeout(invokeLLM({
+  const response = await withGMResponseTimeout((signal) => invokeLLM({
     model: "gpt-5-mini",
     messages: [{ role: "system", content: systemRules }, { role: "user", content: `Narrate the resolved roll. The total, outcome, and consequence are final rules output; do not alter them.
 
@@ -225,6 +233,7 @@ ${history.briefing}
 Game Context:
 ${JSON.stringify(input)}` }],
     outputSchema: resolveOutputSchema,
+    signal,
   }));
   return { ...resolveResultSchema.parse(normalizeResolveCandidate(JSON.parse(getTextContent(response.choices[0]?.message.content ?? "")))), historicalFactIds: history.factIds };
 }

@@ -16,7 +16,9 @@ const context = {
 
 describe("AI GM structured contracts", () => {
   it("fails fast when a model response exceeds the configured waiting window", async () => {
-    await expect(withGMResponseTimeout(new Promise<never>(() => undefined), 1)).rejects.toThrow("AI GM did not respond before the time limit.");
+    let signal: AbortSignal | undefined;
+    await expect(withGMResponseTimeout((receivedSignal) => { signal = receivedSignal; return new Promise<never>(() => undefined); }, 1)).rejects.toThrow("AI GM did not respond before the time limit.");
+    expect(signal?.aborted).toBe(true);
   });
 
   it("normalizes model difficulty to a canonical roll tier", async () => {
