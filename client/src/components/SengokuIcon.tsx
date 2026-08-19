@@ -2,6 +2,7 @@
  * Ledger of Ash design reminder:
  * Use archival Sengoku-inspired mon/ledger icon frames, never generic app badges.
  */
+import React from "react";
 import type { LucideIcon } from "lucide-react";
 import {
   Archive,
