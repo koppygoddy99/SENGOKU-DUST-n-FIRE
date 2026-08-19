@@ -11,6 +11,8 @@ describe("narrative baseline", () => {
     expect(game.currentScene.body).toHaveLength(3);
     expect(game.currentScene.body.every((paragraph) => paragraph.length >= 250)).toBe(true);
     expect(game.currentScene.body.join("\n\n")).toContain("ซาโตะ");
+    expect(game.currentScene.body[1]).toContain("“");
+    expect(game.currentScene.body[2]).toContain("เส้นตาย");
     expect(game.memories[0].detail).toBe(game.currentScene.body.join("\n\n"));
   });
 
@@ -22,6 +24,9 @@ describe("narrative baseline", () => {
     const paragraphs = splitStoryParagraphs(result.narrative);
     expect(paragraphs).toHaveLength(3);
     expect(paragraphs.every((paragraph) => paragraph.length >= 120)).toBe(true);
+    expect(paragraphs[0]).toContain("เปลี่ยนไปก่อนที่ใครจะเอ่ยคำตอบ");
+    expect(paragraphs[1]).toContain("“");
+    expect(paragraphs[2]).toContain("รอยเท้าบนดินชื้น");
   });
 
   it("keeps Reader Mode paragraphs separate", () => {
