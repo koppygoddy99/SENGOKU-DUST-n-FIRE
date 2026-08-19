@@ -99,4 +99,21 @@ describe("UI Preview click flow", () => {
     fireEvent.click(screen.getAllByRole("button", { name: "LOAD" })[1]);
     expect(screen.getByText(/UI PREVIEW · LEAF/i)).toBeTruthy();
   });
+
+  it("opens the Market & gear tree and routes every ledger from the Campaign Sidebar", () => {
+    render(<Home />);
+    fireEvent.click(screen.getByRole("button", { name: "Market & gear" }));
+    ["Carried gear", "This market", "Services & hands", "Credit, debts & favors", "Exchange history"].forEach((item) => expect(screen.getByRole("button", { name: item })).toBeTruthy());
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Carried gear" })[0]);
+    expect(screen.getByText("Carried slots")).toBeTruthy();
+    fireEvent.click(screen.getAllByRole("button", { name: "This market" })[0]);
+    expect(screen.getAllByText(/Why this price:/i).length).toBeGreaterThan(0);
+    fireEvent.click(screen.getAllByRole("button", { name: "Services & hands" })[0]);
+    expect(screen.getByText("คนส่งสารท่าเรือ")).toBeTruthy();
+    fireEvent.click(screen.getAllByRole("button", { name: "Credit, debts & favors" })[0]);
+    expect(screen.getByText("หนี้ชีวิตจากการลากซาเนฟุยุขึ้นจากน้ำ")).toBeTruthy();
+    fireEvent.click(screen.getAllByRole("button", { name: "Exchange history" })[0]);
+    expect(screen.getByText("กันทาโร่ลากซาเนฟุยุขึ้นจากน้ำ")).toBeTruthy();
+  });
 });

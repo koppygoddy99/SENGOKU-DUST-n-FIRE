@@ -11,6 +11,7 @@ import { startLogin } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { SengokuIcon, type SengokuIconName } from "@/components/SengokuIcon";
 import { CampaignsView } from "@/pages/CampaignsView";
+import { MarketHub } from "@/pages/MarketHub";
 import {
   AXES,
   RELATIONSHIP_QUESTIONS,
@@ -27,7 +28,7 @@ import {
   type Season,
 } from "@/lib/game";
 
-export type PageId = "home" | "campaigns" | "start" | "play" | "missions" | "market" | "character" | "log" | "archive" | "save" | "load" | "settings";
+export type PageId = "home" | "campaigns" | "start" | "play" | "missions" | "market" | "localmarket" | "gear" | "services" | "obligations" | "exchanges" | "character" | "log" | "archive" | "save" | "load" | "settings";
 type Language = "en" | "th";
 type FontSize = "small" | "normal" | "large";
 type Accent = "vermilion" | "ochre" | "teal";
@@ -128,7 +129,12 @@ function toGMContext(game: GameState) {
 const campaignNavItems: { id: PageId; en: string; th: string; icon: SengokuIconName }[] = [
   { id: "play", en: "Play", th: "เล่นฉาก", icon: "sword" },
   { id: "missions", en: "Missions", th: "ภารกิจ", icon: "compass" },
-  { id: "market", en: "Market", th: "ตลาด", icon: "credit" },
+  { id: "market", en: "Market & gear", th: "ตลาดและสัมภาระ", icon: "credit" },
+  { id: "gear", en: "Carried gear", th: "ของที่พกอยู่", icon: "character" },
+  { id: "localmarket", en: "This market", th: "ตลาดพื้นที่นี้", icon: "credit" },
+  { id: "services", en: "Services & hands", th: "บริการและคนรับจ้าง", icon: "relation" },
+  { id: "obligations", en: "Credit, debts & favors", th: "เครดิต / หนี้ / บุญคุณ", icon: "memory" },
+  { id: "exchanges", en: "Exchange history", th: "ประวัติการแลกเปลี่ยน", icon: "log" },
   { id: "character", en: "Character", th: "ตัวละคร", icon: "character" },
   { id: "log", en: "Campaign Log", th: "บันทึกเรื่องราว", icon: "log" },
   { id: "archive", en: "World Archive", th: "คลังโลก", icon: "archive" },
@@ -147,7 +153,11 @@ const utilityNavItems: { id: PageId; en: string; th: string; icon: SengokuIconNa
 
 export function CampaignNavigation({ campaignTitle, language, page, expanded, onToggle, onOpen }: { campaignTitle: string; language: Language; page: PageId; expanded: boolean; onToggle: () => void; onOpen: (page: PageId) => void }) {
   const isCampaignPage = campaignNavItems.some((item) => item.id === page);
-  return <>{primaryNavItems.map((item) => <button key={item.id} className={`nav-item ${page === item.id ? "nav-item--active" : ""}`} onClick={() => onOpen(item.id)} title={label(language, item.en, item.th)}><SengokuIcon name={item.icon} size={16} tone={page === item.id ? "vermilion" : "navy"} /><span className="nav-item__label">{label(language, item.en, item.th)}</span></button>)}<div className="nav-list__rule" /><button className={`campaign-nav ${isCampaignPage ? "campaign-nav--active" : ""}`} onClick={onToggle} aria-expanded={expanded} title={campaignTitle}><SengokuIcon name="archive" size={16} tone={isCampaignPage ? "vermilion" : "navy"} /><span className="nav-item__label"><strong>{campaignTitle}</strong><small>{label(language, "Current campaign", "แคมเปญที่กำลังเล่น")}</small></span><ChevronRight className={`campaign-nav__chevron ${expanded ? "is-open" : ""}`} size={15} /></button>{expanded && <div className="campaign-nav__children">{campaignNavItems.map((item) => <button key={item.id} className={`nav-item nav-item--child ${page === item.id ? "nav-item--active" : ""}`} onClick={() => onOpen(item.id)} title={label(language, item.en, item.th)}><SengokuIcon name={item.icon} size={15} tone={page === item.id ? "vermilion" : "navy"} /><span className="nav-item__label">{label(language, item.en, item.th)}</span></button>)}</div>}<div className="nav-list__rule" />{utilityNavItems.map((item) => <button key={item.id} className={`nav-item ${page === item.id ? "nav-item--active" : ""}`} onClick={() => onOpen(item.id)} title={label(language, item.en, item.th)}><SengokuIcon name={item.icon} size={16} tone={page === item.id ? "vermilion" : "navy"} /><span className="nav-item__label">{label(language, item.en, item.th)}</span></button>)}</>;
+  const marketItems = campaignNavItems.filter((item) => ["gear", "localmarket", "services", "obligations", "exchanges"].includes(item.id));
+  const isMarketPage = marketItems.some((item) => item.id === page) || page === "market";
+  const [marketOpen, setMarketOpen] = useState(isMarketPage);
+  useEffect(() => { if (isMarketPage) setMarketOpen(true); }, [isMarketPage]);
+  return <>{primaryNavItems.map((item) => <button key={item.id} className={`nav-item ${page === item.id ? "nav-item--active" : ""}`} onClick={() => onOpen(item.id)} title={label(language, item.en, item.th)}><SengokuIcon name={item.icon} size={16} tone={page === item.id ? "vermilion" : "navy"} /><span className="nav-item__label">{label(language, item.en, item.th)}</span></button>)}<div className="nav-list__rule" /><button className={`campaign-nav ${isCampaignPage ? "campaign-nav--active" : ""}`} onClick={onToggle} aria-expanded={expanded} title={campaignTitle}><SengokuIcon name="archive" size={16} tone={isCampaignPage ? "vermilion" : "navy"} /><span className="nav-item__label"><strong>{campaignTitle}</strong><small>{label(language, "Current campaign", "แคมเปญที่กำลังเล่น")}</small></span><ChevronRight className={`campaign-nav__chevron ${expanded ? "is-open" : ""}`} size={15} /></button>{expanded && <div className="campaign-nav__children">{campaignNavItems.map((item) => { if (item.id === "market") return <React.Fragment key={item.id}><button className={`nav-item nav-item--child nav-item--market-parent ${isMarketPage ? "nav-item--active" : ""}`} onClick={() => setMarketOpen((value) => !value)} aria-expanded={marketOpen} title={label(language, item.en, item.th)}><SengokuIcon name={item.icon} size={15} tone={isMarketPage ? "vermilion" : "navy"} /><span className="nav-item__label">{label(language, item.en, item.th)}</span><ChevronRight className={`campaign-nav__chevron ${marketOpen ? "is-open" : ""}`} size={14} /></button>{marketOpen && <div className="market-nav__children">{marketItems.map((child) => <button key={child.id} className={`nav-item nav-item--child nav-item--market-child ${page === child.id ? "nav-item--active" : ""}`} onClick={() => onOpen(child.id)} title={label(language, child.en, child.th)}><SengokuIcon name={child.icon} size={14} tone={page === child.id ? "vermilion" : "navy"} /><span className="nav-item__label">{label(language, child.en, child.th)}</span></button>)}</div>}</React.Fragment>; if (marketItems.some((marketItem) => marketItem.id === item.id)) return null; return <button key={item.id} className={`nav-item nav-item--child ${page === item.id ? "nav-item--active" : ""}`} onClick={() => onOpen(item.id)} title={label(language, item.en, item.th)}><SengokuIcon name={item.icon} size={15} tone={page === item.id ? "vermilion" : "navy"} /><span className="nav-item__label">{label(language, item.en, item.th)}</span></button>; })}</div>}<div className="nav-list__rule" />{utilityNavItems.map((item) => <button key={item.id} className={`nav-item ${page === item.id ? "nav-item--active" : ""}`} onClick={() => onOpen(item.id)} title={label(language, item.en, item.th)}><SengokuIcon name={item.icon} size={16} tone={page === item.id ? "vermilion" : "navy"} /><span className="nav-item__label">{label(language, item.en, item.th)}</span></button>)}</>;
 }
 
 function SectionKicker({ children }: { children: React.ReactNode }) {
@@ -261,7 +271,12 @@ export default function Home() {
       {page === "start" && <StartView language={language} onStart={beginNew} />}
       {page === "play" && <PlayView game={game} language={language} open={open} onUpdate={updateGame} isAuthenticated={isAuthenticated} uiPreviewMode={uiPreviewMode} onLogin={startLogin} onAccountCreditChange={() => accountCredits.refetch()} />}
       {page === "missions" && <MissionsView game={game} language={language} onUpdate={updateGame} open={open} />}
-      {page === "market" && <MarketView game={game} language={language} onUpdate={updateGame} />}
+      {page === "market" && <MarketHub game={game} language={language} onUpdate={updateGame} initialTab="market" />}
+      {page === "localmarket" && <MarketHub game={game} language={language} onUpdate={updateGame} initialTab="market" />}
+      {page === "gear" && <MarketHub game={game} language={language} onUpdate={updateGame} initialTab="gear" />}
+      {page === "services" && <MarketHub game={game} language={language} onUpdate={updateGame} initialTab="services" />}
+      {page === "obligations" && <MarketHub game={game} language={language} onUpdate={updateGame} initialTab="obligations" />}
+      {page === "exchanges" && <MarketHub game={game} language={language} onUpdate={updateGame} initialTab="history" />}
       {page === "character" && <CharacterView game={game} language={language} open={open} />}
       {page === "log" && <LogView game={game} language={language} readerMode={readerMode} setReaderMode={setReaderMode} />}
       {page === "archive" && <ArchiveView game={game} language={language} />}
