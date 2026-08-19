@@ -10,6 +10,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { startLogin } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { SengokuIcon, type SengokuIconName } from "@/components/SengokuIcon";
+import { CampaignsView } from "@/pages/CampaignsView";
 import {
   AXES,
   RELATIONSHIP_QUESTIONS,
@@ -26,7 +27,7 @@ import {
   type Season,
 } from "@/lib/game";
 
-export type PageId = "home" | "start" | "play" | "missions" | "market" | "character" | "log" | "archive" | "save" | "load" | "settings";
+export type PageId = "home" | "campaigns" | "start" | "play" | "missions" | "market" | "character" | "log" | "archive" | "save" | "load" | "settings";
 type Language = "en" | "th";
 type FontSize = "small" | "normal" | "large";
 type Accent = "vermilion" | "ochre" | "teal";
@@ -135,6 +136,10 @@ const campaignNavItems: { id: PageId; en: string; th: string; icon: SengokuIconN
   { id: "load", en: "Load Game", th: "โหลดเกม", icon: "document" },
 ];
 
+const primaryNavItems: { id: PageId; en: string; th: string; icon: SengokuIconName }[] = [
+  { id: "campaigns", en: "Campaigns", th: "แคมเปญทั้งหมด", icon: "archive" },
+];
+
 const utilityNavItems: { id: PageId; en: string; th: string; icon: SengokuIconName }[] = [
   { id: "start", en: "New Campaign", th: "เริ่มแคมเปญใหม่", icon: "start" },
   { id: "settings", en: "Settings", th: "ตั้งค่า", icon: "settings" },
@@ -142,7 +147,7 @@ const utilityNavItems: { id: PageId; en: string; th: string; icon: SengokuIconNa
 
 export function CampaignNavigation({ campaignTitle, language, page, expanded, onToggle, onOpen }: { campaignTitle: string; language: Language; page: PageId; expanded: boolean; onToggle: () => void; onOpen: (page: PageId) => void }) {
   const isCampaignPage = campaignNavItems.some((item) => item.id === page);
-  return <><button className={`campaign-nav ${isCampaignPage ? "campaign-nav--active" : ""}`} onClick={onToggle} aria-expanded={expanded} title={label(language, "Campaign 1", "แคมเปญ 1")}><SengokuIcon name="archive" size={16} tone={isCampaignPage ? "vermilion" : "navy"} /><span className="nav-item__label"><strong>{label(language, "Campaign 1", "แคมเปญ 1")}</strong><small>{campaignTitle}</small></span><ChevronRight className={`campaign-nav__chevron ${expanded ? "is-open" : ""}`} size={15} /></button>{expanded && <div className="campaign-nav__children">{campaignNavItems.map((item) => <button key={item.id} className={`nav-item nav-item--child ${page === item.id ? "nav-item--active" : ""}`} onClick={() => onOpen(item.id)} title={label(language, item.en, item.th)}><SengokuIcon name={item.icon} size={15} tone={page === item.id ? "vermilion" : "navy"} /><span className="nav-item__label">{label(language, item.en, item.th)}</span></button>)}</div>}<div className="nav-list__rule" />{utilityNavItems.map((item) => <button key={item.id} className={`nav-item ${page === item.id ? "nav-item--active" : ""}`} onClick={() => onOpen(item.id)} title={label(language, item.en, item.th)}><SengokuIcon name={item.icon} size={16} tone={page === item.id ? "vermilion" : "navy"} /><span className="nav-item__label">{label(language, item.en, item.th)}</span></button>)}</>;
+  return <>{primaryNavItems.map((item) => <button key={item.id} className={`nav-item ${page === item.id ? "nav-item--active" : ""}`} onClick={() => onOpen(item.id)} title={label(language, item.en, item.th)}><SengokuIcon name={item.icon} size={16} tone={page === item.id ? "vermilion" : "navy"} /><span className="nav-item__label">{label(language, item.en, item.th)}</span></button>)}<div className="nav-list__rule" /><button className={`campaign-nav ${isCampaignPage ? "campaign-nav--active" : ""}`} onClick={onToggle} aria-expanded={expanded} title={campaignTitle}><SengokuIcon name="archive" size={16} tone={isCampaignPage ? "vermilion" : "navy"} /><span className="nav-item__label"><strong>{campaignTitle}</strong><small>{label(language, "Current campaign", "แคมเปญที่กำลังเล่น")}</small></span><ChevronRight className={`campaign-nav__chevron ${expanded ? "is-open" : ""}`} size={15} /></button>{expanded && <div className="campaign-nav__children">{campaignNavItems.map((item) => <button key={item.id} className={`nav-item nav-item--child ${page === item.id ? "nav-item--active" : ""}`} onClick={() => onOpen(item.id)} title={label(language, item.en, item.th)}><SengokuIcon name={item.icon} size={15} tone={page === item.id ? "vermilion" : "navy"} /><span className="nav-item__label">{label(language, item.en, item.th)}</span></button>)}</div>}<div className="nav-list__rule" />{utilityNavItems.map((item) => <button key={item.id} className={`nav-item ${page === item.id ? "nav-item--active" : ""}`} onClick={() => onOpen(item.id)} title={label(language, item.en, item.th)}><SengokuIcon name={item.icon} size={16} tone={page === item.id ? "vermilion" : "navy"} /><span className="nav-item__label">{label(language, item.en, item.th)}</span></button>)}</>;
 }
 
 function SectionKicker({ children }: { children: React.ReactNode }) {
@@ -166,6 +171,7 @@ export default function Home() {
   const [page, setPage] = useState<PageId>("home");
   const [game, setGame] = useState<GameState>(seedGame);
   const [saves, setSaves] = useState<SaveLeaves>(() => ({ manual: copyState(seedGame()), leaf2: null, leaf3: null }));
+  const [campaignLibrary, setCampaignLibrary] = useState<Record<string, GameState>>(() => { const demo = seedGame(); return { [demo.campaign.id]: demo }; });
   const [language, setLanguage] = useState<Language>("en");
   const [readerMode, setReaderMode] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
@@ -182,9 +188,11 @@ export default function Home() {
       LEGACY_STORAGE_KEYS.forEach((key) => window.localStorage.removeItem(key));
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (raw) {
-        const saved = JSON.parse(raw) as Partial<{ game: GameState; saves: SaveLeaves; language: Language; readerMode: boolean; darkMode: boolean; fontSize: FontSize; accent: Accent }>;
+        const saved = JSON.parse(raw) as Partial<{ game: GameState; saves: SaveLeaves; campaignLibrary: Record<string, GameState>; language: Language; readerMode: boolean; darkMode: boolean; fontSize: FontSize; accent: Accent }>;
         if (saved.game?.schemaVersion === 2) setGame(saved.game);
         if (saved.saves) setSaves(saved.saves);
+        if (saved.campaignLibrary && Object.keys(saved.campaignLibrary).length) setCampaignLibrary(saved.campaignLibrary);
+        else if (saved.game?.schemaVersion === 2) setCampaignLibrary({ [saved.game.campaign.id]: saved.game });
         if (saved.language) setLanguage(saved.language);
         if (typeof saved.readerMode === "boolean") setReaderMode(saved.readerMode);
         if (typeof saved.darkMode === "boolean") setDarkMode(saved.darkMode);
@@ -200,8 +208,8 @@ export default function Home() {
 
   useEffect(() => {
     if (!storageReady) return;
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ game, saves, language, readerMode, darkMode, fontSize, accent }));
-  }, [accent, darkMode, fontSize, game, language, readerMode, saves, storageReady]);
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ game, saves, campaignLibrary, language, readerMode, darkMode, fontSize, accent }));
+  }, [accent, campaignLibrary, darkMode, fontSize, game, language, readerMode, saves, storageReady]);
 
   useEffect(() => { document.documentElement.lang = language; }, [language]);
   useEffect(() => {
@@ -211,17 +219,18 @@ export default function Home() {
   }, [accountCredits.data?.credits, isAuthenticated]);
 
   const appClass = ["app-shell", darkMode ? "theme-dark" : "", `font-${fontSize}`, `accent-${accent}`, sidebarCollapsed ? "sidebar-collapsed" : ""].join(" ");
-  const updateGame = (next: GameState, message: string) => { setGame(next); setNotice(message); };
+  const updateGame = (next: GameState, message: string) => { setGame(next); setCampaignLibrary((current) => ({ ...current, [next.campaign.id]: copyState(next) })); setNotice(message); };
   const isCampaignPage = (nextPage: PageId) => campaignNavItems.some((item) => item.id === nextPage);
   const open = (nextPage: PageId) => { if (isCampaignPage(nextPage)) setCampaignMenuOpen(true); setPage(nextPage); setMenuOpen(false); };
-  const beginNew = (nextGame: GameState) => { setGame(nextGame); setSaves({ manual: null, leaf2: null, leaf3: null }); setNotice("A new campaign has begun · 50 trial credits are ready"); open("play"); };
+  const beginNew = (nextGame: GameState) => { setGame(nextGame); setCampaignLibrary((current) => ({ ...current, [nextGame.campaign.id]: copyState(nextGame) })); setSaves({ manual: null, leaf2: null, leaf3: null }); setNotice("A new campaign has begun · 50 trial credits are ready"); open("play"); };
+  const selectCampaign = (selected: GameState) => { const copy = copyState(selected); setGame(copy); setSaves((current) => ({ ...current, manual: copyState(copy) })); setNotice(`${copy.campaign.title} selected · Local Save restored at Leaf ${copy.tick}`); open("play"); };
   const writeSave = (slot: keyof SaveLeaves) => { setSaves((current) => ({ ...current, [slot]: copyState(game) })); setNotice(`${slot === "manual" ? "Manual Save" : slot === "leaf2" ? "Saved Leaf II" : "Saved Leaf III"} written at Leaf ${game.tick}`); };
   const loadSave = (slot: "auto" | keyof SaveLeaves) => {
     const source = slot === "auto" ? game : saves[slot];
     if (!source) { setNotice("This leaf is still blank"); return; }
     setGame(copyState(source)); setNotice(`${slot === "auto" ? "Auto Save" : "Saved leaf"} restored at Leaf ${source.tick}`); open("play");
   };
-  const resetLocal = () => { const demo = seedGame(); window.localStorage.removeItem(STORAGE_KEY); setGame(demo); setSaves({ manual: copyState(demo), leaf2: null, leaf3: null }); setNotice("Local records cleared · Saika safehouse example is ready"); };
+  const resetLocal = () => { const demo = seedGame(); window.localStorage.removeItem(STORAGE_KEY); setGame(demo); setSaves({ manual: copyState(demo), leaf2: null, leaf3: null }); setCampaignLibrary({ [demo.campaign.id]: copyState(demo) }); setNotice("Local records cleared · Saika safehouse example is ready"); };
 
   return <div className={appClass}>
     <header className="topbar">
@@ -248,6 +257,7 @@ export default function Home() {
     </aside>
     <main className={`main-content ${page === "play" ? "main-content--play" : ""}`}>
       {page === "home" && <HomeView game={game} language={language} open={open} uiPreviewMode={uiPreviewMode} />}
+      {page === "campaigns" && <CampaignsView campaigns={Object.values(campaignLibrary)} activeId={game.campaign.id} language={language} onSelect={selectCampaign} onNew={() => open("start")} />}
       {page === "start" && <StartView language={language} onStart={beginNew} />}
       {page === "play" && <PlayView game={game} language={language} open={open} onUpdate={updateGame} isAuthenticated={isAuthenticated} uiPreviewMode={uiPreviewMode} onLogin={startLogin} onAccountCreditChange={() => accountCredits.refetch()} />}
       {page === "missions" && <MissionsView game={game} language={language} onUpdate={updateGame} open={open} />}

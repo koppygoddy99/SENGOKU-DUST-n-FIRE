@@ -57,6 +57,24 @@ describe("UI Preview click flow", () => {
     expect(screen.getAllByText("คืนที่เมืองซาไกตื่น").length).toBeGreaterThan(0);
   });
 
+  it("lists prior campaigns and switches the active Campaign menu after a selection", () => {
+    const saika = createSaikaSafehouseDemo();
+    const earlier = createSaikaSafehouseDemo();
+    earlier.campaign = { ...earlier.campaign, id: "camp-earlier", title: "Ashes at the river gate", year: 1568, location: "ท่าเรือคิอิ" };
+    earlier.currentScene = { ...earlier.currentScene, title: "ข่าวจากท่าเรือ" };
+    earlier.memories = [{ ...earlier.memories[0], id: "memory-earlier", title: "เงาที่ท่าเรือคิอิ", detail: "คนเรือปิดปากเงียบเมื่อข่าวจากท่าเรือคิอิมาถึง" }];
+    window.localStorage.setItem("dust-fire-local-game-v3-saika", JSON.stringify({ game: saika, saves: { manual: saika, leaf2: null, leaf3: null }, campaignLibrary: { [saika.campaign.id]: saika, [earlier.campaign.id]: earlier }, language: "en", readerMode: true, darkMode: false, fontSize: "normal", accent: "vermilion" }));
+    render(<Home />);
+    fireEvent.click(screen.getByRole("button", { name: "Campaigns" }));
+    expect(screen.getAllByText("Smoke Beneath Sakai").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Ashes at the river gate").length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole("button", { name: /Ashes at the river gate/i }));
+    expect(screen.getAllByText("Ashes at the river gate").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("ข่าวจากท่าเรือ").length).toBeGreaterThan(0);
+    fireEvent.click(screen.getAllByRole("button", { name: "Campaign Log" })[0]);
+    expect(screen.getAllByText("เงาที่ท่าเรือคิอิ").length).toBeGreaterThan(0);
+  });
+
   it("moves from Campaign 1 through Play, local roll, Log, Save, and Load without GM or credit backend calls", () => {
     render(<Home />);
     expect(mocks.creditsQuery).toHaveBeenCalledWith(undefined, expect.objectContaining({ enabled: false }));
