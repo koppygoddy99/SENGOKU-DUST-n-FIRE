@@ -12,7 +12,9 @@
 - [x] ตรวจและทดสอบการเลือก fact cards ของ AI GM จากคำบรรยายไทยเรื่องตลาด เอกสาร ด่าน และสงคราม
 - [x] ทดสอบ historicalFence ให้แยกข้อเท็จจริง บริบทตามพื้นที่ เรื่องสมมติ และข้อมูลไม่พอได้ชัดเจน
 - [x] รัน live smoke หลังแก้ mapping fact cards และบันทึกผลฉากไทยเรื่องตลาด เอกสาร ด่าน และสงคราม
-- [ ] ทดสอบข้อความ historicalFence ที่ผู้เล่นเห็นสำหรับ fact-supported contextual-play campaign-fiction และ insufficient-evidence
+- [x] ทดสอบข้อความ historicalFence ที่ผู้เล่นเห็นสำหรับ fact-supported contextual-play campaign-fiction และ insufficient-evidence
+- [x] แสดง historicalFence และ historicalStatus ของ AI GM ในหน้าเล่นเกมก่อนและหลังทอยโดยไม่เรียกข้อความนี้ว่า "พยาน"
+- [x] แสดง historicalFence และ historicalStatus ของผล AI GM หลังทอยบนหน้าเล่นเกมทันที พร้อม regression test
 - [x] บันทึก live output ที่แสดงทั้ง historicalFence และ historicalStatus ของ AI GM จริง
 - [x] จำกัดความยาวฟิลด์ข้อความของผล AI GM ก่อนตรวจ schema เพื่อให้ live output ไม่ล้มเมื่อโมเดลตอบยาวเกินกำหนด
 - [x] คุมค่า axis difficulty และ context bonus จาก AI GM ให้อยู่ในช่วงกติกาก่อนตรวจ schema
@@ -37,8 +39,10 @@
 - [x] ลดองค์ประกอบ UI ที่ทำให้อ่านยากหรือดูหลอน พร้อมตรวจคอนทราสต์ ลำดับสายตา และมือถือ
 - [x] ทดสอบเส้นทาง New Game → Play → Roll → Mission/Status → Save → Load → Log
 - [x] เพิ่มเครดิตเริ่มต้น 50 เครดิตต่อบัญชีเมื่อพัฒนาระบบล็อกอินและข้อมูลผู้เล่น
-- [ ] ตรวจและเพิ่มคอลัมน์ trialCredits อย่างปลอดภัยสำหรับฐานข้อมูลที่มีตาราง users อยู่แล้ว
-- [ ] ยืนยันการอ่านและหักเครดิตทดลองกับฐานข้อมูลจริงโดยไม่แตะข้อมูลผู้เล่นอื่น
+- [x] ตรวจและเพิ่มคอลัมน์ trialCredits อย่างปลอดภัยสำหรับฐานข้อมูลที่มีตาราง users อยู่แล้ว
+- [x] ยืนยันการอ่านและหักเครดิตทดลองกับฐานข้อมูลจริงโดยไม่แตะข้อมูลผู้เล่นอื่น
+- [x] แก้ imports ของ Drizzle ใน helper เครดิตทดลองให้เรียกฐานข้อมูลจริงได้
+- [x] ปิด process ของ credit live smoke test หลังยืนยันการลบข้อมูลทดสอบแล้ว
 
 - [x] เพิ่มตัวเลือก Winter / ฤดูหนาว ในขั้นสร้างแคมเปญ และตรวจว่าบริบทแสดงผลตรงกัน
 

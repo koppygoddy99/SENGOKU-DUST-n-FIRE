@@ -118,6 +118,13 @@ export type WorldMemory = {
   tone: "teal" | "ochre" | "vermilion" | "navy";
 };
 
+export type HistoricalStatus = "fact-supported" | "contextual-play" | "campaign-fiction" | "insufficient-evidence";
+
+export type HistoricalBoundary = {
+  status: HistoricalStatus;
+  fence: string;
+};
+
 export type RollPreview = {
   action: string;
   isRiskOnly?: boolean;
@@ -130,6 +137,7 @@ export type RollPreview = {
   difficulty: 10 | 14 | 18 | 22;
   risks: string[];
   witnesses: string[];
+  historical?: HistoricalBoundary;
   canUseMomentum: boolean;
 };
 
@@ -171,6 +179,7 @@ export type GameState = {
   market: MarketOffer[];
   memories: WorldMemory[];
   rolls: RollRecord[];
+  historicalBoundary?: HistoricalBoundary & { tick: number };
   tick: number;
 };
 

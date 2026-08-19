@@ -2,7 +2,7 @@
  * Ledger of Ash: quiet paper, traceable consequence, and a narrative-first reading field.
  * Every view reads from the same local campaign state; no hidden backend state is implied.
  */
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, ArrowRight, BookOpen, Check, ChevronRight, Eye, EyeOff, Languages, Menu, Moon, PanelLeftClose, PanelLeftOpen, Plus, RotateCcw, Search, Sun, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -75,6 +75,27 @@ function label(language: Language, en: string, th: string) {
 
 function titleCase(value: string) {
   return value.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+export function historicalStatusLabel(status: NonNullable<RollPreview["historical"]>["status"], language: Language) {
+  const labels = {
+    "fact-supported": ["Fact-supported", "มีหลักฐานรองรับ"],
+    "contextual-play": ["Contextual play", "ใช้บริบทประวัติศาสตร์"],
+    "campaign-fiction": ["Campaign fiction", "เรื่องแต่งในแคมเปญ"],
+    "insufficient-evidence": ["Evidence limited", "หลักฐานยังไม่พอ"],
+  } as const;
+  return labels[status][language === "en" ? 0 : 1];
+}
+
+function historicalTone(status: NonNullable<RollPreview["historical"]>["status"]) {
+  if (status === "fact-supported") return "teal" as const;
+  if (status === "contextual-play") return "ochre" as const;
+  if (status === "campaign-fiction") return "vermilion" as const;
+  return "navy" as const;
+}
+
+export function withHistoricalBoundary(game: GameState, historical: NonNullable<RollPreview["historical"]>): GameState {
+  return { ...game, historicalBoundary: { ...historical, tick: game.tick } };
 }
 
 function toGMContext(game: GameState) {
@@ -307,7 +328,7 @@ function PlayView({ game, language, open, onUpdate, isAuthenticated, onLogin, on
       onSuccess: (answer) => {
         const fallback = parseAction(action, game);
         const mastery = answer.suggestedMastery ? game.character.masteries.find((entry) => entry.label.toLowerCase().includes(answer.suggestedMastery!.toLowerCase()) || answer.suggestedMastery!.toLowerCase().includes(entry.label.toLowerCase())) : undefined;
-        setPreview({ ...fallback, isRiskOnly: false, intent: answer.intentSummary, method: answer.confirmation, axis: answer.axis, mastery, contextBonus: answer.contextBonus, contextReason: answer.contextReason, difficulty: answer.difficulty as RollPreview["difficulty"], risks: [answer.risk], witnesses: [answer.historicalFence] });
+        setPreview({ ...fallback, isRiskOnly: false, intent: answer.intentSummary, method: answer.confirmation, axis: answer.axis, mastery, contextBonus: answer.contextBonus, contextReason: answer.contextReason, difficulty: answer.difficulty as RollPreview["difficulty"], risks: [answer.risk], witnesses: [], historical: { status: answer.historicalStatus, fence: answer.historicalFence } });
         setGmNote(label(language, "AI GM interpretation ready. You may revise the action before the roll.", "AI GM อ่านการกระทำเสร็จแล้ว แก้ประโยคได้ก่อนยืนยันการทอย"));
       },
       onError: () => { localPreview(true); setGmNote(label(language, "The GM could not be reached, so the local rules engine prepared a safe preview instead.", "ติดต่อ AI GM ไม่ได้ ระบบกติกาในเครื่องจึงเตรียมการวิเคราะห์สำรองให้")); },
@@ -323,9 +344,9 @@ function PlayView({ game, language, open, onUpdate, isAuthenticated, onLogin, on
     resolveGM.mutate({ language, context: toGMContext(game), action, roll: { outcome: record.outcome, total: record.total, difficulty: record.difficulty, summary: record.summary, consequence: record.consequence ?? null } }, {
       onSuccess: (answer) => {
         const withNarration: GameState = {
-          ...resolved,
+          ...withHistoricalBoundary(resolved, { status: answer.historicalStatus, fence: answer.historicalFence }),
           currentScene: { ...resolved.currentScene, title: answer.sceneTitle, body: answer.narration, prompt: answer.missionNote, suggestedActions: answer.nextChoices },
-          memories: [...resolved.memories, { id: `gm-memory-${Date.now()}`, kind: "news", title: answer.memory.title, detail: answer.memory.detail, tone: answer.memory.tone, tick: resolved.tick }],
+          memories: [...resolved.memories, { id: `gm-memory-${Date.now()}`, kind: "news", title: answer.memory.title, detail: answer.memory.detail, tone: answer.memory.tone, tick: resolved.tick }, { id: `gm-history-${Date.now()}`, kind: "witness", title: label(language, `Historical boundary · ${historicalStatusLabel(answer.historicalStatus, "en")}`, `ขอบเขตประวัติศาสตร์ · ${historicalStatusLabel(answer.historicalStatus, "th")}`), detail: answer.historicalFence, tone: historicalTone(answer.historicalStatus), tick: resolved.tick }],
         };
         spendCredit.mutate({ amount: 1 }, {
           onSuccess: ({ credits }) => {
@@ -344,16 +365,21 @@ function PlayView({ game, language, open, onUpdate, isAuthenticated, onLogin, on
   };
   return <div className="page game-view"><div className="game-toolbar"><div><SectionKicker>{label(language, `PLAYING · LEAF ${game.tick}`, `กำลังเล่น · หน้าที่ ${game.tick}`)}</SectionKicker><strong>{game.campaign.title} · {game.currentScene.location}</strong></div><div className="game-toolbar__actions"><button onClick={() => open("save")}><SengokuIcon name="log" size={15} tone="ochre" /> {label(language, "Save", "เซฟ")}</button><button onClick={() => open("load")}><SengokuIcon name="document" size={15} tone="navy" /> {label(language, "Load", "โหลด")}</button><span className="credit-inline"><SengokuIcon name="credit" size={15} tone="ochre" /> {game.credits}</span></div></div>
     {lastRoll && <div className="quick-log"><span>LEAF {lastRoll.tick}</span><strong>{lastRoll.summary}</strong><i>2d12: {lastRoll.dice.join(" + ")} · {lastRoll.total} / DN {lastRoll.difficulty}</i><i>{lastRoll.momentumSpent ? "+2 momentum spent" : "no momentum"}</i><b>{titleCase(lastRoll.outcome)}</b></div>}
+    {game.historicalBoundary?.tick === game.tick && <HistoricalBoundaryPanel historical={game.historicalBoundary} language={language} resolved />}
     <section className="game-paper"><div className="game-paper__header"><span><SengokuIcon name="memory" tone="vermilion" /> {game.currentScene.title}</span><button onClick={() => open("log")}><SengokuIcon name="log" size={16} tone="navy" /> {label(language, "Campaign Log", "บันทึกเรื่องราว")}</button></div><div className="scene-context"><SengokuIcon name="history" tone="ochre" /><span>{game.currentScene.publicContext}</span></div><div className="game-story">{game.currentScene.body.map((paragraph, index) => <p key={`${game.currentScene.id}-${index}`}>{paragraph}</p>)}<p className="reader-question">{game.currentScene.prompt}</p></div><div className="scene-suggestions">{game.currentScene.suggestedActions.map((suggestion) => <button key={suggestion} onClick={() => setAction(suggestion)}>{suggestion}<ArrowRight size={14} /></button>)}</div>
       <div className="action-dock"><div className="action-tabs"><button className={!preview ? "active" : ""} onClick={() => setPreview(null)}>{label(language, "Your action", "การกระทำของเจ้า")}</button><button className={preview ? "active" : ""} onClick={() => action.trim() && analyze(true)}>{label(language, "Confirm the roll", "ยืนยันก่อนทอย")}</button></div><div className={`gm-consult ${isAuthenticated ? "is-ready" : ""}`}><span><SengokuIcon name="relation" tone={isAuthenticated ? "teal" : "ochre"} /> {isAuthenticated ? label(language, "AI GM will read this campaign record before you roll.", "AI GM จะอ่านระเบียนแคมเปญนี้ก่อนเจ้ายืนยันการทอย") : label(language, "Local rules are playable now. Sign in to ask the AI GM for a contextual ruling.", "กติกาในเครื่องเล่นได้ทันที เข้าสู่ระบบเพื่อขอคำวินิจฉัยจาก AI GM")}</span>{!isAuthenticated && <button onClick={onLogin}>{label(language, "SIGN IN FOR AI GM", "เข้าสู่ระบบเพื่อใช้ AI GM")}</button>}</div>{gmNote && <p className="gm-note">{gmNote}</p>}<label className="action-field"><span>{label(language, "Say what you will do in one sentence", "บอกสิ่งที่เจ้าจะทำเพียงหนึ่งประโยค")}</span><textarea value={action} placeholder={label(language, "For example: I will use the ledger to ask the scribe for time.", "ตัวอย่าง: ข้าจะใช้บัญชีข้าวขอเวลาเจรจากับเสมียน") } onChange={(event) => { setAction(event.target.value); setPreview(null); setGmNote(""); }} /></label>
       {!preview ? <div className="action-dock__bottom"><p>{label(language, "Assess risk shows only the pressure. Analyze action asks the GM for a contextual interpretation that you may correct once before rolling.", "ประเมินความยากจะแสดงเพียงแรงกดดัน ส่วนวิเคราะห์การกระทำจะให้ GM อ่านบริบทเพื่อให้แก้ได้หนึ่งครั้งก่อนทอย")}</p><div className="action-actions"><Button className="df-button df-button--ghost" onClick={() => analyze(false)} disabled={!action.trim() || analyzeGM.isPending}><EyeOff size={16} /> {label(language, "ASSESS RISK", "ประเมินความยาก")}</Button><Button className="df-button df-button--primary" onClick={() => analyze(true)} disabled={!action.trim() || analyzeGM.isPending}><Eye size={16} /> {analyzeGM.isPending ? label(language, "GM IS READING…", "GM กำลังอ่าน…") : label(language, "ASK THE GM", "ถาม AI GM")}</Button></div></div> : <RollPreviewPanel preview={preview} language={language} momentum={game.character.vitals.momentum} spendMomentum={spendMomentum} setSpendMomentum={setSpendMomentum} onCancel={() => setPreview(null)} onResolve={resolve} isResolving={resolveGM.isPending} />}</div></section>
   </div>;
 }
 
-function RollPreviewPanel({ preview, language, momentum, spendMomentum, setSpendMomentum, onCancel, onResolve, isResolving }: { preview: RollPreview; language: Language; momentum: number; spendMomentum: boolean; setSpendMomentum: (value: boolean) => void; onCancel: () => void; onResolve: () => void; isResolving: boolean }) {
+export function RollPreviewPanel({ preview, language, momentum, spendMomentum, setSpendMomentum, onCancel, onResolve, isResolving }: { preview: RollPreview; language: Language; momentum: number; spendMomentum: boolean; setSpendMomentum: (value: boolean) => void; onCancel: () => void; onResolve: () => void; isResolving: boolean }) {
   const axis = AXES.find((entry) => entry.id === preview.axis);
   const isRiskOnly = Boolean(preview.isRiskOnly);
-  return <div className="roll-preview-panel"><div className="preview-grid"><div><small>{label(language, "Intent", "เจตนา")}</small><strong>{preview.intent}</strong></div><div><small>{label(language, "Method", "วิธี")}</small><strong>{preview.method}</strong></div><div><small>{label(language, "Difficulty", "ระดับความยาก")}</small><strong>DN {preview.difficulty}</strong></div>{!isRiskOnly && <><div><small>{label(language, "Axis", "แกนทอย")}</small><strong>{language === "en" ? axis?.en : axis?.th}</strong></div><div><small>{label(language, "Mastery", "ความชำนาญ")}</small><strong>{preview.mastery?.label ?? label(language, "None", "ไม่มี") } +{preview.mastery?.level ?? 0}</strong></div><div><small>{label(language, "Context", "โบนัสบริบท")}</small><strong>{preview.contextReason ? `${preview.contextReason} +${preview.contextBonus}` : label(language, "No bonus", "ไม่มีโบนัส")}</strong></div></>}</div><div className="risk-strip"><CircleList title={label(language, "Visible risks", "ความเสี่ยงที่เห็น")} values={preview.risks} /><CircleList title={label(language, "Witnesses", "พยาน")} values={preview.witnesses} /></div>{isRiskOnly ? <div className="credit-confirm"><p>{label(language, "Risk assessment does not reveal which trait or mastery the engine would use. Choose Analyze Action when ready to verify that interpretation.", "การประเมินความยากจะไม่เฉลยแกนหรือความชำนาญ กดวิเคราะห์การกระทำเมื่อพร้อมตรวจความเข้าใจของระบบ")}</p><Button className="df-button df-button--ghost" onClick={onCancel}>{label(language, "REVISE ACTION", "แก้การกระทำ")}</Button></div> : <div className="roll-confirmation"><label className="momentum-check"><input type="checkbox" checked={spendMomentum} disabled={momentum <= 0 || isResolving} onChange={(event) => setSpendMomentum(event.target.checked)} /><span>{label(language, "Spend 1 Momentum for +2 after the roll", "ใช้แรงฮึด 1 เพื่อ +2 หลังทอย") } · {momentum}/2</span></label><div className="action-actions"><Button className="df-button df-button--ghost" onClick={onCancel} disabled={isResolving}>{label(language, "REVISE", "แก้ความเข้าใจ")}</Button><Button className="df-button df-button--primary" onClick={onResolve} disabled={isResolving}>{isResolving ? label(language, "GM RECORDING…", "GM กำลังบันทึก…") : label(language, "CONFIRM & ROLL · 1 CREDIT", "ยืนยันและทอย · 1 เครดิต")} <ArrowRight size={16} /></Button></div></div>}</div>;
+  return <div className="roll-preview-panel"><div className="preview-grid"><div><small>{label(language, "Intent", "เจตนา")}</small><strong>{preview.intent}</strong></div><div><small>{label(language, "Method", "วิธี")}</small><strong>{preview.method}</strong></div><div><small>{label(language, "Difficulty", "ระดับความยาก")}</small><strong>DN {preview.difficulty}</strong></div>{!isRiskOnly && <><div><small>{label(language, "Axis", "แกนทอย")}</small><strong>{language === "en" ? axis?.en : axis?.th}</strong></div><div><small>{label(language, "Mastery", "ความชำนาญ")}</small><strong>{preview.mastery?.label ?? label(language, "None", "ไม่มี") } +{preview.mastery?.level ?? 0}</strong></div><div><small>{label(language, "Context", "โบนัสบริบท")}</small><strong>{preview.contextReason ? `${preview.contextReason} +${preview.contextBonus}` : label(language, "No bonus", "ไม่มีโบนัส")}</strong></div></>}</div><div className="risk-strip"><CircleList title={label(language, "Visible risks", "ความเสี่ยงที่เห็น")} values={preview.risks} /></div>{preview.historical && <HistoricalBoundaryPanel historical={preview.historical} language={language} />}{isRiskOnly ? <div className="credit-confirm"><p>{label(language, "Risk assessment does not reveal which trait or mastery the engine would use. Choose Analyze Action when ready to verify that interpretation.", "การประเมินความยากจะไม่เฉลยแกนหรือความชำนาญ กดวิเคราะห์การกระทำเมื่อพร้อมตรวจความเข้าใจของระบบ")}</p><Button className="df-button df-button--ghost" onClick={onCancel}>{label(language, "REVISE ACTION", "แก้การกระทำ")}</Button></div> : <div className="roll-confirmation"><label className="momentum-check"><input type="checkbox" checked={spendMomentum} disabled={momentum <= 0 || isResolving} onChange={(event) => setSpendMomentum(event.target.checked)} /><span>{label(language, "Spend 1 Momentum for +2 after the roll", "ใช้แรงฮึด 1 เพื่อ +2 หลังทอย") } · {momentum}/2</span></label><div className="action-actions"><Button className="df-button df-button--ghost" onClick={onCancel} disabled={isResolving}>{label(language, "REVISE", "แก้ความเข้าใจ")}</Button><Button className="df-button df-button--primary" onClick={onResolve} disabled={isResolving}>{isResolving ? label(language, "GM RECORDING…", "GM กำลังบันทึก…") : label(language, "CONFIRM & ROLL · 1 CREDIT", "ยืนยันและทอย · 1 เครดิต")} <ArrowRight size={16} /></Button></div></div>}</div>;
+}
+
+export function HistoricalBoundaryPanel({ historical, language, resolved = false }: { historical: NonNullable<RollPreview["historical"]>; language: Language; resolved?: boolean }) {
+  return <section className={`historical-boundary historical-boundary--${historical.status} ${resolved ? "historical-boundary--resolved" : ""}`}><div className="historical-boundary__heading"><small>{label(language, resolved ? "HISTORICAL RECORD" : "HISTORICAL BOUNDARY", resolved ? "บันทึกขอบเขตประวัติศาสตร์" : "ขอบเขตประวัติศาสตร์")}</small><span>{historicalStatusLabel(historical.status, language)}</span></div><p>{historical.fence}</p></section>;
 }
 
 function CircleList({ title, values }: { title: string; values: string[] }) { return <div><small>{title}</small>{values.map((value) => <span key={value}>• {value}</span>)}</div>; }
