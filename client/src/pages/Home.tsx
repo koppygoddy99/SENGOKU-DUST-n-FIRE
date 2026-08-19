@@ -16,6 +16,7 @@ import {
   STARTER_TEMPLATES,
   applyRoll,
   buyMarketOffer,
+  createSaikaSafehouseDemo,
   createGameState,
   parseAction,
   resolveRoll,
@@ -31,39 +32,15 @@ type FontSize = "small" | "normal" | "large";
 type Accent = "vermilion" | "ochre" | "teal";
 type SaveLeaves = { manual: GameState | null; leaf2: GameState | null; leaf3: GameState | null };
 
-const STORAGE_KEY = "dust-fire-local-game-v2";
+const STORAGE_KEY = "dust-fire-local-game-v3-saika";
+const LEGACY_STORAGE_KEYS = ["dust-fire-local-game-v1", "dust-fire-local-game-v2"];
 const seasons: Season[] = ["Spring", "Summer", "Autumn", "Winter"];
 const seasonThai: Record<Season, string> = { Spring: "วสันต์", Summer: "คิมหันต์", Autumn: "สารท", Winter: "เหมันต์" };
 const regionOptions = ["Mikawa", "Omi", "Owari", "Sakai", "Izumi", "Iga", "Koga", "Kii", "Yamashiro", "Settsu", "Musashi", "Iyo", "Shima"];
 
-const seedDraft: CharacterDraft = {
-  name: "ซาโตะ",
-  identity: "ผู้เล่นกำหนด",
-  templateId: "ronin",
-  freeformOccupation: "",
-  origin: "เคยรับใช้กองทัพชายแดนมาก่อน",
-  strength: "จำทางหนีและอ่านอันตรายได้ไว",
-  weakness: "ไม่กล้าปฏิเสธคนที่เคยช่วยชีวิต",
-  answers: {
-    first_survivor: "น้องชายที่ยังอยู่ในหมู่บ้าน",
-    stance: "ยังไม่ยืนข้างใครถาวร",
-    never_surrender: "บัญชีข้าวของหมู่บ้าน",
-    debts: "ติดหนี้คนเรือที่พาข้ามฟาก",
-    hidden_knowledge: "รู้ว่ามีเส้นทางน้ำเลี่ยงด่าน",
-    sacrifice: "ชื่อเสียงของตนเอง",
-  },
-};
+const seedDraft: CharacterDraft = { name: "ผู้ไร้นาม", identity: "ผู้เล่นกำหนด", templateId: "ronin", freeformOccupation: "", origin: "เส้นทางชายแดน", strength: "อ่านทางหนีและอันตรายได้ไว", weakness: "มีหนี้ที่ยังไม่กล้าพูดถึง", answers: {} };
 
-const seedGame = () => createGameState({
-  id: "camp-local-demo",
-  title: "Ash over Kinokawa",
-  year: 1578,
-  season: "Summer",
-  region: "Mikawa",
-  location: "ค่ายชายแดนและตลาดหน้าด่าน",
-  warShadow: 3,
-  day: 1,
-}, seedDraft);
+const seedGame = () => createSaikaSafehouseDemo();
 
 function copyState<T>(value: T): T {
   return JSON.parse(JSON.stringify(value)) as T;
@@ -188,7 +165,7 @@ export default function Home() {
 
   const [page, setPage] = useState<PageId>("home");
   const [game, setGame] = useState<GameState>(seedGame);
-  const [saves, setSaves] = useState<SaveLeaves>({ manual: null, leaf2: null, leaf3: null });
+  const [saves, setSaves] = useState<SaveLeaves>(() => ({ manual: copyState(seedGame()), leaf2: null, leaf3: null }));
   const [language, setLanguage] = useState<Language>("en");
   const [readerMode, setReaderMode] = useState(true);
   const [darkMode, setDarkMode] = useState(false);
@@ -202,6 +179,7 @@ export default function Home() {
 
   useEffect(() => {
     try {
+      LEGACY_STORAGE_KEYS.forEach((key) => window.localStorage.removeItem(key));
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const saved = JSON.parse(raw) as Partial<{ game: GameState; saves: SaveLeaves; language: Language; readerMode: boolean; darkMode: boolean; fontSize: FontSize; accent: Accent }>;
@@ -243,7 +221,7 @@ export default function Home() {
     if (!source) { setNotice("This leaf is still blank"); return; }
     setGame(copyState(source)); setNotice(`${slot === "auto" ? "Auto Save" : "Saved leaf"} restored at Leaf ${source.tick}`); open("play");
   };
-  const resetLocal = () => { window.localStorage.removeItem(STORAGE_KEY); setGame(seedGame()); setSaves({ manual: null, leaf2: null, leaf3: null }); setNotice("Local records cleared · a fresh example campaign is ready"); };
+  const resetLocal = () => { const demo = seedGame(); window.localStorage.removeItem(STORAGE_KEY); setGame(demo); setSaves({ manual: copyState(demo), leaf2: null, leaf3: null }); setNotice("Local records cleared · Saika safehouse example is ready"); };
 
   return <div className={appClass}>
     <header className="topbar">

@@ -22,6 +22,7 @@ vi.mock("@/const", () => ({ startLogin: vi.fn() }));
 vi.mock("@/lib/trpc", () => ({ trpc: { profile: { credits: { useQuery: mocks.creditsQuery }, spendCredit: { useMutation: mocks.spendCredit } }, gm: { analyze: { useMutation: mocks.gmAnalyze }, resolve: { useMutation: mocks.gmResolve } } } }));
 
 import Home from "./Home";
+import { createSaikaSafehouseDemo } from "../lib/game";
 
 describe("UI Preview click flow", () => {
   beforeEach(() => {
@@ -29,6 +30,32 @@ describe("UI Preview click flow", () => {
     vi.clearAllMocks();
   });
   afterEach(cleanup);
+
+  it("loads the 1569 Saika safehouse save into Play and Campaign Log", () => {
+    render(<Home />);
+    expect(screen.getByText("1569")).toBeTruthy();
+    expect(screen.getAllByText("Sakai / Izumi").length).toBeGreaterThan(0);
+    expect(screen.getByText("ซาเนฟุยุ")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /try ui preview/i }));
+    expect(screen.getAllByText("คำตอบใต้ห้องขัง").length).toBeGreaterThan(0);
+    expect(screen.getByText(/เซฟเฮาส์ลับของไซกะ/i)).toBeTruthy();
+    fireEvent.click(screen.getAllByRole("button", { name: "Campaign Log" })[0]);
+    expect(screen.getAllByText("คืนที่เมืองซาไกตื่น").length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/กันทาโร่/).length).toBeGreaterThan(0);
+  });
+
+  it("restores the Saika example from Local Save through Load Game before opening Play and Campaign Log", () => {
+    const restored = createSaikaSafehouseDemo();
+    restored.tick = 4;
+    window.localStorage.setItem("dust-fire-local-game-v3-saika", JSON.stringify({ game: restored, saves: { manual: restored, leaf2: null, leaf3: null }, language: "en", readerMode: true, darkMode: false, fontSize: "normal", accent: "vermilion" }));
+    render(<Home />);
+    fireEvent.click(screen.getByRole("button", { name: "Load Game" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "LOAD" })[1]);
+    expect(screen.getAllByText(/UI PREVIEW · LEAF 4/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText("คำตอบใต้ห้องขัง").length).toBeGreaterThan(0);
+    fireEvent.click(screen.getAllByRole("button", { name: "Campaign Log" })[0]);
+    expect(screen.getAllByText("คืนที่เมืองซาไกตื่น").length).toBeGreaterThan(0);
+  });
 
   it("moves from Campaign 1 through Play, local roll, Log, Save, and Load without GM or credit backend calls", () => {
     render(<Home />);
