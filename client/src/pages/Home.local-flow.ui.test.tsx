@@ -27,9 +27,13 @@ import { createSaikaSafehouseDemo } from "../lib/game";
 describe("UI Preview click flow", () => {
   beforeEach(() => {
     window.localStorage.clear();
+    window.history.replaceState({}, "", "/");
     vi.clearAllMocks();
   });
-  afterEach(cleanup);
+  afterEach(() => {
+    cleanup();
+    window.history.replaceState({}, "", "/");
+  });
 
   it("loads the 1569 Saika safehouse save into Play and Campaign Log", () => {
     render(<Home />);
@@ -117,6 +121,16 @@ describe("UI Preview click flow", () => {
     expect(screen.getByText("หนี้ชีวิตจากการลากซาเนฟุยุขึ้นจากน้ำ")).toBeTruthy();
     fireEvent.click(screen.getAllByRole("button", { name: "Exchange history" })[0]);
     expect(screen.getByText("กันทาโร่ลากซาเนฟุยุขึ้นจากน้ำ")).toBeTruthy();
+  });
+
+  it("migrates a legacy Local Save before opening This market through the review URL", async () => {
+    const legacy = JSON.parse(JSON.stringify(createSaikaSafehouseDemo())) as { economy?: unknown };
+    delete legacy.economy;
+    window.localStorage.setItem("dust-fire-local-game-v3-saika", JSON.stringify({ game: legacy, saves: { manual: legacy, leaf2: null, leaf3: null }, language: "en", readerMode: true, darkMode: false, fontSize: "normal", accent: "vermilion" }));
+    window.history.replaceState({}, "", "/?review=market");
+    render(<Home />);
+    await waitFor(() => expect(screen.getByRole("heading", { name: /Markets are made of people/i })).toBeTruthy());
+    expect(screen.getAllByText(/Seller network:/i).length).toBeGreaterThan(0);
   });
 
   it("returns to the Campaign Overview page from the Campaign Sidebar", () => {

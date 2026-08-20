@@ -396,6 +396,14 @@ export function createSaikaSafehouseDemo(): GameState {
   return { schemaVersion: 2, credits: 50, campaign, character, community: { food: 2, labor: 2, voice: 1, safety: 1, cohesion: 2, lastChange: "เมืองซาไกเพิ่มเวรยามและตรวจเรือ" }, currentScene: opening, missions: [mission], market: buildSaikaMarket(), economy: buildSaikaEconomy(), memories: [{ id: "memory-saika-opening", kind: "stain", title: "คืนที่เมืองซาไกตื่น", detail: opening.body.join("\n\n"), tick: 1, tone: "vermilion" }], rolls: [], tick: 1 };
 }
 
+export function normalizeGameState(state: GameState): GameState {
+  if (state.economy) return state;
+  return {
+    ...state,
+    economy: state.campaign.id === "camp-saika-1569" ? buildSaikaEconomy() : buildCampaignEconomy(state.campaign),
+  };
+}
+
 function buildCampaignEconomy(context: CampaignContext): EconomyState {
   return { marketTitle: `ตลาดใกล้ ${context.location}`, marketContext: `ข้อเสนอใน ${context.season} ผูกกับเส้นทางและแรงกดดันของแคมเปญ ไม่ใช่รายการสินค้าสากล`, routeStatus: "เส้นทางยังเปิด แต่ผู้เดินทางถูกซักถาม", sellerNetwork: "พ่อค้าท้องถิ่น คนงานขนของ และคนกลางของชุมชน", services: [{ id: "local-messenger", provider: "คนส่งสารท้องถิ่น", role: "ข่าวสารและเอกสาร", affiliation: "เครือข่ายตลาด", request: "นำห่อเล็กไปยังจุดนัดหมาย", price: "ทรัพย์สิน 2 หรือคำรับรอง", timeCost: "หนึ่งวัน", requirement: "ไม่เปิดเผยชื่อผู้รับต่อหน้าคนแปลกหน้า", witnessRisk: "คนส่งสารจำชื่อผู้ว่าจ้างได้", availability: "available" }], obligations: [], transactions: [] };
 }

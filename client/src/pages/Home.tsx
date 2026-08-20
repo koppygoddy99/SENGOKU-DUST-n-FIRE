@@ -20,6 +20,7 @@ import {
   buyMarketOffer,
   createSaikaSafehouseDemo,
   createGameState,
+  normalizeGameState,
   parseAction,
   resolveRoll,
   type CharacterDraft,
@@ -177,6 +178,13 @@ function GhostLink({ children, onClick }: { children: React.ReactNode; onClick?:
   return <button className="ghost-link" onClick={onClick}>{children} <ChevronRight size={15} /></button>;
 }
 
+function reviewPageFromUrl(): PageId {
+  if (typeof window === "undefined") return "home";
+  const requested = new URLSearchParams(window.location.search).get("review");
+  const pages: PageId[] = ["home", "campaigns", "start", "play", "missions", "market", "localmarket", "gear", "services", "obligations", "exchanges", "character", "log", "archive", "save", "load", "settings"];
+  return pages.includes(requested as PageId) ? requested as PageId : "home";
+}
+
 export default function Home({ forceUiPreviewMode }: { forceUiPreviewMode?: boolean } = {}) {
   // The useAuth hook provides authentication state.
   // To implement login/logout, call logout(), or start login from an event
@@ -187,7 +195,7 @@ export default function Home({ forceUiPreviewMode }: { forceUiPreviewMode?: bool
   const uiPreviewMode = forceUiPreviewMode ?? true;
   const accountCredits = trpc.profile.credits.useQuery(undefined, { enabled: shouldFetchProfileCredits(uiPreviewMode, isAuthenticated), retry: false });
 
-  const [page, setPage] = useState<PageId>("home");
+  const [page, setPage] = useState<PageId>(reviewPageFromUrl);
   const [game, setGame] = useState<GameState>(seedGame);
   const [saves, setSaves] = useState<SaveLeaves>(() => ({ manual: copyState(seedGame()), leaf2: null, leaf3: null }));
   const [campaignLibrary, setCampaignLibrary] = useState<Record<string, GameState>>(() => { const demo = seedGame(); return { [demo.campaign.id]: demo }; });
@@ -208,10 +216,15 @@ export default function Home({ forceUiPreviewMode }: { forceUiPreviewMode?: bool
       const raw = window.localStorage.getItem(STORAGE_KEY);
       if (raw) {
         const saved = JSON.parse(raw) as Partial<{ game: GameState; saves: SaveLeaves; campaignLibrary: Record<string, GameState>; language: Language; readerMode: boolean; darkMode: boolean; fontSize: FontSize; accent: Accent }>;
-        if (saved.game?.schemaVersion === 2) setGame(saved.game);
-        if (saved.saves) setSaves(saved.saves);
-        if (saved.campaignLibrary && Object.keys(saved.campaignLibrary).length) setCampaignLibrary(saved.campaignLibrary);
-        else if (saved.game?.schemaVersion === 2) setCampaignLibrary({ [saved.game.campaign.id]: saved.game });
+        const restoredGame = saved.game?.schemaVersion === 2 ? normalizeGameState(saved.game) : null;
+        const restoredSaves = saved.saves ? Object.fromEntries(Object.entries(saved.saves).map(([slot, save]) => [slot, save ? normalizeGameState(save) : null])) as SaveLeaves : null;
+        const restoredLibrary = saved.campaignLibrary && Object.keys(saved.campaignLibrary).length
+          ? Object.fromEntries(Object.entries(saved.campaignLibrary).map(([id, campaign]) => [id, normalizeGameState(campaign)])) as Record<string, GameState>
+          : null;
+        if (restoredGame) setGame(restoredGame);
+        if (restoredSaves) setSaves(restoredSaves);
+        if (restoredLibrary) setCampaignLibrary(restoredLibrary);
+        else if (restoredGame) setCampaignLibrary({ [restoredGame.campaign.id]: restoredGame });
         if (saved.language) setLanguage(saved.language);
         if (typeof saved.readerMode === "boolean") setReaderMode(saved.readerMode);
         if (typeof saved.darkMode === "boolean") setDarkMode(saved.darkMode);
