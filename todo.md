@@ -27,10 +27,10 @@
 - [ ] ทบทวนและปรับหน้าต่อไปทีละหน้าตามคำชี้จุดของผู้ใช้
 - [x] ออกแบบหน้าแผนที่สถานที่แบบ UI ให้เชื่อมกับบริบทแคมเปญโดยไม่บิดเบือนข้อมูลประวัติศาสตร์
 - [x] อ่าน Integrated Game and UX/UI Spec กับ UX/UI Audit ที่ผู้ใช้แนบ และแปลงเป็น architecture plan ที่ตรวจสอบได้
-- [ ] แยกโมดูลข้อมูลและส่วนประกอบ Story Map, Chronicle และ Play Scene ออกจาก Home.tsx โดยคง GameState/Local Save เดิม
+- [x] แยกโมดูลข้อมูลและส่วนประกอบ Story Map, Chronicle และ Play Scene ออกจาก Home.tsx โดยคง GameState/Local Save เดิม
 - [x] ลบ implementation Chronicle เดิมที่ค้างใน Home.tsx ให้ Chronicle module ใหม่เป็น implementation เดียว
 - [x] ลบ implementation overview เดิมที่ค้างใน Home.tsx ให้ Story Map module ใหม่เป็น implementation เดียว
-- [ ] ลบหรือย้าย implementation Play เดิมที่ค้างใน Home.tsx ให้เหลือเฉพาะ shell และ route wiring
+- [x] ลบหรือย้าย implementation Play เดิมที่ค้างใน Home.tsx ให้เหลือเฉพาะ shell และ route wiring
 - [x] ย้าย helper ที่ยังผูกกับ Home.tsx ไปยัง feature/shared ที่เหมาะสม แล้วรัน full regression suite หลัง cleanup
 - [x] สร้าง original paper-and-ink visual asset direction โดยไม่คัดลอกภาพ reference และไม่ใส่บุคคล
 - [x] พัฒนา Story Map ที่แสดงตำแหน่งแคมเปญ จุดหมาย และแรงกดดันที่มีผลต่อ GameState จริง
