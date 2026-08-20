@@ -8,17 +8,16 @@ describe("Campaign 1 navigation", () => {
     const html = renderToStaticMarkup(<CampaignNavigation campaignTitle="Ash over Kinokawa" language="en" page="home" expanded={false} onToggle={() => undefined} onOpen={() => undefined} />);
     expect(html).toContain("Ash over Kinokawa");
     expect(html).toContain('aria-expanded="false"');
-    expect(html).not.toContain(">Play<");
-    expect(html).toContain(">New Campaign<");
+    expect(html).not.toContain(">Story<");
+    expect(html).not.toContain(">Campaign Command<");
   });
 
-  it("renders the market parent with its five nested ledgers and marks an active market child", () => {
+  it("opens the Prepare group with its campaign ledgers and marks the active child", () => {
     const html = renderToStaticMarkup(<CampaignNavigation campaignTitle="Ash over Kinokawa" language="en" page="localmarket" expanded onToggle={() => undefined} onOpen={() => undefined} />);
     expect(html).toContain('aria-expanded="true"');
-    ["Play", "Missions", "Market &amp; gear", "Carried gear", "This market", "Services &amp; hands", "Credit, debts &amp; favors", "Exchange history", "Character", "Campaign Overview", "Campaign Log", "World Archive", "Save Game", "Load Game"].forEach((item) => expect(html).toContain(`>${item}<`));
-    expect(html).toContain("market-nav__children");
-    expect(html).toContain("nav-item--market-parent");
-    expect(html).toContain("nav-item--market-child nav-item--active");
-    expect(html.indexOf("Campaign Overview")).toBeLessThan(html.indexOf("Campaign Log"));
+    ["Prepare", "Character Dossier", "Carried Gear", "This Market", "Services &amp; Hands", "Debts &amp; Favors", "Exchange History"].forEach((item) => expect(html).toContain(`>${item}<`));
+    expect(html).toContain("campaign-nav__items");
+    expect(html).toContain("nav-item--child nav-item--active");
+    expect(html).not.toContain(">Campaign Command<");
   });
 });

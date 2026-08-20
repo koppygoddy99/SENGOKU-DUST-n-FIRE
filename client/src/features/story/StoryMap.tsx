@@ -25,25 +25,19 @@ export function StoryMap({ game, language, onOpen }: { game: GameState; language
   const activeMission = game.missions.find((mission) => mission.state === "active" || mission.state === "offered");
   const lastRoll = game.rolls.at(-1);
   const recentMemories = game.memories.slice(-3).reverse();
-  const engineLabel = copy(language, "Story Engine: Local", "เครื่องยนต์เรื่องราว: ในเครื่อง");
-  const engineNote = copy(language, "Rules, dice, and saves stay with this campaign.", "กติกา ลูกเต๋า และบันทึกยังอยู่กับแคมเปญนี้");
 
   return <div className="page story-map-page">
     <header className="story-map__header">
       <div>
-        <p className="story-map__eyebrow">{copy(language, "STORY MAP · CAMPAIGN COMMAND", "แผนที่เรื่องราว · โต๊ะบัญชาการ")}</p>
-        <h1>{game.campaign.title}</h1>
-        <p className="story-map__meta">{game.campaign.year} · {seasonName(language, game.campaign.season)} · {game.currentScene.location}</p>
-      </div>
-      <div className="story-map__engine" aria-label={engineLabel}>
-        <span className="story-map__engine-dot" />
-        <div><strong>{engineLabel}</strong><small>{engineNote}</small></div>
+        <p className="story-map__eyebrow">{copy(language, "CAMPAIGN COMMAND", "บัญชาการแคมเปญ")}</p>
+        <h1>{copy(language, "Campaign Command", "บัญชาการแคมเปญ")}</h1>
+        <p className="story-map__meta"><strong>{game.campaign.title}</strong><span>·</span>{game.campaign.year} <span>·</span> {seasonName(language, game.campaign.season)} <span>·</span> {game.currentScene.location}</p>
       </div>
     </header>
 
     <section className="story-command-grid" aria-label={copy(language, "Campaign command desk", "โต๊ะบัญชาการแคมเปญ")}>
       <article className="story-map-card story-map-card--map">
-        <div className="story-map-card__heading"><span><MapPinned size={17} /> {copy(language, "WORLD MAP", "แผนที่โลก")}</span><small>{copy(language, "Campaign layer", "ชั้นข้อมูลแคมเปญ")}</small></div>
+        <div className="story-map-card__heading"><span><MapPinned size={17} /> {copy(language, "SITUATION MAP", "แผนที่สถานการณ์")}</span><small>{copy(language, "Known routes only", "เฉพาะเส้นทางที่ตัวละครรู้")}</small></div>
         <div className="story-map__surface" aria-label={copy(language, "Campaign map with current place, mission, and memory markers", "แผนที่แคมเปญที่มีตำแหน่งปัจจุบัน ภารกิจ และร่องรอยความทรงจำ")}>
           <span className="story-map__terrain story-map__terrain--north" />
           <span className="story-map__terrain story-map__terrain--south" />
@@ -56,7 +50,7 @@ export function StoryMap({ game, language, onOpen }: { game: GameState; language
           {recentMemories.slice(0, 2).map((memory, index) => <button key={memory.id} className={`story-map__marker story-map__marker--memory story-map__marker--memory-${index + 1}`} onClick={() => onOpen("archive")} aria-label={copy(language, `Read memory ${memory.title}`, `อ่านความทรงจำ ${memory.title}`)}><BookOpen size={15} /><i>{copy(language, "Memory", "ร่องรอย")}</i></button>)}
           <div className="story-map__legend"><span><b className="is-current" />{copy(language, "Current place", "ตำแหน่งปัจจุบัน")}</span><span><b className="is-mission" />{copy(language, "Mission pressure", "แรงกดดันภารกิจ")}</span><span><b className="is-memory" />{copy(language, "Recorded memory", "เรื่องที่ถูกจดจำ")}</span></div>
         </div>
-        <div className="story-map__map-footer"><p><ShieldAlert size={15} /> {copy(language, `War shadow ${game.campaign.warShadow}/6 · routes are campaign knowledge, not a claim of historical fact.`, `เงาสงคราม ${game.campaign.warShadow}/6 · เส้นทางเป็นความรู้ของแคมเปญ ไม่ใช่ข้อเท็จจริงทางประวัติศาสตร์`)}</p><button onClick={() => onOpen("archive")}>{copy(language, "Open World Index", "เปิดดัชนีโลก")} <ArrowRight size={15} /></button></div>
+        <div className="story-map__map-footer"><p><ShieldAlert size={15} /> {copy(language, `War shadow ${game.campaign.warShadow}/6 · this map shows campaign knowledge, not a claim of complete historical geography.`, `เงาสงคราม ${game.campaign.warShadow}/6 · แผนที่นี้คือความรู้ของแคมเปญ ไม่ใช่แผนที่ประวัติศาสตร์ฉบับสมบูรณ์`)}</p><button onClick={() => onOpen("archive")}>{copy(language, "Open World Archive", "เปิดคลังโลก")} <ArrowRight size={15} /></button></div>
       </article>
 
       <article className="story-map-card story-map-card--desk">
@@ -66,21 +60,13 @@ export function StoryMap({ game, language, onOpen }: { game: GameState; language
           <div><small>{copy(language, "LAST ROLL", "ผลทอยล่าสุด")}</small><strong>{lastRoll ? `${lastRoll.total} / DN ${lastRoll.difficulty}` : copy(language, "Awaiting intent", "รอเจตนา")}</strong></div>
         </div>
         <div className="story-map__consequence"><p className="story-map__eyebrow">{lastRoll ? outcomeLabel(lastRoll.outcome) : copy(language, "THE CURRENT LEAF", "หน้าปัจจุบัน")}</p><h2>{lastRoll?.summary ?? game.currentScene.title}</h2><p>{lastRoll?.consequence ?? game.currentScene.pressure}</p></div>
-        <Button className="df-button df-button--primary story-map__continue" onClick={() => onOpen("play")}><SengokuIcon name="sword" tone="ink" size={17} /> {copy(language, "CONTINUE STORY", "เล่นเรื่องต่อ")} <ArrowRight size={18} /></Button>
-      </article>
-
-      <aside className="story-map-card story-map-card--state">
-        <div className="story-map-card__heading"><span><ScrollText size={17} /> {copy(language, "CURRENT STATE", "สถานะปัจจุบัน")}</span><small>{copy(language, "Only what matters now", "เฉพาะสิ่งที่ใช้ตัดสินใจตอนนี้")}</small></div>
-        <dl className="story-map__state-list">
+        <dl className="story-map__condition-strip" aria-label={copy(language, "Current condition", "สภาพปัจจุบัน")}>
           <div><dt>{copy(language, "Wounds", "บาดแผล")}</dt><dd>{game.character.vitals.wounds}/6</dd></div>
           <div><dt>{copy(language, "Focus", "ค่าสติ")}</dt><dd>{game.character.vitals.focus}/6</dd></div>
           <div><dt>{copy(language, "Momentum", "แรงฮึด")}</dt><dd>{game.character.vitals.momentum}/2</dd></div>
-          <div><dt>{copy(language, "Property", "ทรัพย์สิน")}</dt><dd>{game.character.resources.property}</dd></div>
-          <div><dt>{copy(language, "Supplies", "เสบียง")}</dt><dd>{game.character.resources.supplies}</dd></div>
-          <div><dt>{copy(language, "Open obligations", "หนี้และบุญคุณค้าง")}</dt><dd>{game.economy?.obligations.filter((entry) => entry.status === "open").length ?? 0}</dd></div>
         </dl>
-        <button className="story-map__text-link" onClick={() => onOpen("character")}>{copy(language, "Review character dossier", "ดูแฟ้มตัวละคร")} <ArrowRight size={15} /></button>
-      </aside>
+        <Button className="df-button df-button--primary story-map__continue" onClick={() => onOpen("play")}><SengokuIcon name="sword" tone="ink" size={17} /> {copy(language, `Return to ${game.currentScene.location}`, `กลับสู่${game.currentScene.location}`)} <ArrowRight size={18} /></Button>
+      </article>
     </section>
 
     <section className="story-map__below">

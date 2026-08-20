@@ -16,6 +16,8 @@ import { StoryMap } from "@/features/story/StoryMap";
 import { PlayScene } from "@/features/play/PlayScene";
 import { ChronicleView } from "@/features/chronicle/ChronicleView";
 import { gmUnavailableLocalTrialNotice, historicalStatusLabel, openLocalPreview, saveLocalTrialResult, shouldFetchProfileCredits, shouldUseLocalRules, splitStoryParagraphs, withHistoricalBoundary } from "@/features/shared/gameplayHelpers";
+import { reviewPageFromSearch, reviewScreenFor, type PlayerPageId } from "@/lib/playerRoutes";
+import { buildReviewSeed } from "@/lib/reviewSeeds";
 export { ChronicleView as LogView } from "@/features/chronicle/ChronicleView";
 export { gmUnavailableLocalTrialNotice, historicalStatusLabel, openLocalPreview, saveLocalTrialResult, shouldFetchProfileCredits, shouldUseLocalRules, splitStoryParagraphs, withHistoricalBoundary } from "@/features/shared/gameplayHelpers";
 import {
@@ -35,7 +37,7 @@ import {
   type Season,
 } from "@/lib/game";
 
-export type PageId = "home" | "campaigns" | "start" | "play" | "missions" | "market" | "localmarket" | "gear" | "services" | "obligations" | "exchanges" | "character" | "log" | "archive" | "save" | "load" | "settings";
+export type PageId = PlayerPageId;
 type Language = "en" | "th";
 type FontSize = "small" | "normal" | "large";
 type Accent = "vermilion" | "ochre" | "teal";
@@ -103,39 +105,42 @@ function toGMContext(game: GameState) {
   };
 }
 
-const campaignNavItems: { id: PageId; en: string; th: string; icon: SengokuIconName }[] = [
-  { id: "play", en: "Play", th: "เล่นฉาก", icon: "sword" },
-  { id: "missions", en: "Missions", th: "ภารกิจ", icon: "compass" },
-  { id: "market", en: "Market & gear", th: "ตลาดและสัมภาระ", icon: "credit" },
-  { id: "gear", en: "Carried gear", th: "ของที่พกอยู่", icon: "character" },
-  { id: "localmarket", en: "This market", th: "ตลาดพื้นที่นี้", icon: "credit" },
-  { id: "services", en: "Services & hands", th: "บริการและคนรับจ้าง", icon: "relation" },
-  { id: "obligations", en: "Credit, debts & favors", th: "เครดิต / หนี้ / บุญคุณ", icon: "memory" },
-  { id: "exchanges", en: "Exchange history", th: "ประวัติการแลกเปลี่ยน", icon: "log" },
-  { id: "character", en: "Character", th: "ตัวละคร", icon: "character" },
-  { id: "home", en: "Campaign Overview", th: "ภาพรวมแคมเปญ", icon: "archive" },
-  { id: "log", en: "Campaign Log", th: "บันทึกเรื่องราว", icon: "log" },
-  { id: "archive", en: "World Archive", th: "คลังโลก", icon: "archive" },
-  { id: "save", en: "Save Game", th: "เซฟเกม", icon: "log" },
-  { id: "load", en: "Load Game", th: "โหลดเกม", icon: "document" },
-];
+type CampaignNavItem = { id: PageId; en: string; th: string; icon: SengokuIconName };
+type CampaignNavGroup = { id: "story" | "prepare" | "chronicle" | "more"; en: string; th: string; icon: SengokuIconName; items: CampaignNavItem[] };
 
-const primaryNavItems: { id: PageId; en: string; th: string; icon: SengokuIconName }[] = [
-  { id: "campaigns", en: "Campaigns", th: "แคมเปญทั้งหมด", icon: "archive" },
-];
-
-const utilityNavItems: { id: PageId; en: string; th: string; icon: SengokuIconName }[] = [
-  { id: "start", en: "New Campaign", th: "เริ่มแคมเปญใหม่", icon: "start" },
-  { id: "settings", en: "Settings", th: "ตั้งค่า", icon: "settings" },
+const campaignNavGroups: CampaignNavGroup[] = [
+  { id: "story", en: "Story", th: "เรื่องราว", icon: "sword", items: [
+    { id: "home", en: "Campaign Command", th: "บัญชาการแคมเปญ", icon: "archive" },
+    { id: "play", en: "Play Scene", th: "เล่นฉาก", icon: "sword" },
+    { id: "missions", en: "Missions", th: "ภารกิจ", icon: "compass" },
+  ] },
+  { id: "prepare", en: "Prepare", th: "เตรียมตัว", icon: "credit", items: [
+    { id: "character", en: "Character Dossier", th: "แฟ้มตัวละคร", icon: "character" },
+    { id: "gear", en: "Carried Gear", th: "สัมภาระที่พก", icon: "character" },
+    { id: "market", en: "This Market", th: "ตลาดพื้นที่นี้", icon: "credit" },
+    { id: "services", en: "Services & Hands", th: "บริการและคนรับจ้าง", icon: "relation" },
+    { id: "obligations", en: "Debts & Favors", th: "หนี้และบุญคุณ", icon: "memory" },
+    { id: "exchanges", en: "Exchange History", th: "ประวัติการแลกเปลี่ยน", icon: "log" },
+  ] },
+  { id: "chronicle", en: "Chronicle", th: "พงศาวดาร", icon: "log", items: [
+    { id: "campaigns", en: "Campaign Library", th: "หอแคมเปญ", icon: "archive" },
+    { id: "log", en: "Chronicle", th: "บันทึกเรื่องราว", icon: "log" },
+    { id: "archive", en: "World Archive", th: "คลังโลก", icon: "archive" },
+  ] },
+  { id: "more", en: "More", th: "อื่น ๆ", icon: "settings", items: [
+    { id: "save", en: "Campaign Safekeeping", th: "เก็บรักษาแคมเปญ", icon: "log" },
+    { id: "load", en: "Return to a Recorded Leaf", th: "กลับไปยังหน้าที่บันทึก", icon: "document" },
+    { id: "start", en: "New Campaign", th: "เริ่มแคมเปญใหม่", icon: "start" },
+    { id: "settings", en: "Settings", th: "ตั้งค่า", icon: "settings" },
+  ] },
 ];
 
 export function CampaignNavigation({ campaignTitle, language, page, expanded, onToggle, onOpen }: { campaignTitle: string; language: Language; page: PageId; expanded: boolean; onToggle: () => void; onOpen: (page: PageId) => void }) {
-  const isCampaignPage = campaignNavItems.some((item) => item.id === page);
-  const marketItems = campaignNavItems.filter((item) => ["gear", "localmarket", "services", "obligations", "exchanges"].includes(item.id));
-  const isMarketPage = marketItems.some((item) => item.id === page) || page === "market";
-  const [marketOpen, setMarketOpen] = useState(isMarketPage);
-  useEffect(() => { if (isMarketPage) setMarketOpen(true); }, [isMarketPage]);
-  return <>{primaryNavItems.map((item) => <button key={item.id} className={`nav-item ${page === item.id ? "nav-item--active" : ""}`} onClick={() => onOpen(item.id)} title={label(language, item.en, item.th)}><SengokuIcon name={item.icon} size={16} tone={page === item.id ? "vermilion" : "navy"} /><span className="nav-item__label">{label(language, item.en, item.th)}</span></button>)}<div className="nav-list__rule" /><button className={`campaign-nav ${isCampaignPage ? "campaign-nav--active" : ""}`} onClick={onToggle} aria-expanded={expanded} title={campaignTitle}><SengokuIcon name="archive" size={16} tone={isCampaignPage ? "vermilion" : "navy"} /><span className="nav-item__label"><strong>{campaignTitle}</strong><small>{label(language, "Current campaign", "แคมเปญที่กำลังเล่น")}</small></span><ChevronRight className={`campaign-nav__chevron ${expanded ? "is-open" : ""}`} size={15} /></button>{expanded && <div className="campaign-nav__children">{campaignNavItems.map((item) => { if (item.id === "market") return <React.Fragment key={item.id}><button className={`nav-item nav-item--child nav-item--market-parent ${isMarketPage ? "nav-item--active" : ""}`} onClick={() => setMarketOpen((value) => !value)} aria-expanded={marketOpen} title={label(language, item.en, item.th)}><SengokuIcon name={item.icon} size={15} tone={isMarketPage ? "vermilion" : "navy"} /><span className="nav-item__label">{label(language, item.en, item.th)}</span><ChevronRight className={`campaign-nav__chevron ${marketOpen ? "is-open" : ""}`} size={14} /></button>{marketOpen && <div className="market-nav__children">{marketItems.map((child) => <button key={child.id} className={`nav-item nav-item--child nav-item--market-child ${page === child.id ? "nav-item--active" : ""}`} onClick={() => onOpen(child.id)} title={label(language, child.en, child.th)}><SengokuIcon name={child.icon} size={14} tone={page === child.id ? "vermilion" : "navy"} /><span className="nav-item__label">{label(language, child.en, child.th)}</span></button>)}</div>}</React.Fragment>; if (marketItems.some((marketItem) => marketItem.id === item.id)) return null; return <button key={item.id} className={`nav-item nav-item--child ${page === item.id ? "nav-item--active" : ""}`} onClick={() => onOpen(item.id)} title={label(language, item.en, item.th)}><SengokuIcon name={item.icon} size={15} tone={page === item.id ? "vermilion" : "navy"} /><span className="nav-item__label">{label(language, item.en, item.th)}</span></button>; })}</div>}<div className="nav-list__rule" />{utilityNavItems.map((item) => <button key={item.id} className={`nav-item ${page === item.id ? "nav-item--active" : ""}`} onClick={() => onOpen(item.id)} title={label(language, item.en, item.th)}><SengokuIcon name={item.icon} size={16} tone={page === item.id ? "vermilion" : "navy"} /><span className="nav-item__label">{label(language, item.en, item.th)}</span></button>)}</>;
+  const activePage: PageId = page === "localmarket" ? "market" : page;
+  const activeGroup = campaignNavGroups.find((group) => group.items.some((item) => item.id === activePage))?.id ?? "story";
+  const [openGroup, setOpenGroup] = useState<CampaignNavGroup["id"]>(activeGroup);
+  useEffect(() => { setOpenGroup(activeGroup); }, [activeGroup]);
+  return <><button className={`campaign-nav ${activeGroup ? "campaign-nav--active" : ""}`} onClick={onToggle} aria-expanded={expanded} title={campaignTitle}><SengokuIcon name="archive" size={16} tone="vermilion" /><span className="nav-item__label"><strong>{campaignTitle}</strong><small>{label(language, "Current campaign", "แคมเปญที่กำลังเล่น")}</small></span><ChevronRight className={`campaign-nav__chevron ${expanded ? "is-open" : ""}`} size={15} /></button>{expanded && <div className="campaign-nav__children">{campaignNavGroups.map((group) => { const groupActive = activeGroup === group.id; const isOpen = openGroup === group.id; return <div className="campaign-nav__group" key={group.id}><button className={`nav-item nav-item--group ${groupActive ? "nav-item--active" : ""}`} onClick={() => setOpenGroup((current) => current === group.id ? "story" : group.id)} aria-expanded={isOpen}><SengokuIcon name={group.icon} size={15} tone={groupActive ? "vermilion" : "navy"} /><span className="nav-item__label">{label(language, group.en, group.th)}</span><ChevronRight className={`campaign-nav__chevron ${isOpen ? "is-open" : ""}`} size={14} /></button>{isOpen && <div className="campaign-nav__items">{group.items.map((item) => <button key={item.id} className={`nav-item nav-item--child ${activePage === item.id ? "nav-item--active" : ""}`} onClick={() => onOpen(item.id)} title={label(language, item.en, item.th)}><SengokuIcon name={item.icon} size={14} tone={activePage === item.id ? "vermilion" : "navy"} /><span className="nav-item__label">{label(language, item.en, item.th)}</span></button>)}</div>}</div>; })}</div>}</>;
 }
 
 function SectionKicker({ children }: { children: React.ReactNode }) {
@@ -148,13 +153,19 @@ function GhostLink({ children, onClick }: { children: React.ReactNode; onClick?:
 
 function reviewPageFromUrl(): PageId {
   if (typeof window === "undefined") return "home";
-  const requested = new URLSearchParams(window.location.search).get("review");
-  const pages: PageId[] = ["home", "campaigns", "start", "play", "missions", "market", "localmarket", "gear", "services", "obligations", "exchanges", "character", "log", "archive", "save", "load", "settings"];
-  return pages.includes(requested as PageId) ? requested as PageId : "home";
+  return reviewPageFromSearch(window.location.search);
+}
+
+function isReviewRoute() {
+  if (typeof window === "undefined") return false;
+  return Boolean(new URLSearchParams(window.location.search).get("review"));
 }
 
 function reviewReaderModeFromUrl(): boolean | undefined {
   if (typeof window === "undefined") return undefined;
+  const screen = reviewScreenFor(reviewPageFromSearch(window.location.search));
+  if (screen?.reader === "library") return false;
+  if (screen?.reader === "reader") return true;
   const requested = new URLSearchParams(window.location.search).get("reader");
   if (requested === "library") return false;
   if (requested === "reader") return true;
@@ -171,10 +182,13 @@ export default function Home({ forceUiPreviewMode }: { forceUiPreviewMode?: bool
   const uiPreviewMode = forceUiPreviewMode ?? true;
   const accountCredits = trpc.profile.credits.useQuery(undefined, { enabled: shouldFetchProfileCredits(uiPreviewMode, isAuthenticated), retry: false });
 
-  const [page, setPage] = useState<PageId>(reviewPageFromUrl);
-  const [game, setGame] = useState<GameState>(seedGame);
-  const [saves, setSaves] = useState<SaveLeaves>(() => ({ manual: copyState(seedGame()), leaf2: null, leaf3: null }));
-  const [campaignLibrary, setCampaignLibrary] = useState<Record<string, GameState>>(() => { const demo = seedGame(); return { [demo.campaign.id]: demo }; });
+  const [reviewRoute] = useState(isReviewRoute);
+  const [reviewScreen] = useState(() => reviewRoute ? reviewScreenFor(reviewPageFromUrl()) : undefined);
+  const initialGame = () => reviewScreen ? buildReviewSeed(reviewScreen.seed) : seedGame();
+  const [page, setPage] = useState<PageId>(() => reviewScreen?.page ?? reviewPageFromUrl());
+  const [game, setGame] = useState<GameState>(initialGame);
+  const [saves, setSaves] = useState<SaveLeaves>(() => { const demo = initialGame(); return { manual: copyState(demo), leaf2: null, leaf3: null }; });
+  const [campaignLibrary, setCampaignLibrary] = useState<Record<string, GameState>>(() => { const demo = initialGame(); return { [demo.campaign.id]: demo }; });
   const [language, setLanguage] = useState<Language>("en");
   const [readerMode, setReaderMode] = useState(() => reviewReaderModeFromUrl() ?? true);
   const [darkMode, setDarkMode] = useState(false);
@@ -187,6 +201,10 @@ export default function Home({ forceUiPreviewMode }: { forceUiPreviewMode?: bool
   const [storageReady, setStorageReady] = useState(false);
 
   useEffect(() => {
+    if (reviewRoute) {
+      setStorageReady(true);
+      return;
+    }
     try {
       LEGACY_STORAGE_KEYS.forEach((key) => window.localStorage.removeItem(key));
       const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -212,12 +230,12 @@ export default function Home({ forceUiPreviewMode }: { forceUiPreviewMode?: bool
     } finally {
       setStorageReady(true);
     }
-  }, []);
+  }, [reviewRoute]);
 
   useEffect(() => {
-    if (!storageReady) return;
+    if (!storageReady || reviewRoute) return;
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ game, saves, campaignLibrary, language, readerMode, darkMode, fontSize, accent }));
-  }, [accent, campaignLibrary, darkMode, fontSize, game, language, readerMode, saves, storageReady]);
+  }, [accent, campaignLibrary, darkMode, fontSize, game, language, readerMode, reviewRoute, saves, storageReady]);
 
   useEffect(() => { document.documentElement.lang = language; }, [language]);
   useEffect(() => {
@@ -226,10 +244,9 @@ export default function Home({ forceUiPreviewMode }: { forceUiPreviewMode?: bool
     setGame((current) => current.credits === credits ? current : { ...current, credits });
   }, [accountCredits.data?.credits, isAuthenticated]);
 
-  const appClass = ["app-shell", darkMode ? "theme-dark" : "", `font-${fontSize}`, `accent-${accent}`, sidebarCollapsed ? "sidebar-collapsed" : ""].join(" ");
+  const appClass = ["app-shell", darkMode ? "theme-dark" : "", `font-${fontSize}`, `accent-${accent}`, sidebarCollapsed ? "sidebar-collapsed" : "", reviewRoute ? "app-shell--review" : ""].join(" ");
   const updateGame = (next: GameState, message: string) => { setGame(next); setCampaignLibrary((current) => ({ ...current, [next.campaign.id]: copyState(next) })); setNotice(message); };
-  const isCampaignPage = (nextPage: PageId) => campaignNavItems.some((item) => item.id === nextPage);
-  const open = (nextPage: PageId) => { if (isCampaignPage(nextPage)) setCampaignMenuOpen(true); setPage(nextPage); setMenuOpen(false); };
+  const open = (nextPage: PageId) => { setCampaignMenuOpen(true); setPage(nextPage); setMenuOpen(false); };
   const beginNew = (nextGame: GameState) => { setGame(nextGame); setCampaignLibrary((current) => ({ ...current, [nextGame.campaign.id]: copyState(nextGame) })); setSaves({ manual: null, leaf2: null, leaf3: null }); setNotice("A new campaign has begun · 50 trial credits are ready"); open("play"); };
   const selectCampaign = (selected: GameState) => { const copy = copyState(selected); setGame(copy); setSaves((current) => ({ ...current, manual: copyState(copy) })); setNotice(`${copy.campaign.title} selected · Local Save restored at Leaf ${copy.tick}`); open("play"); };
   const writeSave = (slot: keyof SaveLeaves) => { setSaves((current) => ({ ...current, [slot]: copyState(game) })); setNotice(`${slot === "manual" ? "Manual Save" : slot === "leaf2" ? "Saved Leaf II" : "Saved Leaf III"} written at Leaf ${game.tick}`); };
@@ -244,9 +261,9 @@ export default function Home({ forceUiPreviewMode }: { forceUiPreviewMode?: bool
     <header className="topbar">
       <button className="brand" onClick={() => open("home")} aria-label="Dust and Fire home"><span className="brand-mark"><span /><span /></span><span className="brand-copy"><strong>Dust &amp; Fire</strong><small>SENGOKU STORIES</small></span></button>
       <div className="topbar__context"><span>{game.campaign.year}</span><span className="topbar__dot">•</span><span>{language === "en" ? game.campaign.season : seasonThai[game.campaign.season]}</span><span className="topbar__dot">•</span><span>{game.campaign.region}</span></div>
-      <button className="credit-chip" onClick={() => open("settings")}><SengokuIcon name="credit" size={16} tone="ochre" /><span>{label(language, "Credits", "เครดิต")}</span><strong>{game.credits}</strong></button>
-      <span className="ui-preview-chip"><span />{label(language, "UI PREVIEW · LOCAL", "ทดลอง UI · ในเครื่อง")}</span>
+      <button className="topbar-safekeeping" onClick={() => open("save")}><SengokuIcon name="log" size={16} tone="teal" /><span>{label(language, "Safekeeping", "เก็บรักษา")}</span></button>
       {!loading && !uiPreviewMode && <button className={`gm-account-chip ${isAuthenticated ? "is-signed-in" : ""}`} onClick={() => !isAuthenticated && startLogin()}>{isAuthenticated ? <><span className="gm-account-chip__dot" />{user?.name || label(language, "GM access", "สิทธิ์ใช้ GM")}</> : <><SengokuIcon name="relation" size={15} tone="teal" />{label(language, "AI GM · Sign in", "AI GM · เข้าสู่ระบบ")}</>}</button>}
+      {!uiPreviewMode && user?.role === "admin" && <a className="admin-console-link" href="/admin">{label(language, "Admin", "ผู้ดูแล")}</a>}
       <div className="topbar-language" aria-label="Language selection"><button className={language === "en" ? "active" : ""} onClick={() => setLanguage("en")}>EN</button><button className={language === "th" ? "active" : ""} onClick={() => setLanguage("th")}>TH</button></div>
       <button className="mobile-menu" onClick={() => setMenuOpen((value) => !value)} aria-label="Open menu">{menuOpen ? <X size={21} /> : <Menu size={21} />}</button>
     </header>
@@ -263,7 +280,7 @@ export default function Home({ forceUiPreviewMode }: { forceUiPreviewMode?: bool
       <div className="sidebar__language"><Languages size={15} /><button className={language === "en" ? "active" : ""} onClick={() => setLanguage("en")}>EN</button><span>/</span><button className={language === "th" ? "active" : ""} onClick={() => setLanguage("th")}>TH</button></div>
       <div className="sidebar__notice">{notice}</div>
     </aside>
-    <main className={`main-content ${page === "play" ? "main-content--play" : ""}`}>
+    <main className={`main-content ${page === "play" ? "main-content--play" : ""}`} data-review-screen={reviewScreen?.screenshotFile} data-review-seed={reviewScreen?.seed} data-review-title={reviewScreen?.pageTitle}>
       {page === "home" && <StoryMap game={game} language={language} onOpen={open} />}
       {page === "campaigns" && <CampaignsView campaigns={Object.values(campaignLibrary)} activeId={game.campaign.id} language={language} onSelect={selectCampaign} onNew={() => open("start")} />}
       {page === "start" && <StartView language={language} onStart={beginNew} />}
@@ -287,22 +304,6 @@ export default function Home({ forceUiPreviewMode }: { forceUiPreviewMode?: bool
 
 function Vital({ label, value, percent, tone }: { label: string; value: string; percent: number; tone: "red" | "ochre" | "teal" }) {
   return <div className="vital"><span>{label}</span><strong>{value}</strong><i className={`bar bar--${tone}`}><b style={{ width: `${Math.max(0, Math.min(100, percent))}%` }} /></i></div>;
-}
-
-function HomeView({ game, language, open, uiPreviewMode }: { game: GameState; language: Language; open: (page: PageId) => void; uiPreviewMode: boolean }) {
-  const activeMission = game.missions.find((mission) => mission.state !== "resolved") ?? game.missions[0];
-  return <div className="page home-view">
-    <aside className="home-ledger-spine" aria-label="Campaign ledger spine"><div className="home-ledger-spine__folio">FOLIO {String(game.tick).padStart(2, "0")}</div><div className="home-ledger-spine__seal">火</div><div className="home-ledger-spine__record"><small>{label(language, "ACTIVE LEAF", "หน้าที่เปิดอยู่")}</small><strong>{game.currentScene.title}</strong></div><div className="home-ledger-spine__record"><small>{label(language, "PLACE", "สถานที่")}</small><strong>{game.campaign.region}</strong></div><button onClick={() => open("log")}><BookOpen size={15} /> {label(language, "RECORD", "บันทึก")}</button></aside>
-    <div className="home-leaf">
-      <section className="hero-ledger"><div className="hero-ledger__spine"><span>LEAF {String(game.tick).padStart(2, "0")}</span><i /></div><div className="hero-ledger__seal">火</div><div><SectionKicker>{label(language, "CAMPAIGN RECORD", "ระเบียนแคมเปญ")}</SectionKicker><h1>{language === "en" ? <>Honor on the banner.<br />Truth under ash.</> : <>เกียรติอยู่บนธง<br />ความจริงอยู่ใต้เถ้า</>}</h1><p>{label(language, "A local-first campaign: each roll leaves a record, a cost, or a door open for the next scene.", "เรื่องราวเก็บอยู่ในเครื่องนี้ ทุกการทอยจะทิ้งบันทึก ราคา หรือประตูบานใหม่ไว้ให้ฉากถัดไป")}</p></div><div className="hero-ledger__actions"><Button className="df-button df-button--primary" onClick={() => openLocalPreview(open)}><SengokuIcon name="sword" size={17} tone="ink" /> {uiPreviewMode ? label(language, "TRY UI PREVIEW", "ลองกดเล่น UI") : label(language, "ANSWER THE CURRENT LEAF", "ตอบในหน้าปัจจุบัน")} <ArrowRight size={18} /></Button><Button className="df-button df-button--ghost" onClick={() => open("start")}><Plus size={16} /> {label(language, "NEW CAMPAIGN", "เริ่มแคมเปญใหม่")}</Button></div></section>
-      <section className="home-grid"><button className="continue-panel" onClick={() => open("play")}><div className="continue-panel__top"><SectionKicker>{label(language, "THE CURRENT LEAF", "หน้าปัจจุบัน")}</SectionKicker><span className="save-dot">AUTO SAVED</span></div><h2>{game.currentScene.title}</h2><p>{game.currentScene.body[0]}</p><span className="continue-panel__link">{label(language, "Read and answer the leaf", "อ่านและตอบในหน้าปัจจุบัน")} <ArrowRight size={17} /></span></button><div className="campaign-card"><SectionKicker>{label(language, "MARGIN NOTE", "บันทึกขอบหน้า")}</SectionKicker><dl><div><dt>{label(language, "Time", "เวลา")}</dt><dd>{game.campaign.year} · {language === "en" ? game.campaign.season : seasonThai[game.campaign.season]}</dd></div><div><dt>{label(language, "Place", "สถานที่")}</dt><dd>{game.campaign.location}</dd></div><div><dt>{label(language, "Burden", "ภาระ")}</dt><dd>{activeMission?.deadline}</dd></div><div><dt>{label(language, "Credits", "เครดิต")}</dt><dd className="credit-inline"><SengokuIcon name="credit" size={15} tone="ochre" /> {game.credits}</dd></div></dl></div></section>
-      <section className="shortcut-row"><Shortcut icon="compass" tone="ochre" title={label(language, "Mission Ledger", "บัญชีภารกิจ")} note={activeMission?.title ?? label(language, "No active mission", "ยังไม่มีภารกิจ")} onClick={() => open("missions")} /><Shortcut icon="character" tone="navy" title={label(language, "Character Dossier", "แฟ้มตัวละคร")} note={game.character.occupation} onClick={() => open("character")} /><Shortcut icon="log" tone="teal" title={label(language, "Campaign Record", "ระเบียนเรื่องราว")} note={`${game.memories.length + game.rolls.length} ${label(language, "recorded changes", "รายการที่บันทึก")}`} onClick={() => open("log")} /><Shortcut icon="archive" tone="navy" title={label(language, "World Index", "ดัชนีโลก")} note={label(language, "People, resources, and memories", "ผู้คน ทรัพยากร และความทรงจำ")} onClick={() => open("archive")} /></section>
-    </div>
-  </div>;
-}
-
-function Shortcut({ icon, tone, title, note, onClick }: { icon: SengokuIconName; tone: "navy" | "ochre" | "teal" | "vermilion"; title: string; note: string; onClick: () => void }) {
-  return <button onClick={onClick}><SengokuIcon name={icon} tone={tone} /><span><strong>{title}</strong><small>{note}</small></span><ChevronRight size={18} /></button>;
 }
 
 function StartView({ language, onStart }: { language: Language; onStart: (game: GameState) => void }) {

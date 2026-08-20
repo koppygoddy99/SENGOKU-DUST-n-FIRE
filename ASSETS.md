@@ -4,13 +4,13 @@
 
 ## Visual Target
 
-`/manus-storage/dust_fire_story_map_visual_target_962e1c62.png` is the visual target for the P0 Story Map. It defines only the intended material mood and hierarchy: an original parchment map, a current-location seal, routes and fog, an indigo-lined walnut dice tray, paper consequence surface, and compact state marks.
+`/manus-storage/dust-fire-tabletop-ui-reset-visual-target_fcb917b6.png` is the visual target for the UI reset. It defines only the intended material mood and hierarchy: an original parchment situation map, current-location seal, routes and fog, an indigo-lined walnut dice tray, calm prose surface, and compact semantic state marks. It must never be stretched as a production background or used as a source of baked UI text.
 
 ## P0 Backgrounds
 
 | Name | Description | Size | Managed image | Status |
 |---|---|---|---|---|
-| Story Map visual target | Original command-desk composition: parchment map, fog, routes, vermilion current-location seal, indigo dice tray, and compact state surfaces. It contains no readable UI copy or people. | 1280×720 px reference; used as a visual QA target, never stretched as an app background. | `/manus-storage/dust_fire_story_map_visual_target_962e1c62.png` | generating |
+| UI reset visual target | Original command-desk composition: parchment map, fog, routes, vermilion current-location seal, indigo dice tray, prose sheet, and compact state surfaces. It contains no readable UI copy or people. | 1280×720 px reference; used as a visual QA target, never stretched as an app background. | `/manus-storage/dust-fire-tabletop-ui-reset-visual-target_fcb917b6.png` | generating |
 
 ## P0 Procedural UI Layers
 

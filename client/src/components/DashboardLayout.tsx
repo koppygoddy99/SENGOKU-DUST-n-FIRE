@@ -21,13 +21,19 @@ import {
 } from "@/components/ui/sidebar";
 import { startLogin } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { LayoutDashboard, LogOut, PanelLeft, Users } from "lucide-react";
+import { LayoutDashboard, LogOut, PanelLeft, Users, type LucideIcon } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 
-const menuItems = [
+export type DashboardMenuItem = {
+  icon: LucideIcon;
+  label: string;
+  path: string;
+};
+
+const defaultMenuItems: DashboardMenuItem[] = [
   { icon: LayoutDashboard, label: "Page 1", path: "/" },
   { icon: Users, label: "Page 2", path: "/some-path" },
 ];
@@ -39,8 +45,12 @@ const MAX_WIDTH = 480;
 
 export default function DashboardLayout({
   children,
+  menuItems = defaultMenuItems,
+  navigationTitle = "Navigation",
 }: {
   children: React.ReactNode;
+  menuItems?: DashboardMenuItem[];
+  navigationTitle?: string;
 }) {
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     const saved = localStorage.getItem(SIDEBAR_WIDTH_KEY);
@@ -88,7 +98,7 @@ export default function DashboardLayout({
         } as CSSProperties
       }
     >
-      <DashboardLayoutContent setSidebarWidth={setSidebarWidth}>
+      <DashboardLayoutContent setSidebarWidth={setSidebarWidth} menuItems={menuItems} navigationTitle={navigationTitle}>
         {children}
       </DashboardLayoutContent>
     </SidebarProvider>
@@ -98,11 +108,15 @@ export default function DashboardLayout({
 type DashboardLayoutContentProps = {
   children: React.ReactNode;
   setSidebarWidth: (width: number) => void;
+  menuItems: DashboardMenuItem[];
+  navigationTitle: string;
 };
 
 function DashboardLayoutContent({
   children,
   setSidebarWidth,
+  menuItems,
+  navigationTitle,
 }: DashboardLayoutContentProps) {
   const { user, logout } = useAuth();
   const [location, setLocation] = useLocation();
@@ -169,7 +183,7 @@ function DashboardLayoutContent({
               {!isCollapsed ? (
                 <div className="flex items-center gap-2 min-w-0">
                   <span className="font-semibold tracking-tight truncate">
-                    Navigation
+                    {navigationTitle}
                   </span>
                 </div>
               ) : null}

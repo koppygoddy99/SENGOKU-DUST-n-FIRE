@@ -14,12 +14,12 @@ describe("StoryMap", () => {
 
     const html = renderToStaticMarkup(<StoryMap game={game} language="en" onOpen={onOpen} />);
 
-    expect(html).toContain("STORY MAP");
+    expect(html).toContain("CAMPAIGN COMMAND");
     expect(html).toContain(game.currentScene.location);
     expect(html).toContain(game.missions[0].title);
     expect(html).toContain(`War shadow ${game.campaign.warShadow}/6`);
     expect(html).toContain("LAST ROLL");
-    expect(html).toContain("CURRENT STATE");
+    expect(html).toContain("SITUATION MAP");
     expect(html).toContain("WORLD STATE PULSE");
   });
 
@@ -27,8 +27,8 @@ describe("StoryMap", () => {
     const game = createSaikaSafehouseDemo();
     const html = renderToStaticMarkup(<StoryMap game={game} language="th" onOpen={() => undefined} />);
 
-    expect(html).toContain("แผนที่เรื่องราว");
-    expect(html).toContain("เครื่องยนต์เรื่องราว: ในเครื่อง");
+    expect(html).toContain("บัญชาการแคมเปญ");
+    expect(html).toContain("แผนที่สถานการณ์");
     expect(html).toContain("ภารกิจปัจจุบัน");
   });
 });

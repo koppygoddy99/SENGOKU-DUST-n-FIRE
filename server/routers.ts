@@ -1,11 +1,12 @@
 import { COOKIE_NAME } from "@shared/const";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+import { buildAdminOverview } from "./admin";
 import { getUserTrialCredits, spendUserTrialCredits } from "./db";
 import { analyzeWithGM, analyzeInputSchema, resolveInputSchema, resolveWithGM } from "./gm";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { protectedProcedure, publicProcedure, router } from "./_core/trpc";
+import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 
 async function requireGMTrialCredit(userId: number) {
   const credits = await getUserTrialCredits(userId);
@@ -42,6 +43,9 @@ export const appRouter = router({
       if (credits === null) throw new TRPCError({ code: "BAD_REQUEST", message: "No AI GM credits remain" });
       return { credits };
     }),
+  }),
+  admin: router({
+    overview: adminProcedure.query(() => buildAdminOverview()),
   }),
 
   // TODO: add feature routers here, e.g.

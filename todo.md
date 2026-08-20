@@ -21,12 +21,16 @@
 - [x] ยืนยัน Local Save ใน regression AI fallback โดยตรวจว่า Leaf และ roll ล่าสุดถูกเขียนใน localStorage
 - [x] จับภาพหน้า Play ปัจจุบันเพื่อรับคำชี้จุดและข้อกำหนดการปรับ UI แบบทีละหน้า
 - [x] ปรับ UI หน้า Play ตามคำชี้จุดของผู้ใช้และตรวจภาพหลังแก้
+- [ ] แก้หน้า Play ให้ใช้พื้นที่เต็ม viewport และตัดการเลื่อนซ้อนของกรอบบทละคร โดยคงส่วนป้อนเจตนาเข้าถึงได้
+- [x] ส่งชุดภาพ UI ชุดล่าสุดครบทุกหน้าพร้อมสารบัญให้ผู้ใช้ตรวจครั้งเดียว
+- [x] รวมภาพ UI ล่าสุดครบทุกหน้าเป็น ZIP พร้อมไฟล์สารบัญสำหรับผู้ใช้
 - [ ] ทบทวนและปรับหน้าต่อไปทีละหน้าตามคำชี้จุดของผู้ใช้
 - [x] ออกแบบหน้าแผนที่สถานที่แบบ UI ให้เชื่อมกับบริบทแคมเปญโดยไม่บิดเบือนข้อมูลประวัติศาสตร์
 - [x] อ่าน Integrated Game and UX/UI Spec กับ UX/UI Audit ที่ผู้ใช้แนบ และแปลงเป็น architecture plan ที่ตรวจสอบได้
 - [ ] แยกโมดูลข้อมูลและส่วนประกอบ Story Map, Chronicle และ Play Scene ออกจาก Home.tsx โดยคง GameState/Local Save เดิม
 - [x] ลบ implementation Chronicle เดิมที่ค้างใน Home.tsx ให้ Chronicle module ใหม่เป็น implementation เดียว
-- [ ] ลบหรือย้าย implementation overview/Play เดิมที่ค้างใน Home.tsx ให้เหลือเฉพาะ shell และ route wiring
+- [x] ลบ implementation overview เดิมที่ค้างใน Home.tsx ให้ Story Map module ใหม่เป็น implementation เดียว
+- [ ] ลบหรือย้าย implementation Play เดิมที่ค้างใน Home.tsx ให้เหลือเฉพาะ shell และ route wiring
 - [x] ย้าย helper ที่ยังผูกกับ Home.tsx ไปยัง feature/shared ที่เหมาะสม แล้วรัน full regression suite หลัง cleanup
 - [x] สร้าง original paper-and-ink visual asset direction โดยไม่คัดลอกภาพ reference และไม่ใส่บุคคล
 - [x] พัฒนา Story Map ที่แสดงตำแหน่งแคมเปญ จุดหมาย และแรงกดดันที่มีผลต่อ GameState จริง
@@ -38,6 +42,13 @@
 - [x] จัดทำ Markdown คู่มือเมนูครบทุกหน้า พร้อมการทำงาน ข้อมูลที่แสดง และข้อจำกัดปัจจุบัน
 - [x] แก้ Market Hub ให้ render ได้อย่างปลอดภัยก่อน Local Save โหลดข้อมูล economy เสร็จ และเพิ่ม regression สำหรับ review URL
 - [x] จัดทำ Markdown คู่มือเกมเชิงลึกสำหรับผู้เล่นและนักพัฒนา โดยไม่รวมรายละเอียด UI
+- [x] จัดทำ Markdown แผนรีเซ็ต Dust & Fire ตาม UI Reset และ Per-Page Design Placement Blueprint พร้อมเกณฑ์ตรวจรับรายหน้า
+- [x] เชื่อม route-to-screen manifest เข้ากับ review renderer เพื่อบังคับ heading และ seed state รายหน้าจริง พร้อม integration regression
+- [x] รีเซ็ต global player shell ให้ใช้ top bar, collapsible rail และลำดับ Story / Prepare / Chronicle / More ตาม blueprint
+- [ ] ปรับหน้าผู้เล่นทีละกลุ่มโดยยึด one-question rule, 3-layer hierarchy และหนึ่ง CTA หลักใน viewport แรก
+- [x] เพิ่ม Admin Console แยกจาก player UI พร้อม dashboard, campaign oversight, content reference, safety checks, audit log และ application settings ตามขอบเขตที่อนุญาต
+- [x] เพิ่ม route `/admin` และ client-side/admin-only guard พร้อมหน้า access denied และซ่อนเมนูผู้ดูแลจากผู้เล่นทั่วไป
+- [x] เพิ่ม regression tests และภาพ review ที่ยืนยัน route, title และ state ของทุกหน้าถูกต้องก่อนส่งชุดภาพใหม่
 
 - [x] เพิ่มหน้า Campaigns เป็นเมนูหลักสำหรับดูและโหลดแคมเปญใน Local Save
 - [x] ผูกชื่อแคมเปญที่เลือกกับหัวเมนู Campaign 1 และเมนูย่อยของแคมเปญนั้น
