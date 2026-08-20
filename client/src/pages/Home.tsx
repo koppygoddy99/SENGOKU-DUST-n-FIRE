@@ -15,7 +15,9 @@ import { MarketHub } from "@/pages/MarketHub";
 import { StoryMap } from "@/features/story/StoryMap";
 import { PlayScene } from "@/features/play/PlayScene";
 import { ChronicleView } from "@/features/chronicle/ChronicleView";
+import { gmUnavailableLocalTrialNotice, historicalStatusLabel, openLocalPreview, saveLocalTrialResult, shouldFetchProfileCredits, shouldUseLocalRules, splitStoryParagraphs, withHistoricalBoundary } from "@/features/shared/gameplayHelpers";
 export { ChronicleView as LogView } from "@/features/chronicle/ChronicleView";
+export { gmUnavailableLocalTrialNotice, historicalStatusLabel, openLocalPreview, saveLocalTrialResult, shouldFetchProfileCredits, shouldUseLocalRules, splitStoryParagraphs, withHistoricalBoundary } from "@/features/shared/gameplayHelpers";
 import {
   AXES,
   RELATIONSHIP_QUESTIONS,
@@ -61,49 +63,11 @@ function titleCase(value: string) {
   return value.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-export function splitStoryParagraphs(story: string) {
-  return story.split(/\n\s*\n/).map((paragraph) => paragraph.trim()).filter(Boolean);
-}
-
-export function shouldUseLocalRules(uiPreviewMode: boolean, isAuthenticated: boolean) {
-  return uiPreviewMode || !isAuthenticated;
-}
-
-export function shouldFetchProfileCredits(uiPreviewMode: boolean, isAuthenticated: boolean) {
-  return isAuthenticated && !uiPreviewMode;
-}
-
-export function openLocalPreview(open: (page: PageId) => void) {
-  open("play");
-}
-
-export function saveLocalTrialResult(resolved: GameState, credits: number): GameState {
-  return { ...resolved, credits };
-}
-
-export function gmUnavailableLocalTrialNotice(language: Language, summary: string) {
-  return label(language, `${summary} · AI GM unavailable · Local Trial saved with no AI credit used`, `${summary} · AI GM ใช้ไม่ได้ · บันทึกแบบกรอกทดลองโดยไม่หักเครดิต AI`);
-}
-
-export function historicalStatusLabel(status: NonNullable<RollPreview["historical"]>["status"], language: Language) {
-  const labels = {
-    "fact-supported": ["Fact-supported", "มีหลักฐานรองรับ"],
-    "contextual-play": ["Contextual play", "ใช้บริบทประวัติศาสตร์"],
-    "campaign-fiction": ["Campaign fiction", "เรื่องแต่งในแคมเปญ"],
-    "insufficient-evidence": ["Evidence limited", "หลักฐานยังไม่พอ"],
-  } as const;
-  return labels[status][language === "en" ? 0 : 1];
-}
-
 function historicalTone(status: NonNullable<RollPreview["historical"]>["status"]) {
   if (status === "fact-supported") return "teal" as const;
   if (status === "contextual-play") return "ochre" as const;
   if (status === "campaign-fiction") return "vermilion" as const;
   return "navy" as const;
-}
-
-export function withHistoricalBoundary(game: GameState, historical: NonNullable<RollPreview["historical"]>): GameState {
-  return { ...game, historicalBoundary: { ...historical, tick: game.tick } };
 }
 
 function toGMContext(game: GameState) {
