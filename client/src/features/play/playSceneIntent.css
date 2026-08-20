@@ -1,0 +1,13 @@
+.play-scene__utilities > .play-scene__intent-link {
+  border-color: var(--vermilion);
+  background: var(--vermilion);
+  color: var(--paper);
+  font-family: Poppins, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .35px;
+}
+
+@media (max-width: 780px) {
+  .play-scene__utilities > .play-scene__intent-link { order: -1; }
+}

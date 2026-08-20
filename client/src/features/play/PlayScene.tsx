@@ -5,6 +5,7 @@ import { SengokuIcon } from "@/components/SengokuIcon";
 import { trpc } from "@/lib/trpc";
 import { AXES, applyRoll, parseAction, resolveRoll, type GameState, type RollPreview } from "@/lib/game";
 import "./playScene.css";
+import "./playSceneIntent.css";
 
 type Language = "en" | "th";
 type PlayDestination = "home" | "log" | "save" | "load";
@@ -62,6 +63,10 @@ export function PlayScene({ game, language, onOpen, onUpdate, isAuthenticated, u
   const spendCredit = trpc.profile.spendCredit.useMutation();
   const useLocal = localRules(uiPreviewMode, isAuthenticated);
   const activeMission = game.missions.find((mission) => mission.state === "active" || mission.state === "offered");
+  const focusComposer = () => {
+    document.getElementById("play-intent-composer")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    window.setTimeout(() => document.getElementById("play-intent-field")?.focus(), 180);
+  };
 
   const resetIntent = () => { setRisk(null); setDetails(null); setDiceResult(null); setNotice(""); };
   const previewRisk = () => { if (!action.trim()) return; const parsed = parseAction(action, game); setRisk({ ...parsed, isRiskOnly: true, mastery: undefined, contextBonus: 0, contextReason: undefined }); setDetails(null); setDiceResult(null); setNotice(copy(language, "Risk is visible. Commit when you are ready to inspect the ruling.", "เห็นความเสี่ยงแล้ว ยืนยันเจตนาเมื่อต้องการตรวจคำวินิจฉัย")); };
@@ -87,14 +92,14 @@ export function PlayScene({ game, language, onOpen, onUpdate, isAuthenticated, u
   const continueScene = () => { setOutcome(null); setNotice(""); };
 
   return <div className="page play-scene-page">
-    <header className="play-scene__header"><div><p className="play-scene__eyebrow">{copy(language, `PLAY SCENE · LEAF ${game.tick}`, `เล่นฉาก · หน้าที่ ${game.tick}`)}</p><h1>{game.currentScene.location}</h1><p>{game.campaign.year} · {game.campaign.season} · {activeMission?.title ?? copy(language, "No active mission", "ยังไม่มีภารกิจที่กำลังดำเนิน")}</p></div><div className="play-scene__utilities"><button onClick={() => onOpen("save")}><Save size={15} /> {copy(language, "Save Leaf", "บันทึกหน้า")}</button><button onClick={() => onOpen("load")}>{copy(language, "Recorded Leaves", "หน้าที่บันทึก")}</button></div></header>
+    <header className="play-scene__header"><div><p className="play-scene__eyebrow">{copy(language, `PLAY SCENE · LEAF ${game.tick}`, `เล่นฉาก · หน้าที่ ${game.tick}`)}</p><h1>{game.currentScene.location}</h1><p>{game.campaign.year} · {game.campaign.season} · {activeMission?.title ?? copy(language, "No active mission", "ยังไม่มีภารกิจที่กำลังดำเนิน")}</p></div><div className="play-scene__utilities"><button className="play-scene__intent-link" onClick={focusComposer}>{copy(language, "DECLARE INTENT", "ประกาศเจตนา")} <ArrowRight size={15} /></button><button onClick={() => onOpen("save")}><Save size={15} /> {copy(language, "Save Leaf", "บันทึกหน้า")}</button><button onClick={() => onOpen("load")}>{copy(language, "Recorded Leaves", "หน้าที่บันทึก")}</button></div></header>
     {outcome ? <OutcomeCard record={outcome} game={game} language={language} notice={notice} onContinue={continueScene} onMap={() => onOpen("home")} onChronicle={() => onOpen("log")} /> : <section className="play-scene__paper">
       <div className="play-scene__paper-heading"><span><SengokuIcon name="memory" tone="vermilion" size={18} /> {game.currentScene.title}</span><button onClick={() => onOpen("log")}><FileText size={15} /> {copy(language, "Chronicle", "บันทึกเรื่อง")}</button></div>
       <p className="play-scene__context">{game.currentScene.publicContext}</p>
       <div className="play-scene__narrative">{game.currentScene.body.map((paragraph, index) => <p key={`${game.currentScene.id}-${index}`}>{paragraph}</p>)}<h2>{game.currentScene.prompt}</h2></div>
       <div className="play-scene__approaches"><p className="play-scene__eyebrow">{copy(language, "POSSIBLE APPROACHES", "แนวทางที่เป็นไปได้")}</p>{game.currentScene.suggestedActions.map((suggestion) => <button key={suggestion} onClick={() => { setAction(suggestion); resetIntent(); }}><span>{suggestion}</span><ArrowRight size={15} /></button>)}</div>
-      <section className="play-scene__composer"><div className="play-scene__composer-heading"><div><p className="play-scene__eyebrow">{copy(language, "DECLARE YOUR INTENT", "ประกาศเจตนาของเจ้า")}</p><h2>{copy(language, "What will you do in one sentence?", "เจ้าจะทำสิ่งใดในหนึ่งประโยค?")}</h2></div>{!useLocal && !isAuthenticated && <button className="play-scene__login" onClick={onLogin}>{copy(language, "AI ASSISTANCE", "ใช้ AI-assisted")}</button>}</div>
-        <textarea value={action} onChange={(event) => { setAction(event.target.value); resetIntent(); }} placeholder={copy(language, "For example: I will ask the gate keeper for one night and name the favor I can repay.", "ตัวอย่าง: ข้าจะขอเวลาจากผู้คุมด่านหนึ่งคืน และบอกบุญคุณที่ข้าจะตอบแทนได้")} />
+      <section className="play-scene__composer" id="play-intent-composer"><div className="play-scene__composer-heading"><div><p className="play-scene__eyebrow">{copy(language, "DECLARE YOUR INTENT", "ประกาศเจตนาของเจ้า")}</p><h2>{copy(language, "What will you do in one sentence?", "เจ้าจะทำสิ่งใดในหนึ่งประโยค?")}</h2></div>{!useLocal && !isAuthenticated && <button className="play-scene__login" onClick={onLogin}>{copy(language, "AI ASSISTANCE", "ใช้ AI-assisted")}</button>}</div>
+        <textarea id="play-intent-field" value={action} onChange={(event) => { setAction(event.target.value); resetIntent(); }} placeholder={copy(language, "For example: I will ask the gate keeper for one night and name the favor I can repay.", "ตัวอย่าง: ข้าจะขอเวลาจากผู้คุมด่านหนึ่งคืน และบอกบุญคุณที่ข้าจะตอบแทนได้")} />
         {notice && <p className="play-scene__notice">{notice}</p>}
         {!details && !diceResult && <div className="play-scene__composer-actions"><div>{risk ? <><strong>{copy(language, "Risk preview", "ภาพรวมความเสี่ยง")}</strong><span>{risk.risks[0]}</span></> : <span>{copy(language, "Write freely. The system will explain the risk before it exposes roll details.", "เขียนได้อย่างอิสระ ระบบจะอธิบายความเสี่ยงก่อนเปิดรายละเอียดการทอย")}</span>}</div><Button className="df-button df-button--ghost" onClick={previewRisk} disabled={!action.trim()}><Eye size={16} /> {copy(language, "SEE THE RISK", "ดูความเสี่ยง")}</Button><Button className="df-button df-button--primary" onClick={commitIntent} disabled={!action.trim() || analyzeGM.isPending}>{analyzeGM.isPending ? copy(language, "READING STORY…", "กำลังอ่านเรื่อง…") : copy(language, "SET THIS INTENTION", "ยืนยันเจตนานี้")} <ArrowRight size={16} /></Button></div>}
         {details && !diceResult && <RollDetails preview={details} language={language} momentum={game.character.vitals.momentum} onRoll={roll} onEdit={resetIntent} rolling={resolveGM.isPending} />}

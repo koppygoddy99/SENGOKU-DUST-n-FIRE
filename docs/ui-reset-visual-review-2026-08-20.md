@@ -42,3 +42,7 @@ Chronicle ผ่านการปรับไปสู่ `recent leaves → se
 > ภาพ full-page ของระบบตรวจจะซ่อน fixed sidebar โดยเจตนา จึงไม่ใช้การไม่มี rail ในไฟล์ภาพเป็นข้อสรุปว่า rail ไม่ทำงาน ตัว shell ยังคง `sidebar` แบบ fixed ใน player preview และถูกทดสอบผ่าน click-flow/navigation regression
 
 ภาพที่เห็นยืนยันว่า Chronicle ใช้ selected-leaf hierarchy แล้ว; Market ใช้ ledger-tab structure ตามข้อมูลเศรษฐกิจจริง; Character, Archive, Save, Load และ Settings ยังคงสอดคล้อง material system แบบ paper/ink แต่ยังเป็นกลุ่มหน้าที่ควรเกลารายหน้าเมื่อผู้ใช้ชี้เป้าหมายถัดไป
+
+## Play scene viewport follow-up
+
+ภาพ desktop ของ Play Scene หลังรีเซ็ตยืนยันว่า narrative paper แสดงเป็นพื้นที่ต่อเนื่องโดยไม่มี scroll ซ้อน และ rail ยังแสดงตัวตน ค่าสถานะ และเส้นทาง Story ในจอเดียวกัน เนื่องจาก prose ของฉากยาวตามข้อกำหนด จึงเพิ่ม CTA สี vermilion **Declare Intent / ประกาศเจตนา** ใน header เพื่อพาผู้เล่นไปยัง composer และโฟกัสช่องเขียนโดยตรง นี่ทำให้การกระทำหลักปรากฏใน viewport แรก โดยไม่ตัดบทละครหรือซ่อนกติกาที่จะใช้หลังเจตนาได้รับการยืนยัน
