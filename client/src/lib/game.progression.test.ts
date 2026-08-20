@@ -59,4 +59,14 @@ describe("skill progression and campaign time", () => {
     expect(bonusForMasteryRank(13)).toBe(4);
     expect(masteryTierForRank(17)).toMatchObject({ minimumDifficulty: 22, bonus: 5 });
   });
+
+  it("opens a new Leaf only after the campaign has accumulated several days of movement", () => {
+    let state = createSaikaSafehouseDemo();
+    for (let index = 0; index < 8; index += 1) {
+      const record = { ...recordFor(state, "decisive_success"), id: `long-road-${index}`, tick: state.tick + 1 };
+      state = applyRoll(state, record);
+    }
+    expect(state.progression).toMatchObject({ leaf: 2, daysSinceLeaf: 0 });
+    expect(state.progression?.lastTimeMark).toMatchObject({ leafAdvanced: true, advancedDays: 1 });
+  });
 });
