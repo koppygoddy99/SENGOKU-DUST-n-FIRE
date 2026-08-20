@@ -58,12 +58,12 @@ export const REVIEW_SCREEN_MANIFEST: readonly ReviewScreen[] = [
   { page: "market", reviewQuery: "market", screenshotFile: "07-market.png", pageTitle: "This Market", seed: "saika-market" },
   { page: "services", reviewQuery: "services", screenshotFile: "08-services.png", pageTitle: "Services & Hands", seed: "saika-services" },
   { page: "obligations", reviewQuery: "obligations", screenshotFile: "09-debts-favors.png", pageTitle: "Debts & Favors", seed: "saika-obligations" },
-  { page: "exchanges", reviewQuery: "exchanges", screenshotFile: "10-exchange-history.png", pageTitle: "Exchange History", seed: "saika-exchanges" },
+  { page: "exchanges", reviewQuery: "exchanges", screenshotFile: "10-agreements-consequences.png", pageTitle: "Agreements & Consequences", seed: "saika-exchanges" },
   { page: "character", reviewQuery: "character", screenshotFile: "11-character.png", pageTitle: "Character Dossier", seed: "saika-character" },
   { page: "log", reviewQuery: "log", screenshotFile: "12-chronicle.png", pageTitle: "Chronicle", seed: "saika-chronicle", reader: "library" },
   { page: "archive", reviewQuery: "archive", screenshotFile: "13-world-archive.png", pageTitle: "World Archive", seed: "saika-archive" },
-  { page: "save", reviewQuery: "save", screenshotFile: "14-save-game.png", pageTitle: "Campaign Safekeeping", seed: "saika-safekeeping" },
-  { page: "load", reviewQuery: "load", screenshotFile: "15-load-game.png", pageTitle: "Return to a Recorded Leaf", seed: "saika-load" },
+  { page: "save", reviewQuery: "save", screenshotFile: "14-save-game.png", pageTitle: "Save Game", seed: "saika-safekeeping" },
+  { page: "load", reviewQuery: "load", screenshotFile: "15-load-game.png", pageTitle: "Load Game", seed: "saika-load" },
   { page: "settings", reviewQuery: "settings", screenshotFile: "16-settings.png", pageTitle: "Arrange Your Reading Room", seed: "saika-settings" },
 ] as const;
 

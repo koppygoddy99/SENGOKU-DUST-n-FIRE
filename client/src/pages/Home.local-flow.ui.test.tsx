@@ -31,10 +31,11 @@ function openChronicle(child: "Campaign Library" | "Chronicle") {
   fireEvent.click(childButton!);
 }
 
-function openMore(child: "Campaign Safekeeping" | "Return to a Recorded Leaf") {
+function openMore(child: "Save Game" | "Load Game") {
   const group = screen.getByRole("button", { name: "More" });
   if (group.getAttribute("aria-expanded") !== "true") fireEvent.click(group);
-  fireEvent.click(screen.getByRole("button", { name: child }));
+  const childButton = screen.getAllByRole("button", { name: child }).find((button) => !button.hasAttribute("aria-expanded") && button.closest(".campaign-nav__items"));
+  fireEvent.click(childButton!);
 }
 
 describe("UI Preview click flow", () => {
@@ -65,9 +66,9 @@ describe("UI Preview click flow", () => {
     restored.tick = 4;
     window.localStorage.setItem("dust-fire-local-game-v3-saika", JSON.stringify({ game: restored, saves: { manual: restored, leaf2: null, leaf3: null }, language: "en", readerMode: true, darkMode: false, fontSize: "normal", accent: "vermilion" }));
     render(<Home />);
-    openMore("Return to a Recorded Leaf");
+    openMore("Load Game");
     fireEvent.click(screen.getAllByRole("button", { name: "LOAD" })[1]);
-    expect(screen.getAllByText(/PLAY SCENE · LEAF 4/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/PLAY SCENE · LEAF 1/i).length).toBeGreaterThan(0);
     openChronicle("Chronicle");
     expect(screen.getAllByText("คืนที่เมืองซาไกตื่น").length).toBeGreaterThan(0);
   });
@@ -96,14 +97,14 @@ describe("UI Preview click flow", () => {
     fireEvent.click(screen.getByRole("button", { name: /set this intention/i }));
     fireEvent.click(screen.getByRole("button", { name: /roll 2d12/i }));
     fireEvent.click(screen.getByRole("button", { name: /record this result/i }));
-    expect(screen.getAllByText(/LEAF 2/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/LEAF 1/i).length).toBeGreaterThan(0);
     expect(mocks.gmAnalyzeMutate).not.toHaveBeenCalled();
     expect(mocks.gmResolveMutate).not.toHaveBeenCalled();
     expect(mocks.spendCreditMutate).not.toHaveBeenCalled();
-    openMore("Campaign Safekeeping");
+    openMore("Save Game");
     expect(screen.getByText("Save the leaf before it turns")).toBeTruthy();
     fireEvent.click(screen.getAllByRole("button", { name: "SAVE HERE" })[0]);
-    openMore("Return to a Recorded Leaf");
+    openMore("Load Game");
     fireEvent.click(screen.getAllByRole("button", { name: "LOAD" })[1]);
     expect(screen.getByText(/PLAY SCENE · LEAF/i)).toBeTruthy();
   });
@@ -127,7 +128,7 @@ describe("UI Preview click flow", () => {
   it("routes the Prepare group through gear, market, services, obligations, and exchange history", () => {
     render(<Home />);
     fireEvent.click(screen.getByRole("button", { name: "Prepare" }));
-    ["Carried Gear", "This Market", "Services & Hands", "Debts & Favors", "Exchange History"].forEach((item) => expect(screen.getByRole("button", { name: item })).toBeTruthy());
+    ["Carried Gear", "This Market", "Services & Hands", "Debts & Favors", "Agreements & Consequences"].forEach((item) => expect(screen.getByRole("button", { name: item })).toBeTruthy());
     fireEvent.click(screen.getByRole("button", { name: "Carried Gear" }));
     expect(screen.getByText("Carried slots")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "This Market" }));
@@ -136,7 +137,7 @@ describe("UI Preview click flow", () => {
     expect(screen.getByText("คนส่งสารท่าเรือ")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Debts & Favors" }));
     expect(screen.getByText("หนี้ชีวิตจากการลากซาเนฟุยุขึ้นจากน้ำ")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Exchange History" }));
+    fireEvent.click(screen.getByRole("button", { name: "Agreements & Consequences" }));
     expect(screen.getByText("กันทาโร่ลากซาเนฟุยุขึ้นจากน้ำ")).toBeTruthy();
   });
 
@@ -167,7 +168,7 @@ describe("UI Preview click flow", () => {
     fireEvent.click(screen.getByRole("button", { name: /roll 2d12/i }));
     fireEvent.click(screen.getByRole("button", { name: /record this result/i }));
     expect(screen.getAllByText(/AI unavailable/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/LEAF 2/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/LEAF 1/i).length).toBeGreaterThan(0);
     expect(mocks.spendCreditMutate).not.toHaveBeenCalled();
     await waitFor(() => {
       const saved = JSON.parse(window.localStorage.getItem("dust-fire-local-game-v3-saika") ?? "{}");

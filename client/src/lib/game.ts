@@ -24,8 +24,47 @@ export type Mastery = {
   id: string;
   label: string;
   level: number;
+  rank?: number;
+  xp?: number;
+  totalXp?: number;
+  masteryMark?: string;
   origin: string;
   tags: string[];
+};
+
+export type TimeSegment = "dawn" | "day" | "dusk" | "night";
+
+export type SkillPractice = {
+  masteryId: string;
+  masteryLabel: string;
+  gained: number;
+  rankBefore: number;
+  rankAfter: number;
+  xp: number;
+  xpNeeded: number;
+  masteryMark?: string;
+  note?: string;
+};
+
+export type TimeMark = {
+  from: TimeSegment;
+  to: TimeSegment;
+  advancedDays: number;
+  leafAdvanced: boolean;
+  message: string;
+};
+
+export type ProgressionState = {
+  leaf: number;
+  segment: TimeSegment;
+  timeMarksSinceLeaf: number;
+  daysSinceLeaf: number;
+  ageAtCampaignStart: number;
+  currentAge: number;
+  birthSeason: Season;
+  campaignStartYear: number;
+  lastPractice?: SkillPractice;
+  lastTimeMark?: TimeMark;
 };
 
 export type InventoryItem = {
@@ -99,6 +138,7 @@ export type Mission = {
   reward: string;
   risk: string;
   options: string[];
+  progress?: { current: number; required: number; triggerPhrases: string[]; rewardItem?: Omit<InventoryItem, "id">; resolvedBy?: string; rewardGranted?: boolean };
 };
 
 export type MarketOffer = {
@@ -201,6 +241,9 @@ export type RollRecord = RollPreview & {
   reward?: string;
   consequence?: string;
   tick: number;
+  practice?: SkillPractice;
+  timeMark?: TimeMark;
+  missionUpdate?: { missionId: string; current: number; required: number; state: MissionState; reward?: string };
 };
 
 export type Scene = {
@@ -229,6 +272,7 @@ export type GameState = {
   memories: WorldMemory[];
   rolls: RollRecord[];
   historicalBoundary?: HistoricalBoundary & { tick: number };
+  progression?: ProgressionState;
   tick: number;
 };
 
@@ -257,7 +301,52 @@ export type StarterTemplate = {
 };
 
 const item = (id: string, label: string, kind: ItemKind, description: string, slots: number, functions: InventoryItem["functions"], bonus?: InventoryItem["bonus"]): InventoryItem => ({ id, label, kind, description, slots, functions, bonus, condition: "usable" });
-const mastery = (id: string, label: string, level: number, origin: string, tags: string[]): Mastery => ({ id, label, level, origin, tags });
+export const MAX_MASTERY_RANK = 20;
+
+export function xpNeededForRank(rank: number) {
+  if (rank >= MAX_MASTERY_RANK) return 0;
+  if (rank <= 4) return 5;
+  if (rank <= 8) return 7;
+  if (rank <= 12) return 10;
+  if (rank <= 16) return 14;
+  return 18;
+}
+
+export function bonusForMasteryRank(rank: number) {
+  if (rank >= 17) return 5;
+  if (rank >= 13) return 4;
+  if (rank >= 9) return 3;
+  if (rank >= 5) return 2;
+  return 1;
+}
+
+export function masteryTierForRank(rank: number) {
+  if (rank >= 20) return { id: "mastered", en: "Mastered", th: "ถึงขีดสุด", minimumDifficulty: 0, bonus: 5, note: "ชื่อและลายมือของเจ้าเปลี่ยนวิธีที่โลกตอบกลับ" };
+  if (rank >= 17) return { id: "renowned", en: "Renowned", th: "ชื่อเสียงเป็นเดิมพัน", minimumDifficulty: 22, bonus: 5, note: "ต้องเจองานที่เดิมพันสูงจึงจะขัดเกลาต่อได้" };
+  if (rank >= 13) return { id: "proven", en: "Proven", th: "ผ่านงานหนัก", minimumDifficulty: 18, bonus: 4, note: "งานธรรมดาไม่ทำให้ฝีมือขยับอีกแล้ว" };
+  if (rank >= 9) return { id: "trusted", en: "Trusted", th: "คนเริ่มเรียกหา", minimumDifficulty: 14, bonus: 3, note: "เริ่มเติบโตจากงานที่มีคนและผลประโยชน์เกี่ยวข้อง" };
+  if (rank >= 5) return { id: "steady", en: "Steady Hand", th: "ชำนาญมือ", minimumDifficulty: 10, bonus: 2, note: "ฝึกจากงานที่มีผลจริง ไม่ใช่การลองซ้ำ" };
+  return { id: "learning", en: "Learning", th: "ตั้งหลัก", minimumDifficulty: 10, bonus: 1, note: "ทุกงานที่มีความเสี่ยงคือการตั้งมือ" };
+}
+
+export function rankForLegacyMasteryBonus(level: number) {
+  if (level >= 5) return 20;
+  if (level === 4) return 16;
+  if (level === 3) return 12;
+  if (level === 2) return 8;
+  return 4;
+}
+
+export function normalizeMasteryProgress(entry: Mastery): Mastery {
+  const rank = Math.max(1, Math.min(MAX_MASTERY_RANK, entry.rank ?? rankForLegacyMasteryBonus(entry.level)));
+  return { ...entry, rank, level: bonusForMasteryRank(rank), xp: rank >= MAX_MASTERY_RANK ? 0 : Math.max(0, Math.min(entry.xp ?? 0, xpNeededForRank(rank) - 1)), totalXp: Math.max(0, entry.totalXp ?? 0) };
+}
+
+function defaultProgression(context: CampaignContext, ageAtCampaignStart = 20, birthSeason: Season = context.season): ProgressionState {
+  return { leaf: 1, segment: "day", timeMarksSinceLeaf: 0, daysSinceLeaf: 0, ageAtCampaignStart, currentAge: ageAtCampaignStart, birthSeason, campaignStartYear: context.year };
+}
+
+const mastery = (id: string, label: string, level: number, origin: string, tags: string[]): Mastery => normalizeMasteryProgress({ id, label, level, origin, tags });
 
 export const RELATIONSHIP_QUESTIONS = [
   ["first_survivor", "เมื่อกลองสงครามดังขึ้น เจ้าอยากให้ใครรอดก่อนเป็นคนแรก", ["family", "protection"]],
@@ -359,7 +448,7 @@ function openingScene(character: Character, campaign: CampaignContext, mission: 
 export function createGameState(context: CampaignContext, draft: CharacterDraft): GameState {
   const character = createCharacter(draft);
   const template = templateById(draft.templateId);
-  const mission: Mission = { ...template.mission, id: `mission-${Date.now()}`, state: "offered" as MissionState };
+  const mission: Mission = { ...template.mission, id: `mission-${Date.now()}`, state: "offered" as MissionState, progress: { current: 0, required: 2, triggerPhrases: template.mission.options } };
   const opening = openingScene(character, context, mission);
   return {
     schemaVersion: 2,
@@ -373,6 +462,7 @@ export function createGameState(context: CampaignContext, draft: CharacterDraft)
     economy: buildCampaignEconomy(context),
     memories: [{ id: `memory-${Date.now()}`, kind: "news", title: opening.title, detail: opening.body.join("\n\n"), tick: 1, tone: "teal" }],
     rolls: [],
+    progression: defaultProgression(context),
     tick: 1,
   };
 }
@@ -382,7 +472,7 @@ export function createSaikaSafehouseDemo(): GameState {
   const character: Character = {
     id: "char-sanefuyu", name: "ซาเนฟุยุ", identity: "เด็กชายวัยสิบสามปี", occupationId: "freeform", occupation: "ทหารรับจ้างถือปืนของไซกะ", origin: "กิอิ", strength: "อ่านผลประโยชน์และพูดในจังหวะที่คนกำลังลังเล", weakness: "บาดเจ็บสาหัสและถูกความหยามเกียรติผลักให้พลั้งมือ", attributes: { body: 1, hand: 3, wit: 3, mind: 2, heart: 3 }, masteries: [mastery("saika-firearm", "ปืนคาบศิลาและคนไซกะ", 2, "งานคุ้มกันและการรบ", ["fight", "weapon", "gunpowder"]), mastery("hard-bargain", "ต่อรองผลประโยชน์", 1, "เอาตัวรอด", ["negotiation", "social"]), mastery("water-escape", "หนีทางน้ำ", 1, "รอดจากการจมน้ำ", ["water", "escape"])], vitals: { wounds: 5, focus: 3, momentum: 1 }, social: { rank: 0, honor: 0, influence: 1, information: 2, stain: 2 }, resources: { property: 1, supplies: 1, credit: 0 }, inventory: [item("bandaged-arm", "ผ้าพันแผลชุ่มยา", "status", "ไหล่ซ้ายและแขนขวาบาดเจ็บ ใช้งานได้จำกัด", 0, []), item("saika-matchlock", "ปืนคาบศิลาเปียกชื้น", "equipment", "ปืนที่ต้องซ่อมและทำให้แห้งก่อนใช้", 2, ["bonus"], { axis: "hand", value: 1, tags: ["fight", "weapon"] }), item("dry-ration", "ข้าวปั้นตากแห้งกับเต้าเจี้ยว", "reserve", "ของกินที่กันทาโร่โยนให้", 1, ["bonus"])], pulls: RELATIONSHIP_QUESTIONS.map(([id, question, tags]) => ({ id, question, answer: id === "stance" ? "ยืนข้างไซกะตราบใดที่ผลประโยชน์ยังตรงกัน" : id === "debts" ? "ติดหนี้ชีวิตกันทาโร่" : "ยังไม่ตอบ", tags: [...tags], weight: id === "stance" || id === "debts" ? 2 : 1 })),
   };
-  const mission: Mission = { id: "mission-echiya", issuer: "กันทาโร่", issuerType: "samurai", title: "คำตอบใต้ห้องขัง", request: "เสนอทางจัดการเอจิยะและตั๋วสัญญาปืนสามสิบกระบอก โดยไม่ให้สิทธิ์การค้าของไซกะในซาไกพังลง", pressure: "เอโกะชูเพิ่มเวรยาม ปิดประตูเมือง และตรวจเรือเข้าออกตามหาพ่อค้าเอจิยะ", deadline: "ก่อนเมืองซาไกยืนยันข่าวการหายตัว", reward: "การคุ้มครองของกันทาโร่และส่วนแบ่งค่าปืน", risk: "หัวของซาเนฟุยุและเอจิยะอาจถูกส่งไปแลกสิทธิ์การค้า", options: ["เสนอแผนปิดปาก", "สอบเอจิยะ", "หาตั๋วสัญญาปืน"], state: "offered" };
+  const mission: Mission = { id: "mission-echiya", issuer: "กันทาโร่", issuerType: "samurai", title: "คำตอบใต้ห้องขัง", request: "เสนอทางจัดการเอจิยะและตั๋วสัญญาปืนสามสิบกระบอก โดยไม่ให้สิทธิ์การค้าของไซกะในซาไกพังลง", pressure: "เอโกะชูเพิ่มเวรยาม ปิดประตูเมือง และตรวจเรือเข้าออกตามหาพ่อค้าเอจิยะ", deadline: "ก่อนเมืองซาไกยืนยันข่าวการหายตัว", reward: "การคุ้มครองของกันทาโร่และส่วนแบ่งค่าปืน", risk: "หัวของซาเนฟุยุและเอจิยะอาจถูกส่งไปแลกสิทธิ์การค้า", options: ["เสนอแผนปิดปาก", "สอบเอจิยะ", "หาตั๋วสัญญาปืน"], state: "offered", progress: { current: 0, required: 2, triggerPhrases: ["เอจิยะ", "ตั๋ว", "ปืน", "แผน"], rewardItem: { label: "จดหมายรับรองของกันทาโร่", kind: "document", description: "หลักฐานคุ้มครองชั่วคราวที่ช่วยให้คนของไซกะยอมฟังคำอธิบาย", slots: 0, functions: ["unlock"], bonus: { axis: "heart", value: 1, tags: ["saika", "protection"] }, condition: "usable", location: "carried", ownership: "owned" } } };
   const opening: Scene = {
     id: "scene-saika-safehouse-opening", chapter: "Leaf 01", title: mission.title, location: campaign.location,
     publicContext: "ฉากแคมเปญสมมติในบริบทเมืองท่าซาไก ค.ศ. 1569 ใช้แรงกดดันของการค้า อาวุธ และเครือข่ายไซกะเป็นฉากหลัง ไม่ได้ยืนยันว่า NPC ในฉากมีตัวตนจริง.",
@@ -393,14 +483,19 @@ export function createSaikaSafehouseDemo(): GameState {
     ],
     speaker: "กันทาโร่", prompt: "ซาเนฟุยุจะตอบกันทาโร่ว่าอย่างไร?", pressure: mission.pressure, suggestedActions: mission.options,
   };
-  return { schemaVersion: 2, credits: 50, campaign, character, community: { food: 2, labor: 2, voice: 1, safety: 1, cohesion: 2, lastChange: "เมืองซาไกเพิ่มเวรยามและตรวจเรือ" }, currentScene: opening, missions: [mission], market: buildSaikaMarket(), economy: buildSaikaEconomy(), memories: [{ id: "memory-saika-opening", kind: "stain", title: "คืนที่เมืองซาไกตื่น", detail: opening.body.join("\n\n"), tick: 1, tone: "vermilion" }], rolls: [], tick: 1 };
+  return { schemaVersion: 2, credits: 50, campaign, character, community: { food: 2, labor: 2, voice: 1, safety: 1, cohesion: 2, lastChange: "เมืองซาไกเพิ่มเวรยามและตรวจเรือ" }, currentScene: opening, missions: [mission], market: buildSaikaMarket(), economy: buildSaikaEconomy(), memories: [{ id: "memory-saika-opening", kind: "stain", title: "คืนที่เมืองซาไกตื่น", detail: opening.body.join("\n\n"), tick: 1, tone: "vermilion" }], rolls: [], progression: defaultProgression(campaign, 13, "Spring"), tick: 1 };
 }
 
 export function normalizeGameState(state: GameState): GameState {
-  if (state.economy) return state;
+  const campaign = state.campaign;
+  const progression = state.progression ?? defaultProgression(campaign, state.character.identity.includes("สิบสาม") ? 13 : 20, campaign.season);
+  const missions = state.missions.map((mission) => mission.progress ? mission : { ...mission, progress: { current: mission.state === "resolved" ? 2 : 0, required: 2, triggerPhrases: mission.options } });
   return {
     ...state,
-    economy: state.campaign.id === "camp-saika-1569" ? buildSaikaEconomy() : buildCampaignEconomy(state.campaign),
+    character: { ...state.character, masteries: state.character.masteries.map(normalizeMasteryProgress) },
+    missions,
+    progression: { ...progression, currentAge: Math.max(progression.currentAge, progression.ageAtCampaignStart) },
+    economy: state.economy ?? (campaign.id === "camp-saika-1569" ? buildSaikaEconomy() : buildCampaignEconomy(campaign)),
   };
 }
 
@@ -525,11 +620,84 @@ export function resolveRoll(preview: RollPreview, state: GameState, spendMomentu
   };
 }
 
+function awardPractice(masteries: Mastery[], record: RollRecord) {
+  const used = record.mastery ? masteries.find((entry) => entry.id === record.mastery?.id) : undefined;
+  if (!used) return { masteries, practice: undefined as SkillPractice | undefined };
+  const before = normalizeMasteryProgress(used);
+  const normalizedRank = before.rank ?? 1;
+  if (normalizedRank >= MAX_MASTERY_RANK) return { masteries, practice: { masteryId: before.id, masteryLabel: before.label, gained: 0, rankBefore: normalizedRank, rankAfter: normalizedRank, xp: 0, xpNeeded: 0, masteryMark: before.masteryMark ?? "Mastered" } };
+  const tier = masteryTierForRank(normalizedRank);
+  const eligible = record.difficulty >= tier.minimumDifficulty;
+  const gained = eligible ? (record.outcome === "decisive_success" ? 2 : 1) : 0;
+  let rank = normalizedRank;
+  let xp = (before.xp ?? 0) + gained;
+  let masteryMark = before.masteryMark;
+  while (rank < MAX_MASTERY_RANK && xp >= xpNeededForRank(rank)) {
+    xp -= xpNeededForRank(rank);
+    rank += 1;
+    if (rank === MAX_MASTERY_RANK) { xp = 0; masteryMark = "Mastered"; }
+  }
+  const after: Mastery = { ...before, rank, level: bonusForMasteryRank(rank), xp, totalXp: (before.totalXp ?? 0) + gained, masteryMark };
+  const practice: SkillPractice = { masteryId: after.id, masteryLabel: after.label, gained, rankBefore: normalizedRank, rankAfter: rank, xp: after.xp ?? 0, xpNeeded: xpNeededForRank(rank), masteryMark, note: eligible ? tier.note : `ต้องเผชิญงาน DN ${tier.minimumDifficulty}+ เพื่อฝึกขั้นนี้` };
+  return { masteries: masteries.map((entry) => entry.id === after.id ? after : entry), practice };
+}
+
+function advanceClock(current: ProgressionState, outcome: Outcome): { progression: ProgressionState; timeMark: TimeMark; dayAdvance: number } {
+  const segments: TimeSegment[] = ["dawn", "day", "dusk", "night"];
+  const marks = outcome === "decisive_success" ? 2 : 1;
+  const startingIndex = segments.indexOf(current.segment);
+  const absolute = startingIndex + marks;
+  const dayAdvance = Math.floor(absolute / segments.length);
+  const to = segments[absolute % segments.length];
+  const daysSinceLeaf = current.daysSinceLeaf + dayAdvance;
+  const leafAdvanced = daysSinceLeaf >= 4;
+  const message = leafAdvanced ? "หลายวันได้ทิ้งร่องรอยพอให้เปิด Leaf ใหม่" : dayAdvance ? "เรื่องยืดผ่านวันเดิมไปแล้ว" : `แสงรอบตัวเคลื่อนจาก ${current.segment} ไปสู่ ${to}`;
+  const timeMark: TimeMark = { from: current.segment, to, advancedDays: dayAdvance, leafAdvanced, message };
+  return { progression: { ...current, leaf: leafAdvanced ? current.leaf + 1 : current.leaf, segment: to, timeMarksSinceLeaf: leafAdvanced ? 0 : current.timeMarksSinceLeaf + marks, daysSinceLeaf: leafAdvanced ? 0 : daysSinceLeaf, lastTimeMark: timeMark }, timeMark, dayAdvance };
+}
+
+function advanceCampaignCalendar(campaign: CampaignContext, progression: ProgressionState, dayAdvance: number) {
+  const seasons: Season[] = ["Spring", "Summer", "Autumn", "Winter"];
+  let year = campaign.year;
+  let season = campaign.season;
+  let day = campaign.day + dayAdvance;
+  let currentAge = progression.currentAge;
+  while (day > 30) {
+    day -= 30;
+    const nextIndex = (seasons.indexOf(season) + 1) % seasons.length;
+    if (season === "Winter") year += 1;
+    season = seasons[nextIndex];
+    if (year > progression.campaignStartYear && season === progression.birthSeason) currentAge += 1;
+  }
+  return { campaign: { ...campaign, year, season, day }, progression: { ...progression, currentAge } };
+}
+
+function progressActiveMission(state: GameState, record: RollRecord): { missions: Mission[]; inventory: InventoryItem[]; transaction?: ExchangeRecord; update?: RollRecord["missionUpdate"] } {
+  const mission = state.missions.find((entry) => entry.state === "offered" || entry.state === "active");
+  if (!mission?.progress || record.outcome === "failure_with_consequence") return { missions: state.missions, inventory: state.character.inventory };
+  const gained = record.outcome === "decisive_success" ? 2 : 1;
+  const current = Math.min(mission.progress.required, mission.progress.current + gained);
+  const resolved = current >= mission.progress.required;
+  const rewardItem = resolved && mission.progress.rewardItem ? { ...mission.progress.rewardItem, id: `mission-reward-${mission.id}-${record.id}` } : undefined;
+  const reward = resolved ? mission.reward : undefined;
+  const updated: Mission = { ...mission, state: resolved ? "resolved" : "active", progress: { ...mission.progress, current, resolvedBy: resolved ? record.id : mission.progress.resolvedBy, rewardGranted: resolved || mission.progress.rewardGranted } };
+  const transaction = resolved ? { id: `tx-mission-${mission.id}-${record.id}`, kind: "favor" as const, title: `ผลของงาน: ${mission.title}`, counterpart: mission.issuer, payment: "การกระทำในฉาก", witness: state.currentScene.speaker || mission.issuer, consequence: reward ?? "งานเปลี่ยนสถานะ", tick: record.tick } : undefined;
+  return { missions: state.missions.map((entry) => entry.id === mission.id ? updated : entry), inventory: rewardItem ? [...state.character.inventory, rewardItem] : state.character.inventory, transaction, update: { missionId: mission.id, current, required: mission.progress.required, state: updated.state, reward } };
+}
+
 export function applyRoll(state: GameState, record: RollRecord): GameState {
   const copy = outcomeCopy[record.outcome];
   const success = record.outcome !== "failure_with_consequence";
+  const initialProgression = state.progression ?? defaultProgression(state.campaign, state.character.identity.includes("สิบสาม") ? 13 : 20, state.campaign.season);
+  const awarded = awardPractice(state.character.masteries, record);
+  const clock = advanceClock(initialProgression, record.outcome);
+  const calendar = advanceCampaignCalendar(state.campaign, clock.progression, clock.dayAdvance);
+  const missionResult = progressActiveMission(state, record);
+  const activeMission = state.missions.find((entry) => entry.state === "offered" || entry.state === "active");
   const updatedCharacter: Character = {
     ...state.character,
+    masteries: awarded.masteries,
+    inventory: missionResult.inventory,
     vitals: { ...state.character.vitals, momentum: Math.max(0, state.character.vitals.momentum - (record.momentumSpent ? 1 : 0)) },
     social: { ...state.character.social, stain: state.character.social.stain + (record.outcome === "failure_with_consequence" ? 1 : 0), information: state.character.social.information + (record.outcome === "partial_success" ? 1 : 0) },
   };
@@ -541,8 +709,7 @@ export function applyRoll(state: GameState, record: RollRecord): GameState {
     tick: record.tick,
     tone: record.outcome === "failure_with_consequence" ? "vermilion" : record.outcome === "success_with_cost" ? "ochre" : "teal",
   };
-  const mission = state.missions[0];
-  const missions = state.missions.map((entry): Mission => entry.id === mission?.id ? { ...entry, state: success ? "resolved" : "active" } : entry);
+  const missions = missionResult.missions;
   const nextScene: Scene = {
     ...state.currentScene,
     id: `scene-${record.id}`,
@@ -551,7 +718,7 @@ export function applyRoll(state: GameState, record: RollRecord): GameState {
     body: success
       ? [
           record.narrative,
-          `คำตอบของเจ้าทำให้งาน “${mission?.title ?? "ภารกิจ"}” ขยับไปข้างหน้า ผู้คนที่เคยยืนเงียบอยู่ข้างเสาเริ่มหันมามองกันเอง เพราะไม่มีใครคิดว่าคำพูดเพียงไม่กี่ประโยคจะเปลี่ยนน้ำหนักของเรื่องได้เร็วขนาดนี้.`,
+          `คำตอบของเจ้าทำให้งาน “${activeMission?.title ?? "ภารกิจ"}” ขยับไปข้างหน้า ผู้คนที่เคยยืนเงียบอยู่ข้างเสาเริ่มหันมามองกันเอง เพราะไม่มีใครคิดว่าคำพูดเพียงไม่กี่ประโยคจะเปลี่ยนน้ำหนักของเรื่องได้เร็วขนาดนี้.`,
           `แต่ผู้มีอำนาจในฉากไม่ได้ยอมเสียหน้าโดยเปล่าประโยชน์ ${record.consequence ?? "จึงมีชื่อของเจ้าและสิ่งที่เจ้าทำถูกเก็บไว้เป็นข้ออ้างสำหรับวันหน้า"}.`,
           `ผู้มอบงานไม่ได้สัญญาว่าทุกอย่างจะปลอดภัย เขาเพียงพยักหน้าแล้วบอกว่า “เจ้าทำให้ข้าเลือกทางที่ยากขึ้นได้แล้ว ทีนี้ก็อย่าปล่อยให้คนอื่นเขียนเรื่องนี้แทนเจ้า.”`,
           `ลมจากเส้นทางหลักยังพาเสียงเกวียนและข่าวลือเข้ามาเหมือนเดิม แต่ตอนนี้เจ้าได้สิ่งหนึ่งที่จับต้องได้: เวลาสั้น ๆ ทางเลือกใหม่หนึ่งทาง และคนที่เริ่มจำชื่อของเจ้าได้.`,
@@ -568,7 +735,8 @@ export function applyRoll(state: GameState, record: RollRecord): GameState {
     pressure: record.consequence ?? state.currentScene.pressure,
     suggestedActions: success ? ["รับรางวัลแล้วถามเงื่อนไข", "ตามหาคนที่เป็นพยาน", "กลับไปดูภารกิจอื่น"] : ["แก้ความเข้าใจกับผู้คุม", "หาหลักฐานเพิ่ม", "ยอมรับผลแล้วเปลี่ยนแผน"],
   };
-  return { ...state, character: updatedCharacter, currentScene: nextScene, missions, memories: [...state.memories, memory], rolls: [...state.rolls, record], tick: record.tick };
+  const storedRecord: RollRecord = { ...record, practice: awarded.practice, timeMark: clock.timeMark, missionUpdate: missionResult.update };
+  return { ...state, campaign: calendar.campaign, progression: { ...calendar.progression, lastPractice: awarded.practice }, character: updatedCharacter, currentScene: nextScene, missions, economy: missionResult.transaction ? { ...state.economy, transactions: [...state.economy.transactions, missionResult.transaction] } : state.economy, memories: [...state.memories, memory], rolls: [...state.rolls, storedRecord], tick: record.tick };
 }
 
 export function buyMarketOffer(state: GameState, offerId: string): { state: GameState; message: string } {

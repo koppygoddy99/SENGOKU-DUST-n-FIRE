@@ -16,7 +16,7 @@ describe("Market and gear hub", () => {
     expect(screen.getByText("คนส่งสารท่าเรือ")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /เครดิต \/ หนี้ \/ บุญคุณ/i }));
     expect(screen.getByText("หนี้ชีวิตจากการลากซาเนฟุยุขึ้นจากน้ำ")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: /ประวัติการแลกเปลี่ยน/i }));
+    fireEvent.click(screen.getByRole("button", { name: /สมุดสัญญาและผลประโยชน์/i }));
     expect(screen.getByText("กันทาโร่ลากซาเนฟุยุขึ้นจากน้ำ")).toBeTruthy();
   });
 
