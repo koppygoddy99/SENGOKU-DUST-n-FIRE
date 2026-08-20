@@ -40,7 +40,7 @@ describe("UI Preview click flow", () => {
     expect(screen.getByText("1569")).toBeTruthy();
     expect(screen.getAllByText("Sakai / Izumi").length).toBeGreaterThan(0);
     expect(screen.getByText("ซาเนฟุยุ")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: /try ui preview/i }));
+    fireEvent.click(screen.getByRole("button", { name: "CONTINUE STORY" }));
     expect(screen.getAllByText("คำตอบใต้ห้องขัง").length).toBeGreaterThan(0);
     expect(screen.getByText(/เซฟเฮาส์ลับของไซกะ/i)).toBeTruthy();
     fireEvent.click(screen.getAllByRole("button", { name: "Campaign Log" })[0]);
@@ -55,7 +55,7 @@ describe("UI Preview click flow", () => {
     render(<Home />);
     fireEvent.click(screen.getByRole("button", { name: "Load Game" }));
     fireEvent.click(screen.getAllByRole("button", { name: "LOAD" })[1]);
-    expect(screen.getAllByText(/UI PREVIEW · LEAF 4/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/PLAY SCENE · LEAF 4/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText("คำตอบใต้ห้องขัง").length).toBeGreaterThan(0);
     fireEvent.click(screen.getAllByRole("button", { name: "Campaign Log" })[0]);
     expect(screen.getAllByText("คืนที่เมืองซาไกตื่น").length).toBeGreaterThan(0);
@@ -83,12 +83,13 @@ describe("UI Preview click flow", () => {
     render(<Home />);
     expect(mocks.creditsQuery).toHaveBeenCalledWith(undefined, expect.objectContaining({ enabled: false }));
 
-    fireEvent.click(screen.getByRole("button", { name: /try ui preview/i }));
-    expect(screen.getByText(/UI PREVIEW · LEAF/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "CONTINUE STORY" }));
+    expect(screen.getByText(/PLAY SCENE · LEAF/i)).toBeTruthy();
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "I will show the rice ledger to the clerk." } });
-    fireEvent.click(screen.getByRole("button", { name: /analyze locally/i }));
-    expect(screen.getAllByText(/LOCAL TRIAL/i).length).toBeGreaterThan(0);
-    fireEvent.click(screen.getByRole("button", { name: /confirm & roll/i }));
+    fireEvent.click(screen.getByRole("button", { name: /commit action/i }));
+    expect(screen.getAllByText(/local rules engine/i).length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole("button", { name: /roll 2d12/i }));
+    fireEvent.click(screen.getByRole("button", { name: /accept result/i }));
     expect(screen.getAllByText(/LEAF 2/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText("50").length).toBeGreaterThan(0);
     expect(mocks.gmAnalyzeMutate).not.toHaveBeenCalled();
@@ -103,7 +104,24 @@ describe("UI Preview click flow", () => {
     fireEvent.click(screen.getByRole("button", { name: "Load Game" }));
     expect(screen.getByText("Return to a recorded leaf")).toBeTruthy();
     fireEvent.click(screen.getAllByRole("button", { name: "LOAD" })[1]);
-    expect(screen.getByText(/UI PREVIEW · LEAF/i)).toBeTruthy();
+    expect(screen.getByText(/PLAY SCENE · LEAF/i)).toBeTruthy();
+  });
+
+  it("offers Momentum only after the local 2d12 result is visible and records the spent token", async () => {
+    render(<Home />);
+    fireEvent.click(screen.getByRole("button", { name: "CONTINUE STORY" }));
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "I will use the ledger to ask the clerk for time." } });
+    fireEvent.click(screen.getByRole("button", { name: /commit action/i }));
+    fireEvent.click(screen.getByRole("button", { name: /roll 2d12/i }));
+    expect(screen.getByRole("button", { name: /spend momentum/i })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /spend momentum/i }));
+    fireEvent.click(screen.getByRole("button", { name: /accept result/i }));
+
+    await waitFor(() => {
+      const saved = JSON.parse(window.localStorage.getItem("dust-fire-local-game-v3-saika") ?? "{}");
+      expect(saved.game.rolls[0].momentumSpent).toBe(2);
+      expect(saved.game.character.vitals.momentum).toBe(0);
+    });
   });
 
   it("opens the Market & gear tree and routes every ledger from the Campaign Sidebar", () => {
@@ -136,8 +154,8 @@ describe("UI Preview click flow", () => {
   it("returns to the Campaign Overview page from the Campaign Sidebar", () => {
     render(<Home />);
     fireEvent.click(screen.getByRole("button", { name: "Campaign Overview" }));
-    expect(screen.getByRole("heading", { name: /Honor on the banner/i })).toBeTruthy();
-    expect(screen.getByText(/current leaf/i)).toBeTruthy();
+    expect(screen.getByText(/STORY MAP/)).toBeTruthy();
+    expect(screen.getByText(/CURRENT STATE/)).toBeTruthy();
   });
 
   it("falls back to Local Trial without spending a credit when an AI GM resolution fails", async () => {
@@ -146,9 +164,10 @@ describe("UI Preview click flow", () => {
     render(<Home forceUiPreviewMode={false} />);
     fireEvent.click(screen.getByRole("button", { name: "Play" }));
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "I will show the rice ledger to the clerk." } });
-    fireEvent.click(screen.getByRole("button", { name: /ask the gm/i }));
-    fireEvent.click(screen.getByRole("button", { name: /confirm & roll/i }));
-    expect(screen.getByText(/AI GM was unavailable/i)).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /commit action/i }));
+    fireEvent.click(screen.getByRole("button", { name: /roll 2d12/i }));
+    fireEvent.click(screen.getByRole("button", { name: /accept result/i }));
+    expect(screen.getAllByText(/AI unavailable/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/LEAF 2/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText("50").length).toBeGreaterThan(0);
     expect(mocks.spendCreditMutate).not.toHaveBeenCalled();

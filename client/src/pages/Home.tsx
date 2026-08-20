@@ -12,6 +12,8 @@ import { trpc } from "@/lib/trpc";
 import { SengokuIcon, type SengokuIconName } from "@/components/SengokuIcon";
 import { CampaignsView } from "@/pages/CampaignsView";
 import { MarketHub } from "@/pages/MarketHub";
+import { StoryMap } from "@/features/story/StoryMap";
+import { PlayScene } from "@/features/play/PlayScene";
 import {
   AXES,
   RELATIONSHIP_QUESTIONS,
@@ -288,10 +290,10 @@ export default function Home({ forceUiPreviewMode }: { forceUiPreviewMode?: bool
       <div className="sidebar__notice">{notice}</div>
     </aside>
     <main className={`main-content ${page === "play" ? "main-content--play" : ""}`}>
-      {page === "home" && <HomeView game={game} language={language} open={open} uiPreviewMode={uiPreviewMode} />}
+      {page === "home" && <StoryMap game={game} language={language} onOpen={open} />}
       {page === "campaigns" && <CampaignsView campaigns={Object.values(campaignLibrary)} activeId={game.campaign.id} language={language} onSelect={selectCampaign} onNew={() => open("start")} />}
       {page === "start" && <StartView language={language} onStart={beginNew} />}
-      {page === "play" && <PlayView game={game} language={language} open={open} onUpdate={updateGame} isAuthenticated={isAuthenticated} uiPreviewMode={uiPreviewMode} onLogin={startLogin} onAccountCreditChange={() => accountCredits.refetch()} />}
+      {page === "play" && <PlayScene game={game} language={language} onOpen={open} onUpdate={updateGame} isAuthenticated={isAuthenticated} uiPreviewMode={uiPreviewMode} onLogin={startLogin} onAccountCreditChange={() => accountCredits.refetch()} />}
       {page === "missions" && <MissionsView game={game} language={language} onUpdate={updateGame} open={open} />}
       {page === "market" && <MarketHub game={game} language={language} onUpdate={updateGame} initialTab="market" />}
       {page === "localmarket" && <MarketHub game={game} language={language} onUpdate={updateGame} initialTab="market" />}

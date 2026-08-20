@@ -1,0 +1,105 @@
+import React, { useState } from "react";
+import { ArrowLeft, ArrowRight, Check, ChevronDown, Eye, FileText, Map, Save, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { SengokuIcon } from "@/components/SengokuIcon";
+import { trpc } from "@/lib/trpc";
+import { AXES, applyRoll, parseAction, resolveRoll, type GameState, type RollPreview } from "@/lib/game";
+import "./playScene.css";
+
+type Language = "en" | "th";
+type PlayDestination = "home" | "log" | "save" | "load";
+type OutcomeRecord = ReturnType<typeof resolveRoll>;
+
+function copy(language: Language, en: string, th: string) { return language === "en" ? en : th; }
+function localRules(uiPreviewMode: boolean, isAuthenticated: boolean) { return uiPreviewMode || !isAuthenticated; }
+function historicalLabel(status: NonNullable<RollPreview["historical"]>["status"], language: Language) {
+  const table = { "fact-supported": ["Fact-supported", "มีหลักฐานรองรับ"], "contextual-play": ["Contextual play", "ใช้บริบทประวัติศาสตร์"], "campaign-fiction": ["Campaign fiction", "เรื่องแต่งในแคมเปญ"], "insufficient-evidence": ["Evidence limited", "หลักฐานยังไม่พอ"] } as const;
+  return table[status][language === "en" ? 0 : 1];
+}
+function historicalTone(status: NonNullable<RollPreview["historical"]>["status"]) { return status === "fact-supported" ? "teal" : status === "contextual-play" ? "ochre" : status === "campaign-fiction" ? "vermilion" : "navy"; }
+function outcomeLabel(outcome: string) { return outcome.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase()); }
+
+function gmContext(game: GameState) {
+  const mission = game.missions.find((entry) => entry.state === "active" || entry.state === "offered");
+  return {
+    campaign: game.campaign,
+    character: { name: game.character.name, occupation: game.character.occupation, origin: game.character.origin, strengths: game.character.strength, weakness: game.character.weakness, attributes: game.character.attributes, masteries: game.character.masteries.map((entry) => ({ name: entry.label, level: entry.level, source: entry.origin })) },
+    currentScene: { title: game.currentScene.title, location: game.currentScene.location, summary: game.currentScene.body.join("\n\n"), pressure: game.currentScene.pressure, declaredChoices: game.currentScene.suggestedActions },
+    activeMission: mission ? { title: mission.title, giver: mission.issuer, objective: mission.request, deadline: mission.deadline, reward: mission.reward } : undefined,
+    socialState: { honor: game.character.social.honor, influence: game.character.social.influence, stain: game.character.social.stain, rumors: game.memories.filter((entry) => entry.kind === "news").slice(-4).map((entry) => entry.detail), oaths: game.memories.filter((entry) => entry.kind === "oath").slice(-4).map((entry) => entry.detail), debts: game.memories.filter((entry) => entry.kind === "debt").slice(-4).map((entry) => entry.detail) },
+    recentMemories: game.memories.slice(-8).map((entry) => ({ title: entry.title, detail: entry.detail, tone: entry.tone })),
+  };
+}
+
+function HistoricalFence({ historical, language }: { historical: NonNullable<RollPreview["historical"]>; language: Language }) {
+  return <aside className={`play-fence play-fence--${historical.status}`}><div><small>{copy(language, "HISTORICAL BOUNDARY", "ขอบเขตประวัติศาสตร์")}</small><span>{historicalLabel(historical.status, language)}</span></div><p>{historical.fence}</p></aside>;
+}
+
+function RollDetails({ preview, language, momentum, onRoll, onEdit, rolling }: { preview: RollPreview; language: Language; momentum: number; onRoll: () => void; onEdit: () => void; rolling: boolean }) {
+  const axis = AXES.find((entry) => entry.id === preview.axis);
+  return <section className="play-roll-details"><div className="play-roll-details__heading"><span><SengokuIcon name="sword" tone="vermilion" size={17} /> {copy(language, "ROLL DETAILS", "รายละเอียดการทอย")}</span><small>{copy(language, "Rules are visible after intent", "เห็นกติกาหลังยืนยันเจตนา")}</small></div><div className="play-roll-details__grid"><div><small>{copy(language, "Intent", "เจตนา")}</small><strong>{preview.intent}</strong></div><div><small>{copy(language, "Axis", "แกนทอย")}</small><strong>{language === "en" ? axis?.en : axis?.th}</strong></div><div><small>{copy(language, "Mastery", "ความชำนาญ")}</small><strong>{preview.mastery ? `${preview.mastery.label} +${preview.mastery.level}` : copy(language, "No mastery", "ไม่มีความชำนาญ")}</strong></div><div><small>{copy(language, "Context", "บริบท")}</small><strong>{preview.contextReason ? `${preview.contextReason} +${preview.contextBonus}` : copy(language, "No bonus", "ไม่มีโบนัส")}</strong></div><div><small>{copy(language, "Difficulty", "ความยาก")}</small><strong>DN {preview.difficulty}</strong></div><div><small>{copy(language, "Momentum", "แรงฮึด")}</small><strong>{momentum}/2 · {copy(language, "available after roll", "เลือกใช้หลังเห็นผล")}</strong></div></div>{preview.historical && <HistoricalFence historical={preview.historical} language={language} />}<div className="play-roll-details__actions"><Button className="df-button df-button--ghost" onClick={onEdit} disabled={rolling}>{copy(language, "EDIT ACTION", "แก้การกระทำ")}</Button><Button className="df-button df-button--primary" onClick={onRoll} disabled={rolling}>{rolling ? copy(language, "ROLLING…", "กำลังทอย…") : copy(language, "ROLL 2D12", "ทอย 2D12")} <ArrowRight size={17} /></Button></div></section>;
+}
+
+function DiceResult({ record, language, momentum, onSpend, onAccept, onEdit }: { record: OutcomeRecord; language: Language; momentum: number; onSpend: () => void; onAccept: () => void; onEdit: () => void }) {
+  const canSpendMomentum = momentum > 0 && !record.momentumSpent;
+  return <section className="play-dice-result"><p className="play-scene__eyebrow">{copy(language, "DICE RESULT · DECISION WINDOW", "ผลลูกเต๋า · ช่วงตัดสินใจ")}</p><div className="play-dice-result__tray"><span>{record.dice[0]}</span><b>+</b><span className="is-light">{record.dice[1]}</span><div><small>{copy(language, "CURRENT TOTAL", "ผลรวมปัจจุบัน")}</small><strong>{record.total} <i>/ DN {record.difficulty}</i></strong></div><em>{outcomeLabel(record.outcome)}</em></div><div className="play-dice-result__copy"><p>{record.summary}</p><p>{record.consequence}</p></div>{canSpendMomentum && <div className="play-dice-result__momentum"><Sparkles size={17} /><div><strong>{copy(language, "Spend 1 Momentum for +2?", "ใช้แรงฮึด 1 เพื่อ +2 หรือไม่?")}</strong><span>{copy(language, "You see the dice first. Spending it will recalculate the same deterministic roll before the result is saved.", "เจ้าเห็นผลลูกเต๋าก่อน การใช้แรงฮึดจะคำนวณผลทอยเดิมใหม่ก่อนบันทึก")}</span></div><Button className="df-button df-button--ghost" onClick={onSpend}>{copy(language, "SPEND MOMENTUM", "ใช้แรงฮึด")}</Button></div>}<div className="play-dice-result__actions"><Button className="df-button df-button--ghost" onClick={onEdit}><ArrowLeft size={16} /> {copy(language, "EDIT ACTION", "แก้การกระทำ")}</Button><Button className="df-button df-button--primary" onClick={onAccept}>{copy(language, "ACCEPT RESULT", "ยอมรับผล")} <Check size={16} /></Button></div></section>;
+}
+
+function OutcomeCard({ record, game, language, notice, onContinue, onMap, onChronicle }: { record: OutcomeRecord; game: GameState; language: Language; notice: string; onContinue: () => void; onMap: () => void; onChronicle: () => void }) {
+  const worldTrace = game.memories.at(-1);
+  return <section className="play-outcome-card"><header><div><p className="play-scene__eyebrow">{copy(language, "OUTCOME · SAVED TO CAMPAIGN", "ผลลัพธ์ · บันทึกลงแคมเปญแล้ว")}</p><h2>{outcomeLabel(record.outcome)}</h2></div><span>{copy(language, "Leaf", "หน้า")} {record.tick}</span></header>{notice && <p className="play-scene__notice play-outcome-card__notice">{notice}</p>}<div className="play-outcome-card__layers"><article><small>{copy(language, "1 · MECHANICAL RESULT", "1 · ผลเชิงกลไก")}</small><strong>{record.total} / DN {record.difficulty}</strong><p>{record.summary}</p></article><article><small>{copy(language, "2 · STORY RESULT", "2 · ผลเชิงเรื่องเล่า")}</small><strong>{game.currentScene.title}</strong><p>{record.narrative || game.currentScene.body[0]}</p></article><article><small>{copy(language, "3 · WORLD CONSEQUENCE", "3 · ร่องรอยในโลก")}</small><strong>{worldTrace?.title ?? copy(language, "The next leaf is recorded", "หน้าถัดไปถูกบันทึกแล้ว")}</strong><p>{worldTrace?.detail ?? record.consequence}</p></article></div><div className="play-outcome-card__actions"><Button className="df-button df-button--primary" onClick={onContinue}>{copy(language, "CONTINUE SCENE", "เล่นฉากต่อ")} <ArrowRight size={17} /></Button><Button className="df-button df-button--ghost" onClick={onMap}><Map size={16} /> {copy(language, "RETURN TO MAP", "กลับแผนที่")}</Button><button onClick={onChronicle}><FileText size={15} /> {copy(language, "OPEN CHRONICLE", "เปิดบันทึกเรื่อง")}</button></div></section>;
+}
+
+export function PlayScene({ game, language, onOpen, onUpdate, isAuthenticated, uiPreviewMode, onLogin, onAccountCreditChange }: { game: GameState; language: Language; onOpen: (page: PlayDestination) => void; onUpdate: (next: GameState, message: string) => void; isAuthenticated: boolean; uiPreviewMode: boolean; onLogin: () => void; onAccountCreditChange: () => unknown }) {
+  const [action, setAction] = useState("");
+  const [risk, setRisk] = useState<RollPreview | null>(null);
+  const [details, setDetails] = useState<RollPreview | null>(null);
+  const [diceResult, setDiceResult] = useState<OutcomeRecord | null>(null);
+  const [outcome, setOutcome] = useState<OutcomeRecord | null>(null);
+  const [notice, setNotice] = useState("");
+  const analyzeGM = trpc.gm.analyze.useMutation();
+  const resolveGM = trpc.gm.resolve.useMutation();
+  const spendCredit = trpc.profile.spendCredit.useMutation();
+  const useLocal = localRules(uiPreviewMode, isAuthenticated);
+  const activeMission = game.missions.find((mission) => mission.state === "active" || mission.state === "offered");
+
+  const resetIntent = () => { setRisk(null); setDetails(null); setDiceResult(null); setNotice(""); };
+  const previewRisk = () => { if (!action.trim()) return; const parsed = parseAction(action, game); setRisk({ ...parsed, isRiskOnly: true, mastery: undefined, contextBonus: 0, contextReason: undefined }); setDetails(null); setDiceResult(null); setNotice(copy(language, "Risk is visible. Commit when you are ready to inspect the ruling.", "เห็นความเสี่ยงแล้ว ยืนยันเจตนาเมื่อต้องการตรวจคำวินิจฉัย")); };
+  const commitIntent = () => {
+    if (!action.trim()) return;
+    const local = () => { setDetails({ ...parseAction(action, game), isRiskOnly: false }); setNotice(copy(language, "The local rules engine prepared the roll details. No AI credit is used.", "กติกาในเครื่องเตรียมรายละเอียดการทอยแล้ว และไม่หักเครดิต AI")); };
+    if (useLocal) { local(); return; }
+    setNotice(copy(language, "The story engine is reading the campaign record…", "เครื่องยนต์เรื่องราวกำลังอ่านระเบียนแคมเปญ…"));
+    analyzeGM.mutate({ action, language, context: gmContext(game) }, { onSuccess: (answer) => { const fallback = parseAction(action, game); const mastery = answer.suggestedMastery ? game.character.masteries.find((entry) => entry.label.toLowerCase().includes(answer.suggestedMastery!.toLowerCase()) || answer.suggestedMastery!.toLowerCase().includes(entry.label.toLowerCase())) : undefined; setDetails({ ...fallback, isRiskOnly: false, intent: answer.intentSummary, method: answer.confirmation, axis: answer.axis, mastery, contextBonus: answer.contextBonus, contextReason: answer.contextReason, difficulty: answer.difficulty as RollPreview["difficulty"], risks: [answer.risk], witnesses: [], historical: { status: answer.historicalStatus, fence: answer.historicalFence } }); setNotice(copy(language, "AI-assisted interpretation is ready. You may inspect or revise it before rolling.", "คำวินิจฉัยแบบ AI-assisted พร้อมแล้ว ตรวจหรือแก้ได้ก่อนทอย")); }, onError: () => { local(); setNotice(copy(language, "AI assistance is unavailable. The story continues with local rules and Local Save.", "AI ยังไม่พร้อม เรื่องยังดำเนินด้วยกติกาในเครื่องและ Local Save")); } });
+  };
+  const roll = () => { if (!details) return; setDiceResult(resolveRoll(details, game, false)); setNotice(copy(language, "The dice are visible. Momentum may be spent now, before this result is recorded.", "เห็นผลลูกเต๋าแล้ว จะใช้แรงฮึดได้ตอนนี้ก่อนบันทึกผล")); };
+  const spendMomentum = () => { if (!details || game.character.vitals.momentum <= 0) return; setDiceResult(resolveRoll(details, game, true)); };
+  const saveLocal = (record: OutcomeRecord, message: string) => { const next = applyRoll(game, record); onUpdate({ ...next, credits: game.credits }, message); setOutcome(record); setDiceResult(null); setDetails(null); setRisk(null); setAction(""); setNotice(message); };
+  const acceptResult = () => {
+    if (!diceResult) return;
+    const record = diceResult;
+    if (useLocal) { saveLocal(record, `${record.summary} · Local Trial saved at Leaf ${record.tick} · no AI credit used`); return; }
+    setNotice(copy(language, "AI assistance is recording the consequence…", "AI-assisted กำลังจดผลกระทบ…"));
+    resolveGM.mutate({ language, context: gmContext(game), action, roll: { outcome: record.outcome, total: record.total, difficulty: record.difficulty, summary: record.summary, consequence: record.consequence ?? null } }, { onSuccess: (answer) => { const narrated = { ...record, narrative: answer.narration.join("\n\n") }; const base = applyRoll(game, narrated); const next: GameState = { ...base, historicalBoundary: { status: answer.historicalStatus, fence: answer.historicalFence, tick: base.tick }, currentScene: { ...base.currentScene, title: answer.sceneTitle, body: answer.narration, prompt: answer.missionNote, suggestedActions: answer.nextChoices }, memories: [...base.memories, { id: `gm-memory-${Date.now()}`, kind: "news", title: answer.memory.title, detail: answer.memory.detail, tone: answer.memory.tone, tick: base.tick }, { id: `gm-history-${Date.now()}`, kind: "witness", title: `${copy(language, "Historical boundary", "ขอบเขตประวัติศาสตร์")} · ${historicalLabel(answer.historicalStatus, language)}`, detail: answer.historicalFence, tone: historicalTone(answer.historicalStatus), tick: base.tick }] };
+      spendCredit.mutate({ amount: 1 }, { onSuccess: ({ credits }) => { onUpdate({ ...next, credits }, `${record.summary} · AI-assisted consequence recorded`); onAccountCreditChange(); setOutcome(narrated); setDiceResult(null); setDetails(null); setRisk(null); setAction(""); setNotice(""); }, onError: () => { saveLocal(record, copy(language, "AI credit is unavailable; the deterministic result was saved locally.", "เครดิต AI ใช้ไม่ได้ จึงบันทึกผลตามกติกาไว้ในเครื่อง")); } });
+    }, onError: () => { saveLocal(record, `${record.summary} · AI unavailable · Local Trial saved with no AI credit used`); } });
+  };
+  const continueScene = () => { setOutcome(null); setNotice(""); };
+
+  return <div className="page play-scene-page">
+    <header className="play-scene__header"><div><p className="play-scene__eyebrow">{copy(language, `PLAY SCENE · LEAF ${game.tick}`, `เล่นฉาก · หน้าที่ ${game.tick}`)}</p><h1>{game.currentScene.location}</h1><p>{game.campaign.year} · {game.campaign.season} · {activeMission?.title ?? copy(language, "No active mission", "ยังไม่มีภารกิจที่กำลังดำเนิน")}</p></div><div className="play-scene__utilities"><span className={`play-scene__engine ${useLocal ? "is-local" : ""}`}>{useLocal ? copy(language, "Story Engine: Local", "เครื่องยนต์เรื่องราว: ในเครื่อง") : copy(language, "Story Engine: AI-assisted", "เครื่องยนต์เรื่องราว: AI-assisted")}</span><button onClick={() => onOpen("save")}><Save size={15} /> {copy(language, "Save", "เซฟ")}</button><button onClick={() => onOpen("load")}>{copy(language, "Load", "โหลด")}</button></div></header>
+    {outcome ? <OutcomeCard record={outcome} game={game} language={language} notice={notice} onContinue={continueScene} onMap={() => onOpen("home")} onChronicle={() => onOpen("log")} /> : <section className="play-scene__paper">
+      <div className="play-scene__paper-heading"><span><SengokuIcon name="memory" tone="vermilion" size={18} /> {game.currentScene.title}</span><button onClick={() => onOpen("log")}><FileText size={15} /> {copy(language, "Chronicle", "บันทึกเรื่อง")}</button></div>
+      <p className="play-scene__context">{game.currentScene.publicContext}</p>
+      <div className="play-scene__narrative">{game.currentScene.body.map((paragraph, index) => <p key={`${game.currentScene.id}-${index}`}>{paragraph}</p>)}<h2>{game.currentScene.prompt}</h2></div>
+      <div className="play-scene__approaches"><p className="play-scene__eyebrow">{copy(language, "POSSIBLE APPROACHES", "แนวทางที่เป็นไปได้")}</p>{game.currentScene.suggestedActions.map((suggestion) => <button key={suggestion} onClick={() => { setAction(suggestion); resetIntent(); }}><span>{suggestion}</span><ArrowRight size={15} /></button>)}</div>
+      <section className="play-scene__composer"><div className="play-scene__composer-heading"><div><p className="play-scene__eyebrow">{copy(language, "DECLARE YOUR INTENT", "ประกาศเจตนาของเจ้า")}</p><h2>{copy(language, "What will you do in one sentence?", "เจ้าจะทำสิ่งใดในหนึ่งประโยค?")}</h2></div>{!useLocal && !isAuthenticated && <button className="play-scene__login" onClick={onLogin}>{copy(language, "AI ASSISTANCE", "ใช้ AI-assisted")}</button>}</div>
+        <textarea value={action} onChange={(event) => { setAction(event.target.value); resetIntent(); }} placeholder={copy(language, "For example: I will ask the gate keeper for one night and name the favor I can repay.", "ตัวอย่าง: ข้าจะขอเวลาจากผู้คุมด่านหนึ่งคืน และบอกบุญคุณที่ข้าจะตอบแทนได้")} />
+        {notice && <p className="play-scene__notice">{notice}</p>}
+        {!details && !diceResult && <div className="play-scene__composer-actions"><div>{risk ? <><strong>{copy(language, "Risk preview", "ภาพรวมความเสี่ยง")}</strong><span>{risk.risks[0]}</span></> : <span>{copy(language, "Write freely. The system will explain the risk before it exposes roll details.", "เขียนได้อย่างอิสระ ระบบจะอธิบายความเสี่ยงก่อนเปิดรายละเอียดการทอย")}</span>}</div><Button className="df-button df-button--ghost" onClick={previewRisk} disabled={!action.trim()}><Eye size={16} /> {copy(language, "PREVIEW RISK", "ดูความเสี่ยง")}</Button><Button className="df-button df-button--primary" onClick={commitIntent} disabled={!action.trim() || analyzeGM.isPending}>{analyzeGM.isPending ? copy(language, "READING STORY…", "กำลังอ่านเรื่อง…") : copy(language, "COMMIT ACTION", "ยืนยันการกระทำ")} <ArrowRight size={16} /></Button></div>}
+        {details && !diceResult && <RollDetails preview={details} language={language} momentum={game.character.vitals.momentum} onRoll={roll} onEdit={resetIntent} rolling={resolveGM.isPending} />}
+        {diceResult && <DiceResult record={diceResult} language={language} momentum={game.character.vitals.momentum} onSpend={spendMomentum} onAccept={acceptResult} onEdit={resetIntent} />}
+      </section>
+    </section>}
+  </div>;
+}
