@@ -14,6 +14,8 @@ import { CampaignsView } from "@/pages/CampaignsView";
 import { MarketHub } from "@/pages/MarketHub";
 import { StoryMap } from "@/features/story/StoryMap";
 import { PlayScene } from "@/features/play/PlayScene";
+import { ChronicleView } from "@/features/chronicle/ChronicleView";
+export { ChronicleView as LogView } from "@/features/chronicle/ChronicleView";
 import {
   AXES,
   RELATIONSHIP_QUESTIONS,
@@ -187,6 +189,14 @@ function reviewPageFromUrl(): PageId {
   return pages.includes(requested as PageId) ? requested as PageId : "home";
 }
 
+function reviewReaderModeFromUrl(): boolean | undefined {
+  if (typeof window === "undefined") return undefined;
+  const requested = new URLSearchParams(window.location.search).get("reader");
+  if (requested === "library") return false;
+  if (requested === "reader") return true;
+  return undefined;
+}
+
 export default function Home({ forceUiPreviewMode }: { forceUiPreviewMode?: boolean } = {}) {
   // The useAuth hook provides authentication state.
   // To implement login/logout, call logout(), or start login from an event
@@ -202,7 +212,7 @@ export default function Home({ forceUiPreviewMode }: { forceUiPreviewMode?: bool
   const [saves, setSaves] = useState<SaveLeaves>(() => ({ manual: copyState(seedGame()), leaf2: null, leaf3: null }));
   const [campaignLibrary, setCampaignLibrary] = useState<Record<string, GameState>>(() => { const demo = seedGame(); return { [demo.campaign.id]: demo }; });
   const [language, setLanguage] = useState<Language>("en");
-  const [readerMode, setReaderMode] = useState(true);
+  const [readerMode, setReaderMode] = useState(() => reviewReaderModeFromUrl() ?? true);
   const [darkMode, setDarkMode] = useState(false);
   const [fontSize, setFontSize] = useState<FontSize>("normal");
   const [accent, setAccent] = useState<Accent>("vermilion");
@@ -228,7 +238,7 @@ export default function Home({ forceUiPreviewMode }: { forceUiPreviewMode?: bool
         if (restoredLibrary) setCampaignLibrary(restoredLibrary);
         else if (restoredGame) setCampaignLibrary({ [restoredGame.campaign.id]: restoredGame });
         if (saved.language) setLanguage(saved.language);
-        if (typeof saved.readerMode === "boolean") setReaderMode(saved.readerMode);
+        if (reviewReaderModeFromUrl() === undefined && typeof saved.readerMode === "boolean") setReaderMode(saved.readerMode);
         if (typeof saved.darkMode === "boolean") setDarkMode(saved.darkMode);
         if (saved.fontSize) setFontSize(saved.fontSize);
         if (saved.accent) setAccent(saved.accent);
@@ -302,7 +312,7 @@ export default function Home({ forceUiPreviewMode }: { forceUiPreviewMode?: bool
       {page === "obligations" && <MarketHub game={game} language={language} onUpdate={updateGame} initialTab="obligations" />}
       {page === "exchanges" && <MarketHub game={game} language={language} onUpdate={updateGame} initialTab="history" />}
       {page === "character" && <CharacterView game={game} language={language} open={open} />}
-      {page === "log" && <LogView game={game} language={language} readerMode={readerMode} setReaderMode={setReaderMode} />}
+      {page === "log" && <ChronicleView game={game} language={language} readerMode={readerMode} setReaderMode={setReaderMode} />}
       {page === "archive" && <ArchiveView game={game} language={language} />}
       {page === "save" && <SaveView game={game} saves={saves} language={language} onSave={writeSave} open={open} />}
       {page === "load" && <LoadView game={game} saves={saves} language={language} onLoad={loadSave} />}
@@ -458,7 +468,7 @@ function CharacterView({ game, language, open }: { game: GameState; language: La
   return <div className="page character-view"><div className="page-heading"><div><SectionKicker>CHARACTER DOSSIER</SectionKicker><h1>{game.character.name}</h1><p>{game.character.occupation} · {game.character.origin}</p></div><GhostLink onClick={() => open("log")}>{label(language, "View related records", "ดูบันทึกที่เกี่ยวข้อง")}</GhostLink></div><section className="dossier-header"><div className="dossier-name"><span className="mon-avatar mon-avatar--large">火</span><div><h2>{game.character.name}</h2><p>{game.character.strength}</p></div></div><div className="dossier-resources"><span>{label(language, "Wounds", "บาดแผล")}<strong>{game.character.vitals.wounds}/6</strong></span><span>{label(language, "Focus", "ค่าสติ")}<strong>{game.character.vitals.focus}/6</strong></span><span>{label(language, "Momentum", "แรงฮึด")}<strong>{game.character.vitals.momentum}/2</strong></span><span>{label(language, "Rank", "ยศ")}<strong>{game.character.social.rank}</strong></span></div></section><div className="character-columns"><section><div className="tab-strip"><button className={tab === "traits" ? "active" : ""} onClick={() => setTab("traits")}>{label(language, "Traits", "แกนทอย")}</button><button className={tab === "masteries" ? "active" : ""} onClick={() => setTab("masteries")}>{label(language, "Masteries", "ความชำนาญ")}</button><button className={tab === "inventory" ? "active" : ""} onClick={() => setTab("inventory")}>{label(language, "Gear", "สัมภาระ")}</button><button className={tab === "ties" ? "active" : ""} onClick={() => setTab("ties")}>{label(language, "Ties", "แรงดึง")}</button></div>{tab === "traits" && <div className="stat-grid">{AXES.map((axis) => <div className="stat-cell" key={axis.id}><SengokuIcon name="memory" tone="navy" /><strong>{language === "en" ? axis.en : axis.th}</strong><b>{game.character.attributes[axis.id]}</b><small>{axis.hint}</small><button>{label(language, "Used by the action parser", "ระบบเลือกใช้จากการกระทำ")}</button></div>)}</div>}{tab === "masteries" && <div className="mastery-list"><div className="list-title"><span>{label(language, "Mastery", "ความชำนาญ")}</span><span>{label(language, "Bonus", "โบนัส")}</span><span>{label(language, "Origin", "ที่มา")}</span></div>{game.character.masteries.map((entry) => <div className="mastery-row" key={entry.id}><span><SengokuIcon name="memory" size={15} tone="ochre" />{entry.label}</span><strong>+{entry.level}</strong><small>{entry.origin}</small></div>)}</div>}{tab === "inventory" && <div className="inventory-sheet"><div className="inventory-capacity"><span>{label(language, "Carried slots", "ช่องสัมภาระ")}</span><strong>{usedSlots}/8</strong></div>{game.character.inventory.map((entry) => <article key={entry.id}><div><strong>{entry.label}</strong><small>{entry.description}</small></div><span>{titleCase(entry.kind)}</span><b>{entry.slots} {label(language, "slot", "ช่อง")}</b></article>)}</div>}{tab === "ties" && <div className="ties-sheet">{game.character.pulls.map((pull) => <article key={pull.id}><small>{pull.question}</small><strong>{pull.answer}</strong><span>{pull.tags.join(" · ")}</span></article>)}</div>}</section><aside className="status-rail"><SectionKicker>{label(language, "Social record", "สถานะทางสังคม")}</SectionKicker>{[["Honor", "เกียรติ", game.character.social.honor, "teal"], ["Influence", "บารมี", game.character.social.influence, "ochre"], ["Information", "ข่าวในมือ", game.character.social.information, "navy"], ["Stain", "ข้อครหา", game.character.social.stain, "vermilion"]].map(([en, th, value, tone]) => <div className={`status-row status-row--${tone}`} key={en as string}><span className="status-dot" /><strong>{language === "en" ? en : th}</strong><small>{value}</small></div>)}<div className="status-note"><SengokuIcon name="relation" tone="teal" />{label(language, "Social values do not grant automatic obedience. They describe access, attention, and what failure can cost.", "ค่าสถานะสังคมไม่ได้ทำให้ใครเชื่อฟังอัตโนมัติ แต่บอกสิทธิ์เข้าถึง สายตาที่จับจ้อง และราคาของความพลาด")}</div></aside></div></div>;
 }
 
-export function LogView({ game, language, readerMode, setReaderMode }: { game: GameState; language: Language; readerMode: boolean; setReaderMode: (value: boolean) => void }) {
+function LegacyLogView({ game, language, readerMode, setReaderMode }: { game: GameState; language: Language; readerMode: boolean; setReaderMode: (value: boolean) => void }) {
   const [query, setQuery] = useState("");
   const [readerIndex, setReaderIndex] = useState(0);
   const entries = useMemo(() => [

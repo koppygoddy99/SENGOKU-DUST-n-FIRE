@@ -1,0 +1,42 @@
+import React, { useMemo, useState } from "react";
+import { ArrowLeft, ArrowRight, BookOpen, EyeOff, LockKeyhole, Search, Sparkles } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { type GameState } from "@/lib/game";
+import "./chronicleView.css";
+
+type Language = "en" | "th";
+type ChronicleEntry = { id: string; tick: number; kind: "Memory" | "Roll"; title: string; story: string; roll?: GameState["rolls"][number] };
+const copy = (language: Language, en: string, th: string) => language === "en" ? en : th;
+const splitStoryParagraphs = (story: string) => story.split(/\n\s*\n/).map((paragraph) => paragraph.trim()).filter(Boolean);
+
+function EntryBadge({ entry, language }: { entry: ChronicleEntry; language: Language }) {
+  return <span className={`chronicle-entry__badge chronicle-entry__badge--${entry.kind.toLowerCase()}`}>{entry.kind === "Roll" ? copy(language, "DECISION", "การตัดสินใจ") : copy(language, "WORLD TRACE", "ร่องรอยโลก")}</span>;
+}
+
+export function ChronicleView({ game, language, readerMode, setReaderMode }: { game: GameState; language: Language; readerMode: boolean; setReaderMode: (value: boolean) => void }) {
+  const [query, setQuery] = useState("");
+  const [readerIndex, setReaderIndex] = useState(0);
+  const entries = useMemo<ChronicleEntry[]>(() => [
+    ...game.memories.map((memory): ChronicleEntry => ({ id: memory.id, tick: memory.tick, kind: "Memory", title: memory.title, story: memory.detail })),
+    ...game.rolls.map((roll): ChronicleEntry => ({ id: roll.id, tick: roll.tick, kind: "Roll", title: roll.summary, story: roll.narrative, roll })),
+  ].sort((a, b) => a.tick - b.tick), [game.memories, game.rolls]);
+  const visible = entries.filter((entry) => `${entry.title} ${entry.story}`.toLowerCase().includes(query.toLowerCase()));
+  const shelf = entries.slice(-4).reverse();
+  const latest = entries.at(-1);
+  const readerEntry = entries[Math.max(0, Math.min(readerIndex, entries.length - 1))];
+  const readerStory = readerEntry?.story ?? copy(language, "No recorded events yet. Return to Play and make the first choice.", "ยังไม่มีเหตุการณ์ที่บันทึกไว้ กลับไปเล่นฉากแล้วตัดสินใจครั้งแรก");
+
+  return <div className={`page log-view chronicle-view ${readerMode ? "is-reader" : ""}`}>
+    <div className="chronicle-view__topline"><div className="chronicle-view__identity"><span className="chronicle-view__seal">火</span><div><strong>{game.campaign.title}</strong><small>{game.campaign.year} · {game.campaign.season} · {game.campaign.location}</small></div></div><div className="reader-switch"><span><EyeOff size={17} /> Reader Mode</span><Switch checked={readerMode} onCheckedChange={setReaderMode} /></div></div>
+    {readerMode ? <section className="reader-paper"><div className="reader-paper__chapter">{game.campaign.title} · LEAF {readerEntry?.tick ?? 1}</div><h2>{readerEntry?.title ?? copy(language, "The first page", "หน้าแรก")}</h2><div className="reader-paper__scroll">{splitStoryParagraphs(readerStory).map((paragraph: string, index: number) => <p key={`${readerEntry?.id ?? "empty"}-${index}`}>{paragraph}</p>)}<p className="reader-question">{game.currentScene.prompt}</p></div><div className="reader-paper__footer"><button disabled={readerIndex <= 0} onClick={() => setReaderIndex((index) => Math.max(0, index - 1))}><ArrowLeft size={16} /> {copy(language, "Previous", "ก่อนหน้า")}</button><span>{readerIndex + 1} / {Math.max(entries.length, 1)}</span><button disabled={readerIndex >= entries.length - 1} onClick={() => setReaderIndex((index) => Math.min(entries.length - 1, index + 1))}>{copy(language, "Next", "ถัดไป")} <ArrowRight size={16} /></button></div></section> : <>
+      <header className="chronicle-view__heading"><div><p className="chronicle-view__eyebrow">{copy(language, "CHRONICLE · INTERACTIVE NOVEL LIBRARY", "พงศาวดาร · ห้องสมุดนิยายโต้ตอบ")}</p><h1>{copy(language, "Chronicle of this campaign", "พงศาวดารของแคมเปญนี้")}</h1><p>{copy(language, "Every card is a consequence the campaign earned. New chapters only appear when the world has something to remember.", "ทุกการ์ดคือผลที่แคมเปญได้มา บทใหม่จะปรากฏก็ต่อเมื่อโลกมีสิ่งที่ควรจดจำ")}</p></div><div className="chronicle-view__count"><BookOpen size={18} /><strong>{entries.length}</strong><span>{copy(language, "recorded leaves", "หน้าที่ถูกบันทึก")}</span></div></header>
+      <section className="chronicle-view__shelf" aria-label={copy(language, "Recent campaign chapters", "บทล่าสุดของแคมเปญ")}>
+        <div className="chronicle-view__shelf-heading"><span>{copy(language, "RECENT LEAVES", "หน้าที่ผ่านมา")}</span><small>{copy(language, "Most recent first", "ล่าสุดอยู่ก่อน")}</small></div>
+        <div className="chronicle-view__cards">{shelf.length ? shelf.map((entry, index) => <button className={`chronicle-entry ${index === 0 ? "is-current" : ""}`} onClick={() => { setReaderIndex(Math.max(0, entries.findIndex((candidate) => candidate.id === entry.id))); setReaderMode(true); }} key={entry.id}><EntryBadge entry={entry} language={language} /><small>{copy(language, "LEAF", "หน้า")} {entry.tick}</small><strong>{entry.title}</strong><p>{entry.story.slice(0, 110)}{entry.story.length > 110 ? "…" : ""}</p>{entry.roll && <span className="chronicle-entry__roll">{entry.roll.dice.join(" + ")} → {entry.roll.total}</span>}{index === 0 && <i>{copy(language, "Open", "เปิด")}</i>}</button>) : <div className="chronicle-view__empty"><LockKeyhole size={21} /><p>{copy(language, "The shelf is empty. Your first decision will create the first leaf.", "ชั้นหนังสือยังว่าง การตัดสินใจแรกจะสร้างหน้าแรก")}</p></div>}</div>
+      </section>
+      <section className="chronicle-view__latest-grid"><article className="chronicle-view__latest"><p className="chronicle-view__eyebrow">{copy(language, "LATEST CONSEQUENCE", "ผลกระทบล่าสุด")}</p><h2>{latest?.title ?? game.currentScene.title}</h2><p>{latest?.story ?? game.currentScene.pressure}</p><button onClick={() => { setReaderIndex(Math.max(0, entries.length - 1)); setReaderMode(true); }}>{copy(language, "OPEN THIS LEAF", "เปิดหน้านี้")} <ArrowRight size={16} /></button></article><aside className="chronicle-view__thread"><p className="chronicle-view__eyebrow">{copy(language, "STORY THREAD", "เส้นเรื่อง")}</p><strong>{game.currentScene.title}</strong><p>{game.currentScene.pressure}</p><div><Sparkles size={15} /><span>{copy(language, "The next scene may alter the chronicle.", "ฉากถัดไปอาจเปลี่ยนพงศาวดาร")}</span></div></aside></section>
+      <div className="log-filter chronicle-view__filter"><button className="active">{copy(language, "All records", "ทั้งหมด")}</button><div><Search size={15} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={copy(language, "Search this campaign", "ค้นหาในแคมเปญนี้")} /></div></div>
+      <section className="chronicle-view__timeline">{visible.map((entry, index) => <article className="log-entry" key={entry.id}><span className="log-index">{String(index + 1).padStart(2, "0")}</span><div><EntryBadge entry={entry} language={language} /><small>LEAF {entry.tick}</small><strong>{entry.title}</strong><div className="log-entry__story">{splitStoryParagraphs(entry.story).map((paragraph: string, paragraphIndex: number) => <p key={`${entry.id}-${paragraphIndex}`}>{paragraph}</p>)}</div>{entry.roll && <i>2d12: {entry.roll.dice.join(" + ")} · total {entry.roll.total} / DN {entry.roll.difficulty}</i>}</div><time>LOCAL</time></article>)}</section>
+    </>}
+  </div>;
+}
