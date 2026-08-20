@@ -332,6 +332,9 @@ function StepControls({ previous, next, nextLabel }: { previous?: () => void; ne
   return <div className="credit-confirm">{previous ? <Button className="df-button df-button--ghost" onClick={previous}><ArrowLeft size={17} /> Back</Button> : <span />}{nextLabel ? <Button className="df-button df-button--primary" onClick={next}>{nextLabel} <ArrowRight size={17} /></Button> : <Button className="df-button df-button--primary" onClick={next}>Continue <ArrowRight size={17} /></Button>}</div>;
 }
 
+/* Retired in favor of client/src/features/play/PlayScene.tsx and LegacyHistoricalPanels.tsx.
+   Kept temporarily as an inactive migration record until the remaining Home cleanup is complete. */
+/*
 function PlayView({ game, language, open, onUpdate, isAuthenticated, uiPreviewMode, onLogin, onAccountCreditChange }: { game: GameState; language: Language; open: (page: PageId) => void; onUpdate: (game: GameState, message: string) => void; isAuthenticated: boolean; uiPreviewMode: boolean; onLogin: () => void; onAccountCreditChange: () => void }) {
   const [action, setAction] = useState("");
   const [preview, setPreview] = useState<RollPreview | null>(null);
@@ -417,6 +420,7 @@ export function HistoricalBoundaryPanel({ historical, language, resolved = false
 }
 
 function CircleList({ title, values }: { title: string; values: string[] }) { return <div><small>{title}</small>{values.map((value) => <span key={value}>• {value}</span>)}</div>; }
+*/
 
 function MissionsView({ game, language, onUpdate, open }: { game: GameState; language: Language; onUpdate: (next: GameState, message: string) => void; open: (page: PageId) => void }) {
   const accept = (id: string) => onUpdate({ ...game, missions: game.missions.map((mission) => mission.id === id ? { ...mission, state: "active" } : mission) }, "Mission accepted · its deadline is now part of the campaign record");

@@ -1,7 +1,7 @@
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { HistoricalBoundaryPanel, RollPreviewPanel, historicalStatusLabel } from "./Home";
+import { HistoricalBoundaryPanel, RollPreviewPanel, historicalStatusLabel } from "@/features/play/LegacyHistoricalPanels";
 import type { RollPreview } from "@/lib/game";
 
 const statuses = ["fact-supported", "contextual-play", "campaign-fiction", "insufficient-evidence"] as const;
