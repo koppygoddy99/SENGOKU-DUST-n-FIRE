@@ -57,6 +57,8 @@
 - [x] ย้ายทางเข้า “หอแคมเปญ” ไปไว้ใต้เมนู More และเพิ่ม regression สำหรับ navigation ใหม่
 - [x] จัดทำรายงานปิดรอบล่าสุดแยกตาม workflow 7 ทีม ครอบคลุมหน้าเล่น แผนที่ พงศาวดาร และเมนู
 - [x] สร้าง GitHub repository ส่วนตัวชื่อ SENGOKU-DUST-n-FIRE และส่งออก source, tests, docs และ configuration ที่ส่งมอบได้
+- [x] ทำ mobile keyboard audit สำหรับเมนูหลัก หน้า Play และการกลับสู่หน้าหลัก พร้อมแก้ regression ที่พบ
+- [x] จัดทำแบบรับ feedback สำหรับเอกสารและกลุ่มหน้าผู้เล่นรอบถัดไปที่ยังต้องการการตัดสินใจจากผู้ใช้
 - [x] แก้ Campaign Command ให้ Story Desk ไม่บีบหรือทำให้ CTA กลับฉากถูกตัดเมื่อชื่อสถานที่ยาว
 - [x] แก้ Campaign Command และ Ledger Spine ให้ยุบ/ขยายตาม viewport โดยไม่ตัด Story Desk หรือสร้าง horizontal overflow
 - [x] เพิ่ม browser/DOM regression ที่ render Campaign Command แล้ว assert ว่า container สำคัญไม่เกิด horizontal overflow ใน desktop viewport หลัก

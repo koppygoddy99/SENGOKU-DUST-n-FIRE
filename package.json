@@ -11,6 +11,7 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "test:campaign-layout": "playwright test tests/campaign-command-overflow.spec.mjs --workers=1",
+    "test:mobile-keyboard": "playwright test tests/mobile-keyboard-audit.spec.mjs --workers=1",
     "db:push": "drizzle-kit generate && drizzle-kit migrate"
   },
   "dependencies": {
