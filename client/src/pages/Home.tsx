@@ -304,7 +304,7 @@ export default function Home({ forceUiPreviewMode }: { forceUiPreviewMode?: bool
       <div className="sidebar__language"><Languages size={15} /><button className={language === "en" ? "active" : ""} onClick={() => setLanguage("en")}>EN</button><span>/</span><button className={language === "th" ? "active" : ""} onClick={() => setLanguage("th")}>TH</button></div>
       <div className="sidebar__notice">{notice}</div>
     </aside>
-    <main className={`main-content ${page === "play" ? "main-content--play" : ""}`} data-review-screen={reviewScreen?.screenshotFile} data-review-seed={reviewScreen?.seed} data-review-title={reviewScreen?.pageTitle}>
+    <main data-testid="player-main-content" className={`main-content ${page === "play" ? "main-content--play" : ""}`} data-review-screen={reviewScreen?.screenshotFile} data-review-seed={reviewScreen?.seed} data-review-title={reviewScreen?.pageTitle}>
       {page === "home" && <StoryMap game={game} language={language} onOpen={open} />}
       {page === "campaigns" && <CampaignsView campaigns={Object.values(campaignLibrary)} activeId={game.campaign.id} language={language} onSelect={selectCampaign} onNew={() => open("start")} />}
       {page === "start" && <StartView language={language} onStart={beginNew} />}

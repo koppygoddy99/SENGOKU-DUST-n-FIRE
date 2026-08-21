@@ -47,8 +47,9 @@
 - [x] รีเซ็ต global player shell ให้ใช้ top bar, collapsible rail และลำดับ Story / Prepare / Chronicle / More ตาม blueprint
 - [ ] ปรับหน้าผู้เล่นทีละกลุ่มโดยยึด one-question rule, 3-layer hierarchy และหนึ่ง CTA หลักใน viewport แรก
 - [x] แก้ Campaign Command และ Ledger Spine ให้ยุบ/ขยายตาม viewport โดยไม่ตัด Story Desk หรือสร้าง horizontal overflow
-- [ ] เพิ่ม browser/DOM regression ที่ render Campaign Command แล้ว assert ว่า container สำคัญไม่เกิด horizontal overflow ใน desktop viewport หลัก
-- [ ] จับและบันทึก visual review ของ Campaign Command ที่ 1280px แยกกรณี rail เปิดและ rail ย่อ พร้อมสรุปผลในเอกสารตรวจรับ
+- [x] เพิ่ม browser/DOM regression ที่ render Campaign Command แล้ว assert ว่า container สำคัญไม่เกิด horizontal overflow ใน desktop viewport หลัก
+- [x] จับและบันทึก visual review ของ Campaign Command ที่ 1280px แยกกรณี rail เปิดและ rail ย่อ พร้อมสรุปผลในเอกสารตรวจรับ
+- [x] เพิ่ม browser runtime harness ที่วัด `scrollWidth <= clientWidth` ของ main content, Campaign Command grid และ Province Map ใน rail เปิด/ย่อที่ viewport 1280px
 - [x] เกลา Campaign Command และ Chronicle ให้บอกจังหวะเวลา Leaf ความกดดัน และผลล่าสุดของภารกิจโดยไม่เพิ่ม dashboard card ซ้ำ
 - [ ] เกลา Market, Character และ Save/Load ให้เห็นผลของรางวัล ข้อตกลง Step/XP และตำแหน่งข้อมูลสำคัญอย่างกระชับ
 - [ ] เกลา Admin Console ให้ใช้ war-office ledger และข้อความกำกับที่ชัดเจนแทน panel แบบ SaaS ทั่วไป

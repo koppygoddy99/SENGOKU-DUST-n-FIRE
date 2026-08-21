@@ -99,10 +99,10 @@ export function StoryMap({ game, language, onOpen }: { game: GameState; language
       </div>
     </header>
 
-    <section className="story-command-grid" aria-label={copy(language, "Campaign command desk", "โต๊ะบัญชาการแคมเปญ")}>
+    <section data-testid="campaign-command-grid" className="story-command-grid" aria-label={copy(language, "Campaign command desk", "โต๊ะบัญชาการแคมเปญ")}>
       <article className="story-map-card story-map-card--map">
         <div className="story-map-card__heading"><span><MapPinned size={17} /> {copy(language, "PROVINCE MAP", "แผนที่แคว้น")}</span><small>{copy(language, "Campaign reading · not a survey", "ภาพอ่านแคมเปญ · ไม่ใช่แผนที่สำรวจ")}</small></div>
-        <div className="province-map" aria-label={copy(language, "Schematic province map with the campaign location", "แผนที่แคว้นเชิงสัญลักษณ์ที่บอกตำแหน่งแคมเปญ")}>
+        <div data-testid="province-map-surface" className="province-map" aria-label={copy(language, "Schematic province map with the campaign location", "แผนที่แคว้นเชิงสัญลักษณ์ที่บอกตำแหน่งแคมเปญ")}>
           <span className="province-map__grain province-map__grain--north" />
           <span className="province-map__grain province-map__grain--coast" />
           {neighborhood.map((province) => <span key={province} className={`province-map__region province-map__region--${province}`}><b>{copy(language, PROVINCE_LABELS[province].en, PROVINCE_LABELS[province].th)}</b></span>)}
