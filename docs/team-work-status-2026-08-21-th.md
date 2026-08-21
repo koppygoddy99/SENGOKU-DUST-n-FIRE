@@ -8,18 +8,18 @@
 | ทีม | ขอบเขตรอบนี้ | สถานะ | ผลส่งมอบที่ตรวจได้ | งานรอบถัดไป |
 |---|---|---|---|---|
 | 1. Game Director | แยกเครื่องมือจัดการออกจากการเล่น | เสร็จ | เมนู **Manage** ซ่อนมุมขวาบน; IA แยก Account, Workspace, Resources และ Admin | อนุมัติรายการเครื่องมือที่ควรเปิดจริงตาม MVP |
-| 2. Game Design | แผนที่ระดับประเทศและขอบเขต timeline | เสร็จ | สลับ Province/National; National เป็นภาพ orientation ไม่ใช่เขตอำนาจ; timeline แยก battle/event และ relevance | ขยายข้อมูลเฉพาะปี/ภูมิภาคเมื่อมีการตรวจแหล่งข้อมูลเพิ่ม |
+| 2. Game Design | แผนที่ระดับประเทศและขอบเขต timeline | เสร็จ | ตัด Province Map และข้อมูลอำนาจออกแล้ว; National Map ใช้ไฟล์ฐานที่ผู้ใช้ยืนยันสิทธิ์หลังตัดองค์ประกอบส่วนเกิน และแสดงเฉพาะตำแหน่งผู้เล่นกับชื่อแคว้น; timeline แยก battle/event และ relevance | ขยายข้อมูลเฉพาะปี/ภูมิภาคเมื่อมีการตรวจแหล่งข้อมูลเพิ่ม |
 | 3. Game Development | สัญญาข้อมูล timeline หลังบ้าน | เสร็จ | `timeline.forCampaign` แบบ read-only; admin timeline coverage; source URL และ date precision อยู่ใน record | ย้าย catalog ที่ตรวจทานแล้วเข้าสู่ฐานข้อมูลพร้อมระบบ revision และ audit |
-| 4. UI/UX Frontend | Ledger ร่วมของ Market, Character, Save/Load | เสร็จ | แสดง Leaf, Campaign Day, Age, Highest Step และ Open Agreements ในลำดับเดียวกัน | ตรวจ UX มือถือและปรับคำอธิบายตามผลเล่นจริง |
-| 5. Art & Audio / Admin UX | การนำเสนอระบบจัดการและแผนที่ | เสร็จ | Drawer ใช้ Ledger of Ash; admin war-office แสดง Timeline และ Operations facts | กำหนด asset pack แผนที่เชิงภาพต้นฉบับและ sound cue เฉพาะหน้า |
-| 6. QA & Testing | ตรวจ role gate, data boundary, layout และ regression | เสร็จ | ทดสอบ tRPC admin/timeline, timeline precision, Story Map, Market และ Local Save flow | เพิ่ม E2E authenticated admin flow และ mobile keyboard audit |
+| 4. UI/UX Frontend | Ledger ร่วมของ Market, Character, Save/Load และ National Map | เสร็จ | แสดง Leaf, Campaign Day, Age, Highest Step และ Open Agreements ในลำดับเดียวกัน; National Map ใช้ asset ใหม่พร้อม marker จาก GameState | ตรวจ UX มือถือและปรับคำอธิบายตามผลเล่นจริง |
+| 5. Art & Audio / Admin UX | การนำเสนอระบบจัดการและแผนที่ | เสร็จ | Drawer ใช้ Ledger of Ash; admin war-office แสดง Timeline และ Operations facts; ตัด asset แผนที่จากไฟล์ฐานที่ผู้ใช้ยืนยันสิทธิ์โดยลบกรอบ ป้าย ธง เข็มทิศ เรือ และเครื่องหมายตกแต่ง | กำหนด sound cue เฉพาะหน้าเมื่อมี direction ด้านเสียง |
+| 6. QA & Testing | ตรวจ role gate, data boundary, layout และ regression | เสร็จ | ทดสอบ tRPC admin/timeline, timeline precision, Story Map, Market และ Local Save flow; TypeScript ผ่าน, Vitest 86 tests/26 files ผ่าน, browser overflow 2 scenarios ผ่าน และตรวจภาพ desktop/mobile สองภูมิภาค | เพิ่ม E2E authenticated admin flow และ mobile keyboard audit |
 | 7. Release & Operations | เกณฑ์สื่อสารสถานะและข้อจำกัด | เสร็จ | Admin ระบุชัดว่า visitor analytics ยัง `not-configured`, Local Save เป็น browser-only และ controls เป็น read-only | เลือกผู้ให้บริการ analytics ที่ผ่าน privacy review และสร้าง incident/audit runbook |
 
 ## สิ่งที่เปิดใช้แล้ว
 
 ผู้เล่นเปิดเมนู **Manage** จากมุมขวาบนและปิดได้โดยไม่ออกจากแคมเปญ เมนูนี้เป็นโครงสร้างทางเลือกสำหรับเรื่องบัญชี พื้นที่ทำงาน ทรัพยากร และการจัดการแอป ส่วนทางเข้า **Admin Console** มีเฉพาะผู้ใช้ที่มี role `admin`; ผู้เล่นทั่วไปไม่เห็นข้อมูลผู้ดูแลและถูกปฏิเสธที่ route เดิม
 
-ในหน้า Campaign Command ผู้เล่นสลับจาก **Province** ไป **National** เพื่อเห็นตำแหน่งแคมเปญในแผนที่หมู่เกาะเชิงสัญลักษณ์ที่มองไกลขึ้นได้โดยไม่ต้องซูม แผนที่นี้ไม่คัดลอกภาพหรือการระบายเขตอำนาจจากเว็บไซต์อ้างอิง และติดคำเตือนว่าป้ายในภาพอธิบายแนวเส้นทาง ไม่ใช่ข้ออ้างเรื่องอำนาจเหนือดินแดน
+ในหน้า Campaign Command เหลือ **National Map** เพียงชุดเดียว เพื่อเห็นตำแหน่งแคมเปญในแผนที่หมู่เกาะที่ผู้ใช้ยืนยันสิทธิ์ให้ใช้เป็นไฟล์ฐาน แผนที่ตัดกรอบ ป้าย ธง เข็มทิศ เรือ และเครื่องหมายตกแต่งออกแล้ว ไม่มีการระบายเขตอำนาจ ป้ายเส้นทาง หรือสัญลักษณ์ของฝ่ายใด และแสดงเฉพาะตำแหน่งปัจจุบันกับชื่อแคว้นของแคมเปญ
 
 ไทม์ไลน์แสดงปี ฤดูหรือวันที่เท่าที่แหล่งข้อมูลระบุได้ รายการ 1569 ที่ไม่ระบุเดือนจึงอยู่ในระดับปี ขณะที่ศึกอาเนงาวะมีวันปรากฏตาม record ที่ตรวจทานแล้ว ไทม์ไลน์เป็น **บริบทประกอบการอ่าน** เท่านั้น ไม่หักลบแต้มทอย ไม่บังคับภารกิจ และไม่ทำให้ NPC สมมติกลายเป็นบุคคลจริงโดยอัตโนมัติ [1] [2]
 

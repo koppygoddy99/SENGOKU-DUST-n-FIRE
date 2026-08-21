@@ -16,7 +16,7 @@ for (const reviewState of reviewStates) {
       await page.waitForSelector('[data-testid="campaign-command-grid"]');
 
       const measures = await page.evaluate(() => {
-        const selectors = [".app-shell", '[data-testid="player-main-content"]', '[data-testid="campaign-command-grid"]', '[data-testid="province-map-surface"]'];
+        const selectors = [".app-shell", '[data-testid="player-main-content"]', '[data-testid="campaign-command-grid"]', '[data-testid="national-context-map"]'];
         return selectors.map((selector) => {
           const element = document.querySelector(selector);
           if (!(element instanceof HTMLElement)) throw new Error(`Missing ${selector}`);

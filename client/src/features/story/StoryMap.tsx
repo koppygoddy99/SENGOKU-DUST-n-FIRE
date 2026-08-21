@@ -136,9 +136,9 @@ export function StoryMap({ game, language, onOpen }: { game: GameState; language
 
 function NationalContextMap({ language, game, currentProvince }: { language: Language; game: GameState; currentProvince: string }) {
   const regionLabel = copy(language, provinceMapContext(game).provinceEn, provinceMapContext(game).provinceTh);
-  return <div data-testid="national-context-map" className="national-context-map" aria-label={copy(language, "Original schematic national map with campaign region", "แผนที่ประเทศเชิงสัญลักษณ์ที่บอกภูมิภาคแคมเปญ")}>
-    <div className="national-context-map__canvas"><svg viewBox="0 0 860 310" role="img" aria-label={copy(language, "A schematic view of the Japanese archipelago", "ภาพเชิงสัญลักษณ์ของหมู่เกาะญี่ปุ่น")}><path className="national-context-map__land" d="M139 206l62-29 74-14 62-45 75-9 63-37 78 5 60-26 67 22 64 40-42 27-80 11-51 29-80-4-52 30-74 7-56 36-63-1-49 25-79-4-38 21-65-3-31-26 35-19z" /><path className="national-context-map__shikoku" d="M257 246l64 8 41 25-55 13-65-11z" /><path className="national-context-map__kyushu" d="M88 226l53 13 22 48-41 18-50-19-21-35z" /><path className="national-context-map__hokkaido" d="M694 32l68-16 48 19-29 29-61 7z" /><path className="national-context-map__ridge" d="M379 119l47 16 52-17 52 21 42-10" /><path className="national-context-map__current-line" d="M334 185C392 160 455 157 514 153" /></svg>
-      <span className="national-context-map__water national-context-map__water--one" /><span className="national-context-map__water national-context-map__water--two" />
+  return <div data-testid="national-context-map" className="national-context-map" aria-label={copy(language, "National map with current campaign region", "แผนที่ระดับประเทศที่บอกภูมิภาคแคมเปญปัจจุบัน")}>
+    <div className="national-context-map__canvas">
+      <img className="national-context-map__image" src="/manus-storage/dust-fire-national-map-clean_a1c5c24e.png" alt={copy(language, "A cleaned national map of the Japanese archipelago used for campaign orientation", "แผนที่หมู่เกาะญี่ปุ่นฉบับตัดองค์ประกอบเพื่อใช้บอกบริบทแคมเปญ")} />
       <span className={`national-context-map__marker national-context-map__marker--${currentProvince}`}><i>火</i><b>{regionLabel}</b></span>
     </div>
     <div className="national-context-map__legend"><div><p>{copy(language, "CURRENT PLACE", "ตำแหน่งปัจจุบัน")}</p><strong>{game.currentScene.location}</strong><span>{copy(language, `You are in ${regionLabel}.`, `เจ้ากำลังอยู่ใน${regionLabel}`)}</span></div></div>
