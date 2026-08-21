@@ -155,7 +155,7 @@ describe("UI Preview click flow", () => {
     render(<Home />);
     fireEvent.click(screen.getByRole("button", { name: "Campaign Command" }));
     expect(screen.getByText(/CAMPAIGN COMMAND/)).toBeTruthy();
-    expect(screen.getByText(/SITUATION MAP/)).toBeTruthy();
+    expect(screen.getByText(/PROVINCE MAP/)).toBeTruthy();
   });
 
   it("falls back to Local Trial without spending a credit when an AI GM resolution fails", async () => {

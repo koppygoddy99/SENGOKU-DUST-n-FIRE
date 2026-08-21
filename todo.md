@@ -58,6 +58,10 @@
 - [ ] รับความเห็นและปรับแก้ชุดเอกสารกลาง/คู่มือทั้งเจ็ดทีมก่อนกลับไปดำเนินงาน UI reset ที่ค้าง
 - [x] รวมชุดเอกสาร Dust & Fire ฉบับล่าสุดเป็นไฟล์ ZIP เดียวและตรวจรายการไฟล์ก่อนส่งมอบ
 - [x] จัดทำคู่มือสรุปกติกา ตัวละคร สกิล Traits ทรัพยากร ความก้าวหน้า และตัวอย่างการเล่นหนึ่งตาให้ผู้เล่นอ่านง่าย
+- [x] แทนที่ Situation Map ด้วยแผนที่แคว้นแบบ Ledger of Ash ที่แสดงตำแหน่งแคมเปญ ภูมิประเทศ และร้อยแก้วบริบทพื้นที่ตาม GameState
+- [x] ขยาย province map context ให้ครอบคลุมทุกภูมิภาคที่ตัวสร้างแคมเปญและเซฟ demo ใช้งานจริง พร้อม marker และร้อยแก้วเฉพาะพื้นที่
+- [x] เพิ่ม regression และ visual review ของแผนที่แคว้นสำหรับภูมิภาคนอกเหนือจากซาไก/อิซุมิและกิอิ
+- [x] จับและบันทึก visual review ของแผนที่แคว้นอย่างน้อยสองภูมิภาคนอกกลุ่มซาไก/อิซุมิและกิอิ พร้อมตรวจ marker และ dossier จาก GameState
 - [x] เพิ่ม Admin Console แยกจาก player UI พร้อม dashboard, campaign oversight, content reference, safety checks, audit log และ application settings ตามขอบเขตที่อนุญาต
 - [x] เพิ่ม route `/admin` และ client-side/admin-only guard พร้อมหน้า access denied และซ่อนเมนูผู้ดูแลจากผู้เล่นทั่วไป
 - [x] เพิ่ม regression tests และภาพ review ที่ยืนยัน route, title และ state ของทุกหน้าถูกต้องก่อนส่งชุดภาพใหม่

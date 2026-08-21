@@ -50,6 +50,7 @@ const LEGACY_STORAGE_KEYS = ["dust-fire-local-game-v1", "dust-fire-local-game-v2
 const seasons: Season[] = ["Spring", "Summer", "Autumn", "Winter"];
 const seasonThai: Record<Season, string> = { Spring: "วสันต์", Summer: "คิมหันต์", Autumn: "สารท", Winter: "เหมันต์" };
 const regionOptions = ["Mikawa", "Omi", "Owari", "Sakai", "Izumi", "Iga", "Koga", "Kii", "Yamashiro", "Settsu", "Musashi", "Iyo", "Shima"];
+const mapReviewRegions = [...regionOptions, "Shinano", "Kaga"] as const;
 
 const seedDraft: CharacterDraft = { name: "ผู้ไร้นาม", identity: "ผู้เล่นกำหนด", templateId: "ronin", freeformOccupation: "", origin: "เส้นทางชายแดน", strength: "อ่านทางหนีและอันตรายได้ไว", weakness: "มีหนี้ที่ยังไม่กล้าพูดถึง", answers: {} };
 
@@ -169,6 +170,21 @@ export function reviewRailCollapsedFromUrl() {
   return Boolean(params.get("review")) && params.get("rail") === "collapsed";
 }
 
+export function reviewMapRegionFromUrl(): string | undefined {
+  if (typeof window === "undefined") return undefined;
+  const params = new URLSearchParams(window.location.search);
+  if (!params.get("review")) return undefined;
+  const region = params.get("mapRegion");
+  return mapReviewRegions.includes(region as (typeof mapReviewRegions)[number]) ? region ?? undefined : undefined;
+}
+
+function withReviewMapRegion(game: GameState): GameState {
+  const region = reviewMapRegionFromUrl();
+  if (!region) return game;
+  const location = `${region} review route`;
+  return { ...game, campaign: { ...game.campaign, region, location }, currentScene: { ...game.currentScene, location } };
+}
+
 function reviewReaderModeFromUrl(): boolean | undefined {
   if (typeof window === "undefined") return undefined;
   const screen = reviewScreenFor(reviewPageFromSearch(window.location.search));
@@ -192,7 +208,7 @@ export default function Home({ forceUiPreviewMode }: { forceUiPreviewMode?: bool
 
   const [reviewRoute] = useState(isReviewRoute);
   const [reviewScreen] = useState(() => reviewRoute ? reviewScreenFor(reviewPageFromUrl()) : undefined);
-  const initialGame = () => reviewScreen ? buildReviewSeed(reviewScreen.seed) : seedGame();
+  const initialGame = () => reviewScreen ? withReviewMapRegion(buildReviewSeed(reviewScreen.seed)) : seedGame();
   const [page, setPage] = useState<PageId>(() => reviewScreen?.page ?? reviewPageFromUrl());
   const [game, setGame] = useState<GameState>(initialGame);
   const [saves, setSaves] = useState<SaveLeaves>(() => { const demo = initialGame(); return { manual: copyState(demo), leaf2: null, leaf3: null }; });

@@ -18,4 +18,10 @@ describe("Campaign Command responsive layout contract", () => {
     expect(shellCss).toContain("@media (max-width: 1180px) and (min-width: 761px)");
     expect(shellCss).toContain(".home-view { grid-template-columns: 1fr; }");
   });
+
+  it("keeps the province map contained and compacts its location dossier for a narrow player leaf", () => {
+    expect(storyMapCss).toContain(".province-map { position: relative; min-height: 486px; overflow: hidden;");
+    expect(storyMapCss).toContain(".province-map__location-card { top: 21px; left: 21px;");
+    expect(storyMapCss).toContain(".province-map__region b { font-size: 8px;");
+  });
 });
