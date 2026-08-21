@@ -25,6 +25,8 @@ describe("StoryMap", () => {
     expect(html).toContain("NATIONAL MAP");
     expect(html).toContain("Izumi Province");
     expect(html).toContain("Current position");
+    expect(html).toContain("Continue scene");
+    expect(html).toContain(`aria-label="Return to ${game.currentScene.location}"`);
     expect(html).toContain('/manus-storage/dust-fire-national-map-clean_a1c5c24e.png');
     expect(html).toContain("national-context-map__marker--izumi");
     expect(html).not.toContain("PROVINCE MAP");

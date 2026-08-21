@@ -1,9 +1,11 @@
 import React from "react";
-import { ArrowRight, BookOpen, CalendarDays, Compass, ExternalLink, Globe2, ScrollText, ShieldAlert } from "lucide-react";
+import { useState } from "react";
+import { ArrowRight, BookOpen, CalendarDays, Compass, ExternalLink, Globe2, Minus, Plus, ScrollText, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SengokuIcon } from "@/components/SengokuIcon";
 import type { GameState } from "@/lib/game";
-import { timelineForCampaign, timelineRegionKey, type HistoricalTimelineRecord } from "@/lib/historicalTimeline";
+import { HISTORICAL_TIMELINE, timelineForCampaign, timelineRegionKey, type HistoricalTimelineRecord } from "@/lib/historicalTimeline";
+import { INTERACTIVE_PROVINCES, PROVINCE_BY_ID, provinceName } from "./provinceMapData";
 import "./storyMap.css";
 
 type Language = "en" | "th";
@@ -55,23 +57,23 @@ const PROVINCE_MAP_CONTEXT: Record<ProvinceKey, ProvinceMapContext> = {
 
 const PROVINCE_ALIASES: [string, ProvinceKey][] = [["sakai", "izumi"], ["izumi", "izumi"], ["ซาไก", "izumi"], ["อิซุมิ", "izumi"], ["mikawa", "mikawa"], ["mikawa", "mikawa"], ["มิกาวะ", "mikawa"], ["omi", "omi"], ["โอมิ", "omi"], ["owari", "owari"], ["โอวาริ", "owari"], ["iga", "iga"], ["อิกะ", "iga"], ["koga", "koga"], ["โคงะ", "koga"], ["kii", "kii"], ["กิอิ", "kii"], ["yamashiro", "yamashiro"], ["ยามาชิโระ", "yamashiro"], ["settsu", "settsu"], ["เซ็ตสึ", "settsu"], ["musashi", "musashi"], ["มูซาชิ", "musashi"], ["iyo", "iyo"], ["อิโยะ", "iyo"], ["shima", "shima"], ["ชิมะ", "shima"], ["shinano", "shinano"], ["ชินาโนะ", "shinano"], ["kaga", "kaga"], ["คางะ", "kaga"], ["yamato", "yamato"], ["ยามาโตะ", "yamato"], ["kawachi", "kawachi"], ["คาวาจิ", "kawachi"]];
 
-const PROVINCE_NEIGHBORHOODS: Record<ProvinceKey, ProvinceKey[]> = {
-  mikawa: ["owari", "mikawa", "shinano", "omi", "koga", "iga"],
-  omi: ["omi", "koga", "iga", "yamashiro", "settsu", "izumi"],
-  owari: ["owari", "mikawa", "shinano", "omi", "koga", "iga"],
-  izumi: ["settsu", "kawachi", "izumi", "yamato", "kii", "koga", "iga"],
-  iga: ["settsu", "kawachi", "izumi", "yamato", "kii", "koga", "iga"],
-  koga: ["settsu", "kawachi", "izumi", "yamato", "kii", "koga", "iga"],
-  kii: ["settsu", "kawachi", "izumi", "yamato", "kii", "koga", "iga"],
-  yamashiro: ["settsu", "kawachi", "izumi", "yamato", "kii", "koga", "iga"],
-  settsu: ["settsu", "kawachi", "izumi", "yamato", "kii", "koga", "iga"],
-  musashi: ["musashi", "shinano", "mikawa", "owari"],
-  iyo: ["iyo", "shima", "kii", "izumi", "settsu"],
-  shima: ["iyo", "shima", "kii", "izumi", "settsu"],
-  shinano: ["shinano", "mikawa", "owari", "omi", "koga", "iga"],
-  kaga: ["kaga", "omi", "yamashiro", "koga", "shinano"],
-  yamato: ["settsu", "kawachi", "izumi", "yamato", "kii", "koga", "iga"],
-  kawachi: ["settsu", "kawachi", "izumi", "yamato", "kii", "koga", "iga"],
+const PROVINCE_NEIGHBORHOODS: Record<ProvinceKey, string[]> = {
+  mikawa: ["mikawa", "owari", "mino", "shinano", "totomi"],
+  omi: ["omi", "wakasa", "echizen", "iga", "yamashiro"],
+  owari: ["owari", "mikawa", "mino", "ise", "shinano"],
+  izumi: ["izumi", "settsu", "kawachi", "yamato", "kii"],
+  iga: ["iga", "ise", "omi", "yamato", "yamashiro"],
+  koga: ["omi", "iga", "yamashiro", "yamato", "ise"],
+  kii: ["kii", "izumi", "yamato", "ise", "awa-shikoku"],
+  yamashiro: ["yamashiro", "settsu", "omi", "iga", "yamato"],
+  settsu: ["settsu", "harima", "tanba", "yamashiro", "kawachi"],
+  musashi: ["musashi", "kai", "sagami", "kozuke", "shimosa"],
+  iyo: ["iyo", "sanuki", "awa-shikoku", "tosa", "awaji"],
+  shima: ["shima", "ise", "iga", "kii", "izumi"],
+  shinano: ["shinano", "echigo", "etchu", "hida", "kai"],
+  kaga: ["kaga", "echizen", "noto", "etchu", "hida"],
+  yamato: ["yamato", "izumi", "kawachi", "iga", "yamashiro"],
+  kawachi: ["kawachi", "settsu", "izumi", "yamato", "harima"],
 };
 
 const PROVINCE_LABELS: Record<ProvinceKey, { en: string; th: string }> = {
@@ -86,6 +88,19 @@ function provinceMapContext(game: GameState): ProvinceMapContext {
 
 export function reviewMapModeFromUrl(): "national" {
   return "national";
+}
+
+function reviewProvinceZoomFromUrl() {
+  if (typeof window === "undefined") return false;
+  const params = new URLSearchParams(window.location.search);
+  return Boolean(params.get("review")) && params.get("mapZoom") === "province";
+}
+
+function reviewProvinceIdFromUrl() {
+  if (typeof window === "undefined") return undefined;
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("mapProvince");
+  return id && PROVINCE_BY_ID.has(id) ? id : undefined;
 }
 
 export function StoryMap({ game, language, onOpen }: { game: GameState; language: Language; onOpen: (page: StoryDestination) => void }) {
@@ -122,7 +137,7 @@ export function StoryMap({ game, language, onOpen }: { game: GameState; language
           <div><dt>{copy(language, "Focus", "ค่าสติ")}</dt><dd>{game.character.vitals.focus}/6</dd></div>
           <div><dt>{copy(language, "Momentum", "แรงฮึด")}</dt><dd>{game.character.vitals.momentum}/2</dd></div>
         </dl>
-        <Button className="df-button df-button--primary story-map__continue" onClick={() => onOpen("play")}><SengokuIcon name="sword" tone="ink" size={17} /> {copy(language, `Return to ${game.currentScene.location}`, `กลับสู่${game.currentScene.location}`)} <ArrowRight size={18} /></Button>
+        <Button className="df-button df-button--primary story-map__continue" aria-label={copy(language, `Return to ${game.currentScene.location}`, `กลับสู่ฉากที่${game.currentScene.location}`)} onClick={() => onOpen("play")}><SengokuIcon name="sword" tone="ink" size={17} /> {copy(language, "Continue scene", "กลับสู่ฉาก")} <ArrowRight size={18} /></Button>
       </article>
     </section>
 
@@ -135,13 +150,26 @@ export function StoryMap({ game, language, onOpen }: { game: GameState; language
 }
 
 function NationalContextMap({ language, game, currentProvince }: { language: Language; game: GameState; currentProvince: string }) {
+  const [zoomed, setZoomed] = useState(reviewProvinceZoomFromUrl);
+  const currentDetail = PROVINCE_BY_ID.get(currentProvince) ?? PROVINCE_BY_ID.get("omi")!;
+  const [selectedId, setSelectedId] = useState(() => reviewProvinceIdFromUrl() ?? currentDetail.id);
+  const selected = PROVINCE_BY_ID.get(selectedId) ?? currentDetail;
+  const nearbyIds = PROVINCE_NEIGHBORHOODS[currentProvince as ProvinceKey] ?? [currentDetail.id];
+  const nearby = nearbyIds.map((id) => PROVINCE_BY_ID.get(id)).filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));
+  const visibleProvinces = zoomed ? Array.from(new Map([...nearby, selected].map((entry) => [entry.id, entry])).values()) : [];
+  const yearRecord = HISTORICAL_TIMELINE.find((record) => record.year === game.campaign.year && record.regionKeys.includes(selected.id));
   const regionLabel = copy(language, provinceMapContext(game).provinceEn, provinceMapContext(game).provinceTh);
-  return <div data-testid="national-context-map" className="national-context-map" aria-label={copy(language, "National map with current campaign region", "แผนที่ระดับประเทศที่บอกภูมิภาคแคมเปญปัจจุบัน")}>
+  return <div data-testid="national-context-map" className={`national-context-map ${zoomed ? "is-zoomed" : ""}`} aria-label={copy(language, "National map with current campaign region", "แผนที่ระดับประเทศที่บอกภูมิภาคแคมเปญปัจจุบัน")}>
     <div className="national-context-map__canvas">
-      <img className="national-context-map__image" src="/manus-storage/dust-fire-national-map-clean_a1c5c24e.png" alt={copy(language, "A cleaned national map of the Japanese archipelago used for campaign orientation", "แผนที่หมู่เกาะญี่ปุ่นฉบับตัดองค์ประกอบเพื่อใช้บอกบริบทแคมเปญ")} />
-      <span className={`national-context-map__marker national-context-map__marker--${currentProvince}`}><i>火</i><b>{regionLabel}</b></span>
+      <div className="national-context-map__map-layer" style={{ transformOrigin: `${currentDetail.x}% ${currentDetail.y}%` }}>
+        <img className="national-context-map__image" src="/manus-storage/dust-fire-national-map-clean_a1c5c24e.png" alt={copy(language, "A cleaned national map of the Japanese archipelago used for campaign orientation", "แผนที่หมู่เกาะญี่ปุ่นฉบับตัดองค์ประกอบเพื่อใช้บอกบริบทแคมเปญ")} />
+        {visibleProvinces.map((province) => <button key={province.id} type="button" data-testid={`province-hotspot--${province.id}`} className={`national-context-map__province national-context-map__province--${province.id} ${selected.id === province.id ? "is-selected" : ""} ${currentDetail.id === province.id ? "is-current" : ""}`} style={{ left: `${province.x}%`, top: `${province.y}%` }} onClick={() => setSelectedId(province.id)} aria-pressed={selected.id === province.id} aria-label={copy(language, `Inspect ${province.en} Province`, `อ่านข้อมูลแคว้น${province.th}`)}><span>{provinceName(province, language)}</span><small>{province.jp}</small></button>)}
+        <span className={`national-context-map__marker national-context-map__marker--${currentProvince}`}><i>火</i><b>{regionLabel}</b></span>
+      </div>
+      <div className="national-context-map__zoom-controls" role="group" aria-label={copy(language, "Map zoom", "การซูมแผนที่")}><button type="button" className={!zoomed ? "is-active" : ""} onClick={() => setZoomed(false)} aria-pressed={!zoomed}><Minus size={14} /> {copy(language, "Overview", "ภาพรวม")}</button><button type="button" data-testid="national-map-zoom-in" className={zoomed ? "is-active" : ""} onClick={() => setZoomed(true)} aria-pressed={zoomed}><Plus size={14} /> {copy(language, "Province detail", "ดูแคว้น")}</button></div>
     </div>
-    <div className="national-context-map__legend"><div><p>{copy(language, "CURRENT PLACE", "ตำแหน่งปัจจุบัน")}</p><strong>{game.currentScene.location}</strong><span>{copy(language, `You are in ${regionLabel}.`, `เจ้ากำลังอยู่ใน${regionLabel}`)}</span></div></div>
+    <div className="national-context-map__legend"><div><p>{copy(language, "CURRENT PLACE", "ตำแหน่งปัจจุบัน")}</p><strong>{game.currentScene.location}</strong><span>{copy(language, `You are in ${regionLabel}.`, `เจ้ากำลังอยู่ใน${regionLabel}`)}</span></div>{zoomed && <span className="national-context-map__zoom-hint">{copy(language, "Select a province label to read its local context.", "เลือกชื่อแคว้นเพื่ออ่านบริบทพื้นที่")}</span>}</div>
+    {zoomed && <div className="national-context-map__province-brief" data-testid="national-map-province-brief"><div><p>{copy(language, "PROVINCE DETAIL", "ข้อมูลแคว้น")}</p><h3>{provinceName(selected, language)} <span>· {selected.jp}</span></h3><p>{copy(language, selected.focus.en, selected.focus.th)}</p></div><div className="national-context-map__year-note"><p>{game.campaign.year} · {copy(language, "HISTORICAL NOTE", "หมายเหตุประวัติศาสตร์")}</p><strong>{yearRecord ? copy(language, yearRecord.title.en, yearRecord.title.th) : copy(language, "No reviewed local event in this timeline year", "ไม่มีเหตุการณ์เฉพาะพื้นที่ที่ผ่านการตรวจทานในปีนี้")}</strong><span>{yearRecord ? copy(language, yearRecord.summary.en, yearRecord.summary.th) : copy(language, "Province names and boundaries remain visible without inventing a year-specific event or ruler.", "เกมยังแสดงชื่อและแนวเขตแคว้น แต่ไม่แต่งเหตุการณ์หรือผู้ครองอำนาจเฉพาะปีขึ้นเอง")}</span></div></div>}
   </div>;
 }
 

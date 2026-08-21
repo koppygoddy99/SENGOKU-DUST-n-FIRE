@@ -46,6 +46,7 @@
 - [x] เชื่อม route-to-screen manifest เข้ากับ review renderer เพื่อบังคับ heading และ seed state รายหน้าจริง พร้อม integration regression
 - [x] รีเซ็ต global player shell ให้ใช้ top bar, collapsible rail และลำดับ Story / Prepare / Chronicle / More ตาม blueprint
 - [ ] ปรับหน้าผู้เล่นทีละกลุ่มโดยยึด one-question rule, 3-layer hierarchy และหนึ่ง CTA หลักใน viewport แรก
+- [x] แก้ Campaign Command ให้ Story Desk ไม่บีบหรือทำให้ CTA กลับฉากถูกตัดเมื่อชื่อสถานที่ยาว
 - [x] แก้ Campaign Command และ Ledger Spine ให้ยุบ/ขยายตาม viewport โดยไม่ตัด Story Desk หรือสร้าง horizontal overflow
 - [x] เพิ่ม browser/DOM regression ที่ render Campaign Command แล้ว assert ว่า container สำคัญไม่เกิด horizontal overflow ใน desktop viewport หลัก
 - [x] จับและบันทึก visual review ของ Campaign Command ที่ 1280px แยกกรณี rail เปิดและ rail ย่อ พร้อมสรุปผลในเอกสารตรวจรับ
@@ -95,6 +96,10 @@
 - [x] เชื่อม National Map asset ที่ตัดแล้วเข้ากับ Campaign Command พร้อม overlay ตำแหน่งปัจจุบันและชื่อแคว้นจาก GameState
 - [x] ปรับ browser overflow regression ให้ตรวจ National Map asset แทน selector ของ Province Map ที่ถอดออกแล้ว
 - [x] สรุปรายงานปิดรอบตาม workflow เจ็ดทีม โดยแยกงานที่เสร็จ หลักฐานตรวจรับ สิ่งที่รอไฟล์/การตัดสินใจ และงานต่อไปของแต่ละทีม
+- [x] เพิ่มโหมด National Map ซูมออก/ซูมเข้า โดยซูมออกคงมุมมองสะอาดและซูมเข้าเผยชื่อแคว้นตามเขตประวัติศาสตร์
+- [x] เพิ่มชั้นโต้ตอบของแคว้นที่ซูมเข้าให้คลิกหรือใช้คีย์บอร์ดเพื่ออ่านชื่อและบริบทสั้นที่ผูกกับปีแคมเปญ
+- [x] ครอบคลุมแคว้นบนแผนที่ทั้งหมดด้วย label, hotspot และข้อมูลย่อที่ไม่อ้างอำนาจการครอบครอง
+- [x] เพิ่ม regression และ visual review สำหรับ zoom, การเลือกแคว้น, desktop และมือถือ
 - [x] เพิ่มหน้า Campaigns เป็นเมนูหลักสำหรับดูและโหลดแคมเปญใน Local Save
 - [x] ผูกชื่อแคมเปญที่เลือกกับหัวเมนู Campaign 1 และเมนูย่อยของแคมเปญนั้น
 - [x] เพิ่มการ์ดแสดงแคมเปญปัจจุบันและเซฟอื่นพร้อมข้อมูลปี สถานที่ ตัวละคร และ Leaf ล่าสุด
