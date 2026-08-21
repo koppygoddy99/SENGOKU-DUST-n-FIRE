@@ -55,6 +55,8 @@
 - [x] จัดทำ Markdown คอร์เกม Dust & Fire ฉบับ source of truth สำหรับ AI GM และหลังบ้าน รวมกติกา ข้อมูล การเซฟ และ guardrails ที่ใช้งานจริง
 - [x] จัดทำ Lore, Narrative, Language, Skill, Setting, Mechanics และ Art Bible ฉบับละเอียดสำหรับ AI GM หลังบ้าน ผู้เขียน และฝ่ายอาร์ต
 - [x] จัดทำเอกสารกลาง Dust & Fire แบบตัวอักษรล้วนหนึ่งฉบับ และคู่มือเชิงลึกแยกตามความรับผิดชอบของเจ็ดทีมอีกเจ็ดฉบับ
+- [ ] รับความเห็นและปรับแก้ชุดเอกสารกลาง/คู่มือทั้งเจ็ดทีมก่อนกลับไปดำเนินงาน UI reset ที่ค้าง
+- [x] รวมชุดเอกสาร Dust & Fire ฉบับล่าสุดเป็นไฟล์ ZIP เดียวและตรวจรายการไฟล์ก่อนส่งมอบ
 - [x] เพิ่ม Admin Console แยกจาก player UI พร้อม dashboard, campaign oversight, content reference, safety checks, audit log และ application settings ตามขอบเขตที่อนุญาต
 - [x] เพิ่ม route `/admin` และ client-side/admin-only guard พร้อมหน้า access denied และซ่อนเมนูผู้ดูแลจากผู้เล่นทั่วไป
 - [x] เพิ่ม regression tests และภาพ review ที่ยืนยัน route, title และ state ของทุกหน้าถูกต้องก่อนส่งชุดภาพใหม่
