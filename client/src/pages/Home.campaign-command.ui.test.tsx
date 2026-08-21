@@ -17,7 +17,7 @@ function renderCampaignCommand(path: string) {
   return {
     main: screen.getByTestId("player-main-content"),
     grid: screen.getByTestId("campaign-command-grid"),
-    map: screen.getByTestId("province-map-surface"),
+    map: screen.getByTestId("national-context-map"),
   };
 }
 
@@ -42,7 +42,7 @@ describe("Campaign Command desktop DOM contract", () => {
     expect(app?.classList.contains("sidebar-collapsed")).toBe(collapsed);
     expect(main.classList.contains("main-content")).toBe(true);
     expect(grid.classList.contains("story-command-grid")).toBe(true);
-    expect(map.classList.contains("province-map")).toBe(true);
+    expect(map.classList.contains("national-context-map")).toBe(true);
     expect(grid.querySelector(".story-map-card--map")).toBeTruthy();
     expect(grid.querySelector(".story-map-card--desk")).toBeTruthy();
     expect(main.getAttribute("style") ?? "").not.toMatch(/width\s*:/i);
