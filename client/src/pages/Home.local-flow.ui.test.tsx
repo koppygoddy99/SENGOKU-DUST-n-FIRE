@@ -141,6 +141,33 @@ describe("UI Preview click flow", () => {
     expect(screen.getByText("กันทาโร่ลากซาเนฟุยุขึ้นจากน้ำ")).toBeTruthy();
   });
 
+  it("renders the shared ledger with Step/XP, agreements, and honest reward context across preparation and local save views", () => {
+    render(<Home />);
+    fireEvent.click(screen.getByRole("button", { name: "Prepare" }));
+    fireEvent.click(screen.getByRole("button", { name: "Character Dossier" }));
+    expect(screen.getByText("NEXT PRACTICE")).toBeTruthy();
+    expect(screen.getByText(/: \d+\/\d+ XP$/)).toBeTruthy();
+    expect(screen.getByText("OPEN AGREEMENTS")).toBeTruthy();
+    expect(screen.getByTestId("campaign-reward-context")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "This Market" }));
+    expect(screen.getByText("NEXT PRACTICE")).toBeTruthy();
+    expect(screen.getByText(/: \d+\/\d+ XP$/)).toBeTruthy();
+    expect(screen.getByText("OPEN AGREEMENTS")).toBeTruthy();
+    expect(screen.getByTestId("market-reward-context")).toBeTruthy();
+
+    openMore("Save Game");
+    expect(screen.getByText("NEXT PRACTICE")).toBeTruthy();
+    expect(screen.getByText(/: \d+\/\d+ XP$/)).toBeTruthy();
+    expect(screen.getByText("OPEN AGREEMENTS")).toBeTruthy();
+    expect(screen.getByTestId("campaign-reward-context")).toBeTruthy();
+    openMore("Load Game");
+    expect(screen.getByText("NEXT PRACTICE")).toBeTruthy();
+    expect(screen.getByText(/: \d+\/\d+ XP$/)).toBeTruthy();
+    expect(screen.getByText("OPEN AGREEMENTS")).toBeTruthy();
+    expect(screen.getByTestId("campaign-reward-context")).toBeTruthy();
+  });
+
   it("uses a review seed instead of stale local storage when opening a review route", async () => {
     const legacy = JSON.parse(JSON.stringify(createSaikaSafehouseDemo())) as { economy?: unknown };
     delete legacy.economy;

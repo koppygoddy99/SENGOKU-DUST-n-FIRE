@@ -44,6 +44,12 @@ export function buildAdminOverview() {
       status: "not-configured",
       detail: "Admin audit storage will be added before any settings-changing controls are enabled.",
     },
+    {
+      id: "historical-timeline",
+      label: "Reviewed historical timeline catalog",
+      status: "ready",
+      detail: "Read-only timeline records retain source links and date precision; they do not alter campaign state automatically.",
+    },
   ];
 
   return {
@@ -55,6 +61,23 @@ export function buildAdminOverview() {
     review: {
       manifestRequired: true,
       rule: "A review image is valid only when route, heading, seed state, and file name agree.",
+    },
+  };
+}
+
+export function buildAdminOperationsFacts() {
+  return {
+    visitorAnalytics: {
+      status: "not-configured" as const,
+      detail: "No visitor total is displayed because this project does not currently ingest a verified privacy-reviewed visitor metric.",
+    },
+    playerData: {
+      status: "local-first" as const,
+      detail: "Player campaign records remain in browser Local Save. This console does not expose raw campaign prose or Local Save by default.",
+    },
+    controls: {
+      status: "read-only" as const,
+      detail: "Administrative mutation controls remain withheld until append-only audit storage and confirmation flows are implemented.",
     },
   };
 }

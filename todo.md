@@ -50,9 +50,21 @@
 - [x] เพิ่ม browser/DOM regression ที่ render Campaign Command แล้ว assert ว่า container สำคัญไม่เกิด horizontal overflow ใน desktop viewport หลัก
 - [x] จับและบันทึก visual review ของ Campaign Command ที่ 1280px แยกกรณี rail เปิดและ rail ย่อ พร้อมสรุปผลในเอกสารตรวจรับ
 - [x] เพิ่ม browser runtime harness ที่วัด `scrollWidth <= clientWidth` ของ main content, Campaign Command grid และ Province Map ใน rail เปิด/ย่อที่ viewport 1280px
+- [x] ทีม 1: สร้างเมนูการจัดการแบบซ่อนมุมขวาบนที่ไม่รบกวนการเล่น พร้อม IA เมนูย่อยที่ยังเป็นโครงสร้าง
+- [x] ทีม 5: เชื่อมทางเข้า Admin Console แบบ role-gated จากเมนูการจัดการ และออกแบบ dashboard ผู้ดูแลที่เป็นทางการ
+- [x] ทีม 2: เพิ่มมุมมองแผนที่ระดับประเทศแบบ SVG ที่สลับเปิด/ปิดจากหน้าแผนที่ โดยไม่คัดลอก asset หรือขอบเขตอำนาจจากเว็บอ้างอิง
+- [x] ทีม 3: สร้างโมเดล timeline ตามปีและฤดูจากแหล่งอ้างอิงที่ตรวจสอบได้ และกำหนด integration boundary กับ GameState
+- [x] ทีม 6: เพิ่ม regression ครอบคลุมเมนูการจัดการ แผนที่ระดับประเทศ และ timeline boundary
+- [x] ทีม 7: จัดทำสถานะการทำงานรายทีมและเกณฑ์ตรวจรับก่อน checkpoint ของงานรอบนี้
 - [x] เกลา Campaign Command และ Chronicle ให้บอกจังหวะเวลา Leaf ความกดดัน และผลล่าสุดของภารกิจโดยไม่เพิ่ม dashboard card ซ้ำ
-- [ ] เกลา Market, Character และ Save/Load ให้เห็นผลของรางวัล ข้อตกลง Step/XP และตำแหน่งข้อมูลสำคัญอย่างกระชับ
-- [ ] เกลา Admin Console ให้ใช้ war-office ledger และข้อความกำกับที่ชัดเจนแทน panel แบบ SaaS ทั่วไป
+- [x] เกลา Market, Character และ Save/Load ให้เห็นผลของรางวัล ข้อตกลง Step/XP และตำแหน่งข้อมูลสำคัญอย่างกระชับ
+- [x] เกลา Admin Console ให้ใช้ war-office ledger และข้อความกำกับที่ชัดเจนแทน panel แบบ SaaS ทั่วไป
+- [x] เพิ่มการแสดงผลรางวัลล่าสุด/ของรางวัลที่เข้าสัมภาระหรือผลตอบแทนจากภารกิจใน Market, Character และ Save/Load ให้เห็นชัดใน ledger เดียวกัน
+- [x] เพิ่ม regression เฉพาะสำหรับ Market, Character และ Save/Load ที่ assert การแสดง Step/XP, agreements และ reward context บนแต่ละหน้า
+- [x] เพิ่มการแสดง XP/ความคืบหน้าขั้นถัดไปใน Market, Character, Save และ Load ให้ใช้ข้อมูลเดียวกันกับ Highest Step
+- [x] เพิ่ม UI regression แบบ render-level สำหรับ Character, Save และ Load และขยาย Market regression ให้ตรวจ Step/XP, agreements และ reward context บนหน้าจริง
+- [x] เพิ่ม assertion แยกสำหรับ Character, Save และ Load ให้ตรวจ NEXT PRACTICE ค่า XP, OPEN AGREEMENTS และ reward context จาก DOM จริง
+- [x] ขยาย Market regression ให้ตรวจ Highest Step, Next Practice XP, Open Agreements และ reward context บน Market UI จริง
 - [x] จัดทำ Markdown คอร์เกม Dust & Fire ฉบับ source of truth สำหรับ AI GM และหลังบ้าน รวมกติกา ข้อมูล การเซฟ และ guardrails ที่ใช้งานจริง
 - [x] จัดทำ Lore, Narrative, Language, Skill, Setting, Mechanics และ Art Bible ฉบับละเอียดสำหรับ AI GM หลังบ้าน ผู้เขียน และฝ่ายอาร์ต
 - [x] จัดทำเอกสารกลาง Dust & Fire แบบตัวอักษรล้วนหนึ่งฉบับ และคู่มือเชิงลึกแยกตามความรับผิดชอบของเจ็ดทีมอีกเจ็ดฉบับ

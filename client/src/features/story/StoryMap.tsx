@@ -1,8 +1,10 @@
 import React from "react";
-import { ArrowRight, BookOpen, Compass, MapPinned, ScrollText, ShieldAlert } from "lucide-react";
+import { useState } from "react";
+import { ArrowRight, BookOpen, CalendarDays, Compass, ExternalLink, Globe2, MapPinned, ScrollText, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SengokuIcon } from "@/components/SengokuIcon";
 import type { GameState } from "@/lib/game";
+import { timelineForCampaign, timelineRegionKey, type HistoricalTimelineRecord } from "@/lib/historicalTimeline";
 import "./storyMap.css";
 
 type Language = "en" | "th";
@@ -83,12 +85,19 @@ function provinceMapContext(game: GameState): ProvinceMapContext {
   return PROVINCE_MAP_CONTEXT[matched?.[1] ?? "yamato"];
 }
 
+export function reviewMapModeFromUrl(search = typeof window === "undefined" ? "" : window.location.search): "province" | "national" {
+  const params = new URLSearchParams(search);
+  return params.get("review") && params.get("map") === "national" ? "national" : "province";
+}
+
 export function StoryMap({ game, language, onOpen }: { game: GameState; language: Language; onOpen: (page: StoryDestination) => void }) {
+  const [mapMode, setMapMode] = useState<"province" | "national">(() => reviewMapModeFromUrl());
   const activeMission = game.missions.find((mission) => mission.state === "active" || mission.state === "offered");
   const lastRoll = game.rolls.at(-1);
   const recentMemories = game.memories.slice(-3).reverse();
   const provinceContext = provinceMapContext(game);
   const neighborhood = PROVINCE_NEIGHBORHOODS[provinceContext.marker];
+  const timeline = timelineForCampaign(game.campaign.year, game.campaign.region);
 
   return <div className="page story-map-page">
     <header className="story-map__header">
@@ -101,8 +110,9 @@ export function StoryMap({ game, language, onOpen }: { game: GameState; language
 
     <section data-testid="campaign-command-grid" className="story-command-grid" aria-label={copy(language, "Campaign command desk", "โต๊ะบัญชาการแคมเปญ")}>
       <article className="story-map-card story-map-card--map">
-        <div className="story-map-card__heading"><span><MapPinned size={17} /> {copy(language, "PROVINCE MAP", "แผนที่แคว้น")}</span><small>{copy(language, "Campaign reading · not a survey", "ภาพอ่านแคมเปญ · ไม่ใช่แผนที่สำรวจ")}</small></div>
-        <div data-testid="province-map-surface" className="province-map" aria-label={copy(language, "Schematic province map with the campaign location", "แผนที่แคว้นเชิงสัญลักษณ์ที่บอกตำแหน่งแคมเปญ")}>
+        <div className="story-map-card__heading"><span>{mapMode === "province" ? <MapPinned size={17} /> : <Globe2 size={17} />} {copy(language, mapMode === "province" ? "PROVINCE MAP" : "NATIONAL CONTEXT", mapMode === "province" ? "แผนที่แคว้น" : "บริบทระดับประเทศ")}</span><small>{copy(language, mapMode === "province" ? "Campaign reading · not a survey" : "Orientation · not territorial control", mapMode === "province" ? "ภาพอ่านแคมเปญ · ไม่ใช่แผนที่สำรวจ" : "ใช้มองบริบท · ไม่ใช่เขตอำนาจ")}</small></div>
+        <div className="story-map__mode-toggle" role="group" aria-label={copy(language, "Map view", "มุมมองแผนที่")}><button className={mapMode === "province" ? "is-active" : ""} onClick={() => setMapMode("province")}><MapPinned size={15} />{copy(language, "Province", "แคว้น")}</button><button className={mapMode === "national" ? "is-active" : ""} onClick={() => setMapMode("national")}><Globe2 size={15} />{copy(language, "National", "ทั้งประเทศ")}</button></div>
+        {mapMode === "province" ? <><div data-testid="province-map-surface" className="province-map" aria-label={copy(language, "Schematic province map with the campaign location", "แผนที่แคว้นเชิงสัญลักษณ์ที่บอกตำแหน่งแคมเปญ")}>
           <span className="province-map__grain province-map__grain--north" />
           <span className="province-map__grain province-map__grain--coast" />
           {neighborhood.map((province) => <span key={province} className={`province-map__region province-map__region--${province}`}><b>{copy(language, PROVINCE_LABELS[province].en, PROVINCE_LABELS[province].th)}</b></span>)}
@@ -114,8 +124,7 @@ export function StoryMap({ game, language, onOpen }: { game: GameState; language
             <h2>{game.currentScene.location}</h2>
             <dl><div><dt>{copy(language, "Province", "แคว้น")}</dt><dd>{copy(language, provinceContext.provinceEn, provinceContext.provinceTh)}</dd></div><div><dt>{copy(language, "Ground", "ภูมิประเทศ")}</dt><dd>{copy(language, provinceContext.terrainEn, provinceContext.terrainTh)}</dd></div><div><dt>{copy(language, "War shadow", "เงาสงคราม")}</dt><dd>{game.campaign.warShadow}/6</dd></div></dl>
           </aside>
-        </div>
-        <div className="story-map__map-footer story-map__map-footer--province"><p><ShieldAlert size={15} /> {copy(language, provinceContext.proseEn, provinceContext.proseTh)}</p><button onClick={() => onOpen("archive")}>{copy(language, "Open World Archive", "เปิดคลังโลก")} <ArrowRight size={15} /></button></div>
+        </div><div className="story-map__map-footer story-map__map-footer--province"><p><ShieldAlert size={15} /> {copy(language, provinceContext.proseEn, provinceContext.proseTh)}</p><button onClick={() => onOpen("archive")}>{copy(language, "Open World Archive", "เปิดคลังโลก")} <ArrowRight size={15} /></button></div></> : <NationalContextMap language={language} game={game} currentProvince={timelineRegionKey(game.campaign.region)} onOpenArchive={() => onOpen("archive")} />}
       </article>
 
       <article className="story-map-card story-map-card--desk">
@@ -138,5 +147,22 @@ export function StoryMap({ game, language, onOpen }: { game: GameState; language
       <article className="story-map__mission-card"><p className="story-map__eyebrow">{copy(language, "ACTIVE MISSION", "ภารกิจปัจจุบัน")}</p><h2>{activeMission?.title ?? copy(language, "No mission is active", "ยังไม่มีภารกิจที่กำลังดำเนิน")}</h2><p>{activeMission ? `${activeMission.issuer} · ${activeMission.deadline}` : copy(language, "The next scene will establish what needs your answer.", "ฉากถัดไปจะบอกว่าโลกกำลังต้องการคำตอบใดจากเจ้า")}</p><button onClick={() => onOpen("missions")}>{copy(language, "VIEW MISSION", "ดูภารกิจ")} <ArrowRight size={15} /></button></article>
       <article className="story-map__pulse-card"><p className="story-map__eyebrow">{copy(language, "WORLD STATE PULSE", "ชีพจรของโลก")}</p><div>{recentMemories.length ? recentMemories.map((memory) => <button key={memory.id} onClick={() => onOpen("archive")}><span className={`state-pill state-pill--${memory.tone}`}>{memory.kind}</span><p>{memory.detail}</p><ArrowRight size={15} /></button>) : <p>{copy(language, "No consequence has been recorded yet. The first decision will give the world something to remember.", "โลกยังไม่มีร่องรอยที่บันทึกไว้ การตัดสินใจแรกจะทิ้งบางสิ่งให้โลกจดจำ")}</p>}</div></article>
     </section>
+    <HistoricalTimeline language={language} year={game.campaign.year} season={game.campaign.season} region={game.campaign.region} records={timeline} />
   </div>;
+}
+
+function NationalContextMap({ language, game, currentProvince, onOpenArchive }: { language: Language; game: GameState; currentProvince: string; onOpenArchive: () => void }) {
+  const regionLabel = copy(language, provinceMapContext(game).provinceEn, provinceMapContext(game).provinceTh);
+  return <div data-testid="national-context-map" className="national-context-map" aria-label={copy(language, "Original schematic national map with campaign region", "แผนที่ประเทศเชิงสัญลักษณ์ที่บอกภูมิภาคแคมเปญ")}>
+    <div className="national-context-map__canvas"><svg viewBox="0 0 860 310" role="img" aria-label={copy(language, "A schematic view of the Japanese archipelago", "ภาพเชิงสัญลักษณ์ของหมู่เกาะญี่ปุ่น")}><path className="national-context-map__land" d="M139 206l62-29 74-14 62-45 75-9 63-37 78 5 60-26 67 22 64 40-42 27-80 11-51 29-80-4-52 30-74 7-56 36-63-1-49 25-79-4-38 21-65-3-31-26 35-19z" /><path className="national-context-map__shikoku" d="M257 246l64 8 41 25-55 13-65-11z" /><path className="national-context-map__kyushu" d="M88 226l53 13 22 48-41 18-50-19-21-35z" /><path className="national-context-map__hokkaido" d="M694 32l68-16 48 19-29 29-61 7z" /><path className="national-context-map__ridge" d="M379 119l47 16 52-17 52 21 42-10" /><path className="national-context-map__current-line" d="M334 185C392 160 455 157 514 153" /></svg>
+      <span className="national-context-map__water national-context-map__water--one" /><span className="national-context-map__water national-context-map__water--two" />
+      <span className="national-context-map__region national-context-map__region--west">WESTERN ROUTES</span><span className="national-context-map__region national-context-map__region--central">KINAI</span><span className="national-context-map__region national-context-map__region--east">EASTERN PLAINS</span><span className="national-context-map__region national-context-map__region--north">NORTHERN ROADS</span>
+      <span className={`national-context-map__marker national-context-map__marker--${currentProvince}`}><i>火</i><b>{regionLabel}</b></span>
+    </div>
+    <div className="national-context-map__legend"><div><p>{copy(language, "CURRENT CAMPAIGN", "แคมเปญปัจจุบัน")}</p><strong>{regionLabel}</strong><span>{copy(language, "Schematic orientation only; labels describe route regions rather than historical territorial control.", "เป็นภาพสำหรับมองทิศทางเท่านั้น ป้ายอธิบายเส้นทาง ไม่ได้แสดงเขตอำนาจทางประวัติศาสตร์")}</span></div><button onClick={onOpenArchive}>{copy(language, "Inspect source boundary", "ตรวจขอบเขตแหล่งข้อมูล")} <ArrowRight size={15} /></button></div>
+  </div>;
+}
+
+function HistoricalTimeline({ language, year, season, region, records }: { language: Language; year: number; season: GameState["campaign"]["season"]; region: string; records: (HistoricalTimelineRecord & { relevance: "regional" | "national" })[] }) {
+  return <section className="historical-timeline" aria-label={copy(language, "Historical timeline", "ไทม์ไลน์ประวัติศาสตร์")}><header><div><p className="story-map__eyebrow">{copy(language, "HISTORICAL TIMELINE", "ไทม์ไลน์ประวัติศาสตร์")}</p><h2><CalendarDays size={20} /> {year} · {seasonName(language, season)}</h2><p>{copy(language, `Cited context for ${region}; it does not resolve your campaign or create mandatory quests.`, `บริบทที่มีแหล่งอ้างอิงสำหรับ ${region}; ข้อมูลนี้ไม่ตัดสินแคมเปญและไม่สร้างภารกิจบังคับ`)}</p></div><span className="historical-timeline__fence"><ShieldAlert size={15} /> {copy(language, "Historical Fence", "แนวกั้นประวัติศาสตร์")}</span></header>{records.length ? <div className="historical-timeline__records">{records.map((record) => <article key={record.id}><div className="historical-timeline__record-meta"><span className={`historical-timeline__kind historical-timeline__kind--${record.kind}`}>{copy(language, record.kind === "battle" ? "BATTLE" : "EVENT", record.kind === "battle" ? "ศึก" : "เหตุการณ์")}</span><time>{copy(language, record.date.en, record.date.th)}</time><span>{copy(language, record.relevance === "regional" ? "Regional context" : "National context", record.relevance === "regional" ? "บริบทภูมิภาค" : "บริบทระดับประเทศ")}</span></div><h3>{copy(language, record.title.en, record.title.th)}</h3><p>{copy(language, record.summary.en, record.summary.th)}</p><a href={record.source.url} target="_blank" rel="noreferrer">{record.source.label}<ExternalLink size={13} /></a></article>)}</div> : <div className="historical-timeline__empty"><BookOpen size={20} /><p>{copy(language, "This local prototype has no reviewed record for this campaign year yet. The game keeps the date visible instead of filling the gap with invented history.", "ต้นแบบนี้ยังไม่มีรายการที่ผ่านการตรวจทานสำหรับปีแคมเปญนี้ เกมจะแสดงวันที่ไว้แทนการเติมประวัติศาสตร์ที่แต่งขึ้น")}</p></div>}</section>;
 }

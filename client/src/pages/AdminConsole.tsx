@@ -13,6 +13,8 @@ type AdminOverview = {
   systems: Array<{ id: string; label: string; status: "ready" | "safe-fallback" | "planned" | "not-configured"; detail: string }>;
   review: { manifestRequired: boolean; rule: string };
 };
+type AdminTimelineFacts = { storage: string; reviewedYears: number[]; recordCount: number; sourceCount: number; policy: string };
+type AdminOperationsFacts = { visitorAnalytics: { status: string; detail: string }; playerData: { status: string; detail: string }; controls: { status: string; detail: string } };
 
 const adminMenu: Array<{ id: AdminSection; icon: typeof Gauge; label: string; thai: string; path: string; folio: string }> = [
   { id: "overview", icon: Gauge, label: "Office Overview", thai: "ภาพรวมสำนักงาน", path: "/admin", folio: "01" },
@@ -47,14 +49,26 @@ function StatusMark({ status }: { status: AdminOverview["systems"][number]["stat
   return <span className={`admin-status admin-status--${status}`}>{label}</span>;
 }
 
-function AdminBody({ section, overview, loading }: { section: AdminSection; overview: AdminOverview | undefined; loading: boolean }) {
+function AdminBody({ section, overview, timeline, operations, loading }: { section: AdminSection; overview: AdminOverview | undefined; timeline: AdminTimelineFacts | undefined; operations: AdminOperationsFacts | undefined; loading: boolean }) {
   if (loading) return <section className="admin-loading-ledger" aria-label="Loading administration data"><p className="admin-kicker">READING OFFICE LEDGER</p>{[1, 2, 3].map((row) => <div key={row}><span /><strong /><i /></div>)}</section>;
   if (!overview) return <section className="admin-notice"><ShieldAlert size={24} /><div><p className="admin-kicker">NO OFFICE RECORD RETURNED</p><h2>Operational data is unavailable</h2><p>No state was changed. The console will remain read-only until a server response is available.</p></div></section>;
   if (section === "campaigns") return <AdminNotice icon={ArchiveRestore} title="No remote campaign database" detail="Campaign Library persists in local browser storage. Central campaign access is intentionally unavailable until consent, a database policy, and retention terms exist." />;
-  if (section === "content") return <AdminNotice icon={BookMarked} title="Content review protocol" detail="Each future entry must retain one historical boundary label: fact-supported, contextual-play, campaign-fiction, or insufficient-evidence. No batch editor is active." />;
+  if (section === "content") return <AdminTimelineLedger timeline={timeline} />;
+  if (section === "operations") return <AdminOperationsLedger operations={operations} />;
   if (section === "audit") return <AdminNotice icon={ClipboardList} title="Audit storage is not configured" detail="Mutable administrator controls are withheld until append-only audit records, actor identity, timestamps, and retention rules are available." />;
   if (section === "settings") return <AdminNotice icon={Cog} title="No live settings exposed" detail="Feature flags and secrets are intentionally absent. Future settings must be server-validated, role-gated, confirmed, and recorded." />;
   return <section className="admin-system-ledger"><div className="admin-system-ledger__head"><span>FOLIO</span><span>SYSTEM</span><span>OFFICE MARK</span><span>IMPLEMENTED BOUNDARY</span></div>{overview.systems.map((system, index) => <article key={system.id}><span>{String(index + 1).padStart(2, "0")}</span><strong>{system.label}</strong><StatusMark status={system.status} /><p>{system.detail}</p></article>)}</section>;
+}
+
+function AdminTimelineLedger({ timeline }: { timeline: AdminTimelineFacts | undefined }) {
+  if (!timeline) return <AdminNotice icon={BookMarked} title="Timeline catalog unavailable" detail="No historical coverage record was returned. No campaign state was changed." />;
+  return <section className="admin-system-ledger"><div className="admin-system-ledger__head"><span>FOLIO</span><span>CATALOG</span><span>REVIEWED YEARS</span><span>BOUNDARY</span></div><article><span>01</span><strong>{timeline.storage}</strong><StatusMark status="ready" /><p>{timeline.recordCount} reviewed records · {timeline.sourceCount} source URLs · {timeline.reviewedYears.join(", ")}</p></article><div className="admin-notice"><BookMarked size={24} /><div><p className="admin-kicker">HISTORICAL FENCE</p><h2>Evidence remains separate from campaign fiction</h2><p>{timeline.policy}</p></div></div></section>;
+}
+
+function AdminOperationsLedger({ operations }: { operations: AdminOperationsFacts | undefined }) {
+  if (!operations) return <AdminNotice icon={Landmark} title="Operations facts unavailable" detail="No state was changed. This office will not estimate live traffic or provider health." />;
+  const rows = [["Visitor analytics", operations.visitorAnalytics], ["Player data boundary", operations.playerData], ["Administrative controls", operations.controls]] as const;
+  return <section className="admin-system-ledger"><div className="admin-system-ledger__head"><span>FOLIO</span><span>OPERATION</span><span>OFFICE MARK</span><span>IMPLEMENTED BOUNDARY</span></div>{rows.map(([label, record], index) => <article key={label}><span>{String(index + 1).padStart(2, "0")}</span><strong>{label}</strong><span className="admin-status admin-status--not-configured">{record.status.replace(/-/g, " ")}</span><p>{record.detail}</p></article>)}</section>;
 }
 
 function AdminNotice({ icon: Icon, title, detail }: { icon: typeof ShieldCheck; title: string; detail: string }) {
@@ -66,6 +80,8 @@ export function AdminConsole() {
   const [location, setLocation] = useLocation();
   const isAdmin = user?.role === "admin";
   const overview = trpc.admin.overview.useQuery(undefined, { enabled: isAdmin, retry: false, refetchOnWindowFocus: false });
+  const timeline = trpc.admin.timeline.useQuery(undefined, { enabled: isAdmin, retry: false, refetchOnWindowFocus: false });
+  const operations = trpc.admin.operations.useQuery(undefined, { enabled: isAdmin, retry: false, refetchOnWindowFocus: false });
   if (loading) return <OfficeGate type="loading" />;
   if (!user) return <OfficeGate type="signin" />;
   if (!isAdmin) return <OfficeGate type="denied" onReturn={() => setLocation("/")} />;
@@ -75,6 +91,6 @@ export function AdminConsole() {
 
   return <div className="admin-ledger">
     <aside className="admin-ledger__spine"><div className="admin-ledger__brand"><span>火</span><div><strong>Dust &amp; Fire</strong><small>WAR OFFICE</small></div></div><div className="admin-ledger__folio"><small>APPLICATION FOLIO</small><strong>{activeEntry.folio}</strong><span>{content.eyebrow}</span></div><nav aria-label="Administrator sections">{adminMenu.map((item) => { const Icon = item.icon; return <button key={item.id} className={item.id === section ? "is-active" : ""} onClick={() => setLocation(item.path)}><span>{item.folio}</span><Icon size={15} /><div><strong>{item.label}</strong><small>{item.thai}</small></div></button>; })}</nav><div className="admin-ledger__identity"><span className="admin-ledger__identity-mark">印</span><div><small>OFFICE ACCOUNT</small><strong>{user.name || "Administrator"}</strong><button onClick={() => setLocation("/")}>Return to player ledger</button></div></div></aside>
-    <main className="admin-ledger__main"><header className="admin-ledger__header"><div><p className="admin-kicker">{content.eyebrow}</p><h1>{content.title}</h1><p>{content.summary}</p></div><div className="admin-ledger__seal"><span>火</span><small>READ ONLY</small></div></header><AdminBody section={section} overview={overview.data} loading={overview.isLoading} /></main>
+    <main className="admin-ledger__main"><header className="admin-ledger__header"><div><p className="admin-kicker">{content.eyebrow}</p><h1>{content.title}</h1><p>{content.summary}</p></div><div className="admin-ledger__seal"><span>火</span><small>READ ONLY</small></div></header><AdminBody section={section} overview={overview.data} timeline={timeline.data} operations={operations.data} loading={overview.isLoading || timeline.isLoading || operations.isLoading} /></main>
   </div>;
 }

@@ -1,12 +1,13 @@
 import { COOKIE_NAME } from "@shared/const";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { buildAdminOverview } from "./admin";
+import { buildAdminOperationsFacts, buildAdminOverview } from "./admin";
 import { getUserTrialCredits, spendUserTrialCredits } from "./db";
 import { analyzeWithGM, analyzeInputSchema, resolveInputSchema, resolveWithGM } from "./gm";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
+import { buildHistoricalTimeline, buildTimelineOperationsFacts } from "./timeline";
 
 async function requireGMTrialCredit(userId: number) {
   const credits = await getUserTrialCredits(userId);
@@ -44,8 +45,13 @@ export const appRouter = router({
       return { credits };
     }),
   }),
+  timeline: router({
+    forCampaign: publicProcedure.input(z.object({ year: z.number().int().min(1467).max(1615), region: z.string().min(1).max(80) })).query(({ input }) => buildHistoricalTimeline(input.year, input.region)),
+  }),
   admin: router({
     overview: adminProcedure.query(() => buildAdminOverview()),
+    timeline: adminProcedure.query(() => buildTimelineOperationsFacts()),
+    operations: adminProcedure.query(() => buildAdminOperationsFacts()),
   }),
 
   // TODO: add feature routers here, e.g.

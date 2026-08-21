@@ -2,9 +2,14 @@ import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { createSaikaSafehouseDemo, parseAction, resolveRoll, applyRoll } from "@/lib/game";
-import { StoryMap } from "./StoryMap";
+import { reviewMapModeFromUrl, StoryMap } from "./StoryMap";
 
 describe("StoryMap", () => {
+  it("opens the national map only from an explicit review route", () => {
+    expect(reviewMapModeFromUrl("?review=home&map=national")).toBe("national");
+    expect(reviewMapModeFromUrl("?map=national")).toBe("province");
+  });
+
   it("projects campaign location, active mission, memories, and roll state from the real game state", () => {
     const base = createSaikaSafehouseDemo();
     const preview = parseAction("I will ask the guard for one night to speak with the prisoner.", base);

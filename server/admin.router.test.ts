@@ -37,4 +37,21 @@ describe("admin.overview", () => {
 
     await expect(caller.admin.overview()).rejects.toMatchObject({ code: "FORBIDDEN" });
   });
+
+  it("exposes timeline catalog facts and honest operations states only to administrators", async () => {
+    const caller = appRouter.createCaller(createContext("admin"));
+    const [timeline, operations] = await Promise.all([caller.admin.timeline(), caller.admin.operations()]);
+
+    expect(timeline.reviewedYears).toEqual(expect.arrayContaining([1569, 1570]));
+    expect(timeline.recordCount).toBeGreaterThan(0);
+    expect(operations.visitorAnalytics).toMatchObject({ status: "not-configured" });
+    expect(operations.playerData).toMatchObject({ status: "local-first" });
+  });
+
+  it("refuses timeline and operations facts to ordinary players", async () => {
+    const caller = appRouter.createCaller(createContext("user"));
+
+    await expect(caller.admin.timeline()).rejects.toMatchObject({ code: "FORBIDDEN" });
+    await expect(caller.admin.operations()).rejects.toMatchObject({ code: "FORBIDDEN" });
+  });
 });
