@@ -163,6 +163,12 @@ function isReviewRoute() {
   return Boolean(new URLSearchParams(window.location.search).get("review"));
 }
 
+export function reviewRailCollapsedFromUrl() {
+  if (typeof window === "undefined") return false;
+  const params = new URLSearchParams(window.location.search);
+  return Boolean(params.get("review")) && params.get("rail") === "collapsed";
+}
+
 function reviewReaderModeFromUrl(): boolean | undefined {
   if (typeof window === "undefined") return undefined;
   const screen = reviewScreenFor(reviewPageFromSearch(window.location.search));
@@ -197,7 +203,7 @@ export default function Home({ forceUiPreviewMode }: { forceUiPreviewMode?: bool
   const [fontSize, setFontSize] = useState<FontSize>("normal");
   const [accent, setAccent] = useState<Accent>("vermilion");
   const [menuOpen, setMenuOpen] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(reviewRailCollapsedFromUrl);
   const [campaignMenuOpen, setCampaignMenuOpen] = useState(true);
   const [notice, setNotice] = useState("Local Save active · this campaign stays in this browser");
   const [storageReady, setStorageReady] = useState(false);

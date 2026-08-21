@@ -46,11 +46,15 @@
 - [x] เชื่อม route-to-screen manifest เข้ากับ review renderer เพื่อบังคับ heading และ seed state รายหน้าจริง พร้อม integration regression
 - [x] รีเซ็ต global player shell ให้ใช้ top bar, collapsible rail และลำดับ Story / Prepare / Chronicle / More ตาม blueprint
 - [ ] ปรับหน้าผู้เล่นทีละกลุ่มโดยยึด one-question rule, 3-layer hierarchy และหนึ่ง CTA หลักใน viewport แรก
-- [ ] เกลา Campaign Command และ Chronicle ให้บอกจังหวะเวลา Leaf ความกดดัน และผลล่าสุดของภารกิจโดยไม่เพิ่ม dashboard card ซ้ำ
+- [x] แก้ Campaign Command และ Ledger Spine ให้ยุบ/ขยายตาม viewport โดยไม่ตัด Story Desk หรือสร้าง horizontal overflow
+- [ ] เพิ่ม browser/DOM regression ที่ render Campaign Command แล้ว assert ว่า container สำคัญไม่เกิด horizontal overflow ใน desktop viewport หลัก
+- [ ] จับและบันทึก visual review ของ Campaign Command ที่ 1280px แยกกรณี rail เปิดและ rail ย่อ พร้อมสรุปผลในเอกสารตรวจรับ
+- [x] เกลา Campaign Command และ Chronicle ให้บอกจังหวะเวลา Leaf ความกดดัน และผลล่าสุดของภารกิจโดยไม่เพิ่ม dashboard card ซ้ำ
 - [ ] เกลา Market, Character และ Save/Load ให้เห็นผลของรางวัล ข้อตกลง Step/XP และตำแหน่งข้อมูลสำคัญอย่างกระชับ
 - [ ] เกลา Admin Console ให้ใช้ war-office ledger และข้อความกำกับที่ชัดเจนแทน panel แบบ SaaS ทั่วไป
 - [x] จัดทำ Markdown คอร์เกม Dust & Fire ฉบับ source of truth สำหรับ AI GM และหลังบ้าน รวมกติกา ข้อมูล การเซฟ และ guardrails ที่ใช้งานจริง
 - [x] จัดทำ Lore, Narrative, Language, Skill, Setting, Mechanics และ Art Bible ฉบับละเอียดสำหรับ AI GM หลังบ้าน ผู้เขียน และฝ่ายอาร์ต
+- [x] จัดทำเอกสารกลาง Dust & Fire แบบตัวอักษรล้วนหนึ่งฉบับ และคู่มือเชิงลึกแยกตามความรับผิดชอบของเจ็ดทีมอีกเจ็ดฉบับ
 - [x] เพิ่ม Admin Console แยกจาก player UI พร้อม dashboard, campaign oversight, content reference, safety checks, audit log และ application settings ตามขอบเขตที่อนุญาต
 - [x] เพิ่ม route `/admin` และ client-side/admin-only guard พร้อมหน้า access denied และซ่อนเมนูผู้ดูแลจากผู้เล่นทั่วไป
 - [x] เพิ่ม regression tests และภาพ review ที่ยืนยัน route, title และ state ของทุกหน้าถูกต้องก่อนส่งชุดภาพใหม่
