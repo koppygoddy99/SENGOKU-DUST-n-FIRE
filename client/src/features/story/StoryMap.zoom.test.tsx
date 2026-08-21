@@ -6,7 +6,7 @@ import { createSaikaSafehouseDemo } from "@/lib/game";
 import { StoryMap } from "./StoryMap";
 
 describe("StoryMap province zoom", () => {
-  it("keeps province labels hidden in overview, then reveals selectable nearby provinces and a year-scoped brief", () => {
+  it("keeps province labels hidden in overview, then reveals only a close neighborhood and a province brief without historical-note copy", () => {
     const game = createSaikaSafehouseDemo();
     render(<StoryMap game={game} language="en" onOpen={() => undefined} />);
 
@@ -16,8 +16,10 @@ describe("StoryMap province zoom", () => {
     expect(screen.getByTestId("province-hotspot--izumi")).toBeTruthy();
     expect(screen.getByTestId("province-hotspot--settsu")).toBeTruthy();
     expect(screen.getByTestId("national-map-province-brief").textContent).toContain("Izumi");
-    fireEvent.click(screen.getByTestId("province-hotspot--yamato"));
-    expect(screen.getByTestId("national-map-province-brief").textContent).toContain("Yamato");
+    expect(screen.getByTestId("national-map-province-brief").textContent).not.toContain("HISTORICAL NOTE");
+    expect(screen.getAllByRole("button", { name: /Inspect .* Province/ }).length).toBeLessThanOrEqual(3);
+    fireEvent.click(screen.getByTestId("province-hotspot--kawachi"));
+    expect(screen.getByTestId("national-map-province-brief").textContent).toContain("Kawachi");
     expect(screen.getByText("Overview").getAttribute("aria-pressed")).toBe("false");
   });
 });

@@ -23,15 +23,16 @@ vi.mock("@/lib/trpc", () => ({ trpc: { profile: { credits: { useQuery: mocks.cre
 
 import Home from "./Home";
 import { createSaikaSafehouseDemo } from "../lib/game";
+import { ROLL_ANIMATION_MS } from "../features/play/PlayScene";
 
-function openChronicle(child: "Campaign Library" | "Chronicle") {
+function openChronicle(child: "Chronicle") {
   const group = screen.getAllByRole("button", { name: "Chronicle" }).find((button) => button.hasAttribute("aria-expanded"));
   if (group?.getAttribute("aria-expanded") !== "true") fireEvent.click(group!);
   const childButton = screen.getAllByRole("button", { name: child }).find((button) => !button.hasAttribute("aria-expanded"));
   fireEvent.click(childButton!);
 }
 
-function openMore(child: "Save Game" | "Load Game") {
+function openMore(child: "Campaign Library" | "Save Game" | "Load Game") {
   const group = screen.getByRole("button", { name: "More" });
   if (group.getAttribute("aria-expanded") !== "true") fireEvent.click(group);
   const childButton = screen.getAllByRole("button", { name: child }).find((button) => !button.hasAttribute("aria-expanded") && button.closest(".campaign-nav__items"));
@@ -79,14 +80,15 @@ describe("UI Preview click flow", () => {
     earlier.campaign = { ...earlier.campaign, id: "camp-earlier", title: "Ashes at the river gate", year: 1568, location: "ท่าเรือคิอิ" };
     earlier.currentScene = { ...earlier.currentScene, title: "ข่าวจากท่าเรือ" };
     earlier.memories = [{ ...earlier.memories[0], id: "memory-earlier", title: "เงาที่ท่าเรือคิอิ", detail: "คนเรือปิดปากเงียบเมื่อข่าวจากท่าเรือคิอิมาถึง" }];
-    window.localStorage.setItem("dust-fire-local-game-v3-saika", JSON.stringify({ game: saika, saves: { manual: saika, leaf2: null, leaf3: null }, campaignLibrary: { [saika.campaign.id]: saika, [earlier.campaign.id]: earlier }, language: "en", readerMode: true, darkMode: false, fontSize: "normal", accent: "vermilion" }));
+    window.localStorage.setItem("dust-fire-local-game-v3-saika", JSON.stringify({ game: saika, saves: { manual: saika, leaf2: null, leaf3: null }, campaignLibrary: { [saika.campaign.id]: saika, [earlier.campaign.id]: earlier }, language: "en", readerMode: false, darkMode: false, fontSize: "normal", accent: "vermilion" }));
     render(<Home />);
-    openChronicle("Campaign Library");
+    openMore("Campaign Library");
     expect(screen.getAllByText("Smoke Beneath Sakai").length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole("button", { name: /Ashes at the river gate/i }));
     expect(screen.getAllByText("ข่าวจากท่าเรือ").length).toBeGreaterThan(0);
     openChronicle("Chronicle");
     expect(screen.getAllByText("เงาที่ท่าเรือคิอิ").length).toBeGreaterThan(0);
+    expect(screen.getByTestId("chronicle-campaign-scope").textContent).toContain("Ashes at the river gate");
   });
 
   it("plays a Local Trial, records an outcome, saves it, and restores it without GM or credit mutations", () => {
@@ -123,6 +125,23 @@ describe("UI Preview click flow", () => {
       expect(saved.game.rolls[0].momentumSpent).toBe(2);
       expect(saved.game.character.vitals.momentum).toBe(0);
     });
+  });
+
+  it("uses one direct intent CTA without a risk-preview button and preserves the four-second roll cadence", () => {
+    render(<Home />);
+    fireEvent.click(screen.getByRole("button", { name: /Return to/i }));
+    expect(screen.getByText("What will you do?")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /see the risk/i })).toBeNull();
+    expect(ROLL_ANIMATION_MS).toBe(4000);
+  });
+
+  it("presents World Archive cards as readonly records rather than navigation controls", () => {
+    render(<Home />);
+    fireEvent.click(screen.getByRole("button", { name: "Chronicle" }));
+    fireEvent.click(screen.getByRole("button", { name: "World Archive" }));
+    const records = screen.getAllByTestId("archive-record");
+    expect(records).toHaveLength(4);
+    expect(records.every((record) => record.tagName === "ARTICLE")).toBe(true);
   });
 
   it("routes the Prepare group through gear, market, services, obligations, and exchange history", () => {

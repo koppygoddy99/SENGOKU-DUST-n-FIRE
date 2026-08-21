@@ -45,7 +45,18 @@
 - [x] จัดทำ Markdown แผนรีเซ็ต Dust & Fire ตาม UI Reset และ Per-Page Design Placement Blueprint พร้อมเกณฑ์ตรวจรับรายหน้า
 - [x] เชื่อม route-to-screen manifest เข้ากับ review renderer เพื่อบังคับ heading และ seed state รายหน้าจริง พร้อม integration regression
 - [x] รีเซ็ต global player shell ให้ใช้ top bar, collapsible rail และลำดับ Story / Prepare / Chronicle / More ตาม blueprint
-- [ ] ปรับหน้าผู้เล่นทีละกลุ่มโดยยึด one-question rule, 3-layer hierarchy และหนึ่ง CTA หลักใน viewport แรก
+- [ ] ปรับหน้าผู้เล่นกลุ่มถัดไปโดยยึด one-question rule, 3-layer hierarchy และหนึ่ง CTA หลักใน viewport แรก
+- [x] ปรับกลุ่ม Play, Campaign Command, Chronicle และ World Archive ตาม one-question rule, 3-layer hierarchy และ CTA หลักของรอบนี้
+- [x] ปรับ World Archive ให้ record ที่อ่านอย่างเดียวไม่ใช้ chevron หรือ affordance ที่สื่อว่ากดเปิดรายละเอียดได้
+- [x] เพิ่ม animation ลูกเต๋าหมุนและหยุดตามลำดับราวสี่วินาทีในหน้า Play ก่อนเปิดผลการทอย
+- [x] แสดงข้อความผลหลังทอยแบบค่อยเป็นค่อยไปคล้ายกำลังพิมพ์ เพื่อลดความรู้สึกว่ารอการสร้างคำตอบ
+- [x] เปลี่ยนคำถามประกาศเจตนาเป็น “เจ้าจะทำอย่างไร” และตัดปุ่มดูความเสี่ยงเพื่อไม่เรียก AI ในจุดนั้น
+- [x] ซ่อน historical note ที่ระบุว่าไม่มีเหตุการณ์เฉพาะพื้นที่จาก Province Detail บน National Map
+- [x] ปรับ Province Detail ให้ซูมใกล้ขึ้นและโฟกัสเฉพาะแคว้นซ้าย–ขวารอบตำแหน่งปัจจุบัน
+- [x] ทำให้พงศาวดารแสดงเฉพาะบันทึกของแคมเปญที่เลือก โดยไม่ปนกับแคมเปญอื่นใน Local Save
+- [x] ย้ายทางเข้า “หอแคมเปญ” ไปไว้ใต้เมนู More และเพิ่ม regression สำหรับ navigation ใหม่
+- [x] จัดทำรายงานปิดรอบล่าสุดแยกตาม workflow 7 ทีม ครอบคลุมหน้าเล่น แผนที่ พงศาวดาร และเมนู
+- [ ] สร้าง GitHub repository ส่วนตัวชื่อ SENGOKU-DUST-n-FIRE และส่งออก source, tests, docs และ configuration ที่ส่งมอบได้
 - [x] แก้ Campaign Command ให้ Story Desk ไม่บีบหรือทำให้ CTA กลับฉากถูกตัดเมื่อชื่อสถานที่ยาว
 - [x] แก้ Campaign Command และ Ledger Spine ให้ยุบ/ขยายตาม viewport โดยไม่ตัด Story Desk หรือสร้าง horizontal overflow
 - [x] เพิ่ม browser/DOM regression ที่ render Campaign Command แล้ว assert ว่า container สำคัญไม่เกิด horizontal overflow ใน desktop viewport หลัก

@@ -4,7 +4,7 @@ import { ArrowRight, BookOpen, CalendarDays, Compass, ExternalLink, Globe2, Minu
 import { Button } from "@/components/ui/button";
 import { SengokuIcon } from "@/components/SengokuIcon";
 import type { GameState } from "@/lib/game";
-import { HISTORICAL_TIMELINE, timelineForCampaign, timelineRegionKey, type HistoricalTimelineRecord } from "@/lib/historicalTimeline";
+import { timelineForCampaign, timelineRegionKey, type HistoricalTimelineRecord } from "@/lib/historicalTimeline";
 import { INTERACTIVE_PROVINCES, PROVINCE_BY_ID, provinceName } from "./provinceMapData";
 import "./storyMap.css";
 
@@ -156,12 +156,11 @@ function NationalContextMap({ language, game, currentProvince }: { language: Lan
   const selected = PROVINCE_BY_ID.get(selectedId) ?? currentDetail;
   const nearbyIds = PROVINCE_NEIGHBORHOODS[currentProvince as ProvinceKey] ?? [currentDetail.id];
   const nearby = nearbyIds.map((id) => PROVINCE_BY_ID.get(id)).filter((entry): entry is NonNullable<typeof entry> => Boolean(entry));
-  const visibleProvinces = zoomed ? Array.from(new Map([...nearby, selected].map((entry) => [entry.id, entry])).values()) : [];
-  const yearRecord = HISTORICAL_TIMELINE.find((record) => record.year === game.campaign.year && record.regionKeys.includes(selected.id));
+  const visibleProvinces = zoomed ? Array.from(new Map([currentDetail, ...nearby.filter((entry) => entry.id !== currentDetail.id).slice(0, 2), selected].map((entry) => [entry.id, entry])).values()) : [];
   const regionLabel = copy(language, provinceMapContext(game).provinceEn, provinceMapContext(game).provinceTh);
   return <div data-testid="national-context-map" className={`national-context-map ${zoomed ? "is-zoomed" : ""}`} aria-label={copy(language, "National map with current campaign region", "แผนที่ระดับประเทศที่บอกภูมิภาคแคมเปญปัจจุบัน")}>
     <div className="national-context-map__canvas">
-      <div className="national-context-map__map-layer" style={{ transformOrigin: `${currentDetail.x}% ${currentDetail.y}%` }}>
+      <div className="national-context-map__map-layer" style={{ transformOrigin: `${currentDetail.x}% ${currentDetail.y}%`, transform: zoomed ? "scale(2.65)" : "scale(1)" }}>
         <img className="national-context-map__image" src="/manus-storage/dust-fire-national-map-clean_a1c5c24e.png" alt={copy(language, "A cleaned national map of the Japanese archipelago used for campaign orientation", "แผนที่หมู่เกาะญี่ปุ่นฉบับตัดองค์ประกอบเพื่อใช้บอกบริบทแคมเปญ")} />
         {visibleProvinces.map((province) => <button key={province.id} type="button" data-testid={`province-hotspot--${province.id}`} className={`national-context-map__province national-context-map__province--${province.id} ${selected.id === province.id ? "is-selected" : ""} ${currentDetail.id === province.id ? "is-current" : ""}`} style={{ left: `${province.x}%`, top: `${province.y}%` }} onClick={() => setSelectedId(province.id)} aria-pressed={selected.id === province.id} aria-label={copy(language, `Inspect ${province.en} Province`, `อ่านข้อมูลแคว้น${province.th}`)}><span>{provinceName(province, language)}</span><small>{province.jp}</small></button>)}
         <span className={`national-context-map__marker national-context-map__marker--${currentProvince}`}><i>火</i><b>{regionLabel}</b></span>
@@ -169,7 +168,7 @@ function NationalContextMap({ language, game, currentProvince }: { language: Lan
       <div className="national-context-map__zoom-controls" role="group" aria-label={copy(language, "Map zoom", "การซูมแผนที่")}><button type="button" className={!zoomed ? "is-active" : ""} onClick={() => setZoomed(false)} aria-pressed={!zoomed}><Minus size={14} /> {copy(language, "Overview", "ภาพรวม")}</button><button type="button" data-testid="national-map-zoom-in" className={zoomed ? "is-active" : ""} onClick={() => setZoomed(true)} aria-pressed={zoomed}><Plus size={14} /> {copy(language, "Province detail", "ดูแคว้น")}</button></div>
     </div>
     <div className="national-context-map__legend"><div><p>{copy(language, "CURRENT PLACE", "ตำแหน่งปัจจุบัน")}</p><strong>{game.currentScene.location}</strong><span>{copy(language, `You are in ${regionLabel}.`, `เจ้ากำลังอยู่ใน${regionLabel}`)}</span></div>{zoomed && <span className="national-context-map__zoom-hint">{copy(language, "Select a province label to read its local context.", "เลือกชื่อแคว้นเพื่ออ่านบริบทพื้นที่")}</span>}</div>
-    {zoomed && <div className="national-context-map__province-brief" data-testid="national-map-province-brief"><div><p>{copy(language, "PROVINCE DETAIL", "ข้อมูลแคว้น")}</p><h3>{provinceName(selected, language)} <span>· {selected.jp}</span></h3><p>{copy(language, selected.focus.en, selected.focus.th)}</p></div><div className="national-context-map__year-note"><p>{game.campaign.year} · {copy(language, "HISTORICAL NOTE", "หมายเหตุประวัติศาสตร์")}</p><strong>{yearRecord ? copy(language, yearRecord.title.en, yearRecord.title.th) : copy(language, "No reviewed local event in this timeline year", "ไม่มีเหตุการณ์เฉพาะพื้นที่ที่ผ่านการตรวจทานในปีนี้")}</strong><span>{yearRecord ? copy(language, yearRecord.summary.en, yearRecord.summary.th) : copy(language, "Province names and boundaries remain visible without inventing a year-specific event or ruler.", "เกมยังแสดงชื่อและแนวเขตแคว้น แต่ไม่แต่งเหตุการณ์หรือผู้ครองอำนาจเฉพาะปีขึ้นเอง")}</span></div></div>}
+    {zoomed && <div className="national-context-map__province-brief" data-testid="national-map-province-brief"><div><p>{copy(language, "PROVINCE DETAIL", "ข้อมูลแคว้น")}</p><h3>{provinceName(selected, language)} <span>· {selected.jp}</span></h3><p>{copy(language, selected.focus.en, selected.focus.th)}</p></div></div>}
   </div>;
 }
 

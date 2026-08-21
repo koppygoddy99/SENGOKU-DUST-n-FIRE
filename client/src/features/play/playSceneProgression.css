@@ -47,3 +47,14 @@
   .play-scene__skill-ledger article:last-child { border-bottom: 0; }
   .play-outcome-card__layers .play-outcome-card__prose { grid-column: auto; }
 }
+
+.play-scene__composer-actions { grid-template-columns: minmax(0, 1fr) auto; }
+.play-dice-result.is-rolling .play-dice-result__tray > span { animation: df-dice-tumble .32s linear infinite; }
+.play-dice-result.is-rolling .play-dice-result__tray > span.is-light { animation-delay: .12s; animation-direction: reverse; }
+.play-outcome-card__typed > span { display: inline-block; margin-left: 2px; color: var(--vermilion); animation: df-typewriter-caret .7s steps(1) infinite; }
+
+@keyframes df-typewriter-caret { 50% { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .play-outcome-card__typed > span { animation: none; }
+}
