@@ -46,6 +46,7 @@
 - [x] เชื่อม route-to-screen manifest เข้ากับ review renderer เพื่อบังคับ heading และ seed state รายหน้าจริง พร้อม integration regression
 - [x] รีเซ็ต global player shell ให้ใช้ top bar, collapsible rail และลำดับ Story / Prepare / Chronicle / More ตาม blueprint
 - [ ] ปรับหน้าผู้เล่นกลุ่มถัดไปโดยยึด one-question rule, 3-layer hierarchy และหนึ่ง CTA หลักใน viewport แรก
+- [x] ปรับ Character Dossier ให้ทางเข้า related records ระบุปลายทางชัดและไม่แข่งขันกับการอ่านสถานะตัวละคร
 - [x] ปรับกลุ่ม Play, Campaign Command, Chronicle และ World Archive ตาม one-question rule, 3-layer hierarchy และ CTA หลักของรอบนี้
 - [x] ปรับ World Archive ให้ record ที่อ่านอย่างเดียวไม่ใช้ chevron หรือ affordance ที่สื่อว่ากดเปิดรายละเอียดได้
 - [x] เพิ่ม animation ลูกเต๋าหมุนและหยุดตามลำดับราวสี่วินาทีในหน้า Play ก่อนเปิดผลการทอย

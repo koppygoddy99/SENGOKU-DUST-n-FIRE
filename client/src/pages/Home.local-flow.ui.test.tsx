@@ -187,6 +187,7 @@ describe("UI Preview click flow", () => {
     render(<Home />);
     fireEvent.click(screen.getByRole("button", { name: "Prepare" }));
     fireEvent.click(screen.getByRole("button", { name: "Character Dossier" }));
+    expect(screen.getByText("Open this campaign's Chronicle")).toBeTruthy();
     expect(screen.getByText("NEXT PRACTICE")).toBeTruthy();
     expect(screen.getByText(/: \d+\/\d+ XP$/)).toBeTruthy();
     expect(screen.getByText("OPEN AGREEMENTS")).toBeTruthy();

@@ -28,3 +28,9 @@
 ตรวจ Play, National Map ใน Province Detail และ Chronicle library ที่ viewport 1280 × 720 แล้ว หน้า Play เหลือ CTA ยืนยันเจตนาหลักเดียวโดยไม่มีปุ่มดูความเสี่ยง; คำถามภาษาอังกฤษเปลี่ยนเป็น “What will you do?” และคำถามไทยใน component เปลี่ยนเป็น “เจ้าจะทำอย่างไร” ตาม requirement. National Map ซูมเข้าใกล้จุดอิซุมิและแสดงเพียง Izumi, Settsu และ Kawachi พร้อม province brief โดยไม่มี historical note. Chronicle แสดงบรรทัดกำกับว่าพงศาวดารเป็นของแคมเปญที่เปิดอยู่เท่านั้น. ภาพรวมไม่พบ horizontal clipping ในสามหน้าที่ตรวจ.
 
 ตรวจ viewport 375 × 812 แล้ว หน้า Play เรียง narrative, approaches และ composer แบบคอลัมน์เดียว ปุ่มตั้งเจตนายังเข้าถึงได้ และไม่มีปุ่มดูความเสี่ยง ส่วน National Map แสดงแคว้นอิซุมิและแคว้นซ้าย–ขวาในกรอบโดยไม่มี horizontal scroll; Story Desk, Mission และ Timeline จัดลงเป็น flow เดียวใต้แผนที่โดยไม่ตัดข้อความหลัก.
+
+## Prepare group triage
+
+ตรวจ Character, Gear, Market, Services และ Obligations ที่ 1280 × 720 แล้ว พบว่า Market และหน้ารองต่าง ๆ สื่อบทบาทเป็น ledger ได้ค่อนข้างชัด ส่วน **Character Dossier** มีคำสั่ง `View related records` ที่กว้างและไม่บอกปลายทาง จึงเป็นจุดเสี่ยงสูงสุดต่อ one-question rule ในกลุ่มนี้ รอบถัดไปควรเปลี่ยนเป็นคำสั่งที่ระบุปลายทางหรือย้ายการนำทางรองเข้ากลุ่ม record ที่สัมพันธ์กัน โดยไม่เปลี่ยนค่าตัวละครหรือระบบ progression
+
+แก้แล้วเป็น `Open this campaign's Chronicle` / `เปิดพงศาวดารของแคมเปญนี้` และตรวจภาพที่ 1280 × 720 กับ 375 × 812 แล้ว label อ่านได้ครบ ไม่ชนกับข้อมูลตัวตนหรือ status ledger และยังนำไป Chronicle ของแคมเปญเดียวกันตามเดิม
