@@ -135,6 +135,22 @@ describe("UI Preview click flow", () => {
     expect(ROLL_ANIMATION_MS).toBe(4000);
   });
 
+  it("keeps two dice in the decision window and lets a saved narrative outcome accept the next intent immediately", () => {
+    render(<Home />);
+    fireEvent.click(screen.getByRole("button", { name: /Return to/i }));
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "I will offer the clerk a favor." } });
+    fireEvent.click(screen.getByRole("button", { name: /set this intention/i }));
+    fireEvent.click(screen.getByRole("button", { name: /roll 2d12/i }));
+    expect(screen.getByTestId("dice-decision-window")).toBeTruthy();
+    expect(screen.getByTestId("dice-one").textContent).toMatch(/^\d+$/);
+    expect(screen.getByTestId("dice-two").textContent).toMatch(/^\d+$/);
+    fireEvent.click(screen.getByRole("button", { name: /record this result/i }));
+    expect(screen.getByTestId("narrative-outcome")).toBeTruthy();
+    const nextIntent = screen.getByRole("textbox");
+    fireEvent.change(nextIntent, { target: { value: "I will carry the answer to the gate." } });
+    expect(screen.getByRole("button", { name: /set this intention/i })).toBeTruthy();
+  });
+
   it("presents World Archive cards as readonly records rather than navigation controls", () => {
     render(<Home />);
     fireEvent.click(screen.getByRole("button", { name: "Chronicle" }));
