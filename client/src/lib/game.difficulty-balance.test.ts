@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyMomentumToRoll, createSaikaSafehouseDemo, parseAction, resolveRoll } from "./game";
+import { applyMomentumFromSource, applyMomentumToRoll, applyRoll, createSaikaSafehouseDemo, getMomentumSources, parseAction, resolveRoll } from "./game";
 
 function outcomeForMargin(margin: number) {
   if (margin >= 5) return "decisive";
@@ -68,5 +68,35 @@ describe("DN balance guardrails", () => {
     expect(boosted.total).toBe(record.total + 2);
     expect(boosted.margin).toBe(record.margin + 2);
     expect(boosted.momentumSpent).toBe(2);
+  });
+
+  it("lists concrete Momentum sources from Focus, carried reserves, and an open favor", () => {
+    const game = createSaikaSafehouseDemo();
+    const sources = getMomentumSources(game);
+    expect(sources).toEqual(expect.arrayContaining([
+      expect.objectContaining({ id: "vital-focus", kind: "vital", cost: "Focus −1" }),
+      expect.objectContaining({ id: "item-dry-ration", kind: "item", itemId: "dry-ration" }),
+      expect.objectContaining({ id: "scene-favor-favor-gantaro-life", kind: "scene" }),
+    ]));
+  });
+
+  it("uses a chosen carried reserve only when the Momentum result is recorded", () => {
+    const game = createSaikaSafehouseDemo();
+    const record = resolveRoll(parseAction("ข้าจะเสนอแผนให้กันทาโร่", game), game, false);
+    const boosted = applyMomentumFromSource(record, game, "item-dry-ration");
+    const saved = applyRoll(game, boosted);
+    expect(boosted.dice).toEqual(record.dice);
+    expect(boosted.momentumSource).toMatchObject({ kind: "item", itemId: "dry-ration", cost: "ใช้ของ 1 ชิ้น" });
+    expect(saved.character.inventory.find((entry) => entry.id === "dry-ration")?.condition).toBe("used");
+    expect(saved.character.vitals.focus).toBe(game.character.vitals.focus);
+    expect(saved.memories.at(-1)?.detail).toContain("ใช้ของ 1 ชิ้น");
+  });
+
+  it("spends Focus only when the selected vital source is committed", () => {
+    const game = createSaikaSafehouseDemo();
+    const record = resolveRoll(parseAction("ข้าจะเสนอแผนให้กันทาโร่", game), game, false);
+    const saved = applyRoll(game, applyMomentumFromSource(record, game, "vital-focus"));
+    expect(saved.character.vitals.focus).toBe(game.character.vitals.focus - 1);
+    expect(saved.character.vitals.momentum).toBe(game.character.vitals.momentum - 1);
   });
 });

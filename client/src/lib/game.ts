@@ -80,6 +80,16 @@ export type InventoryItem = {
   ownership?: "owned" | "borrowed" | "held_for_other" | "disputed";
 };
 
+export type MomentumSourceKind = "vital" | "item" | "scene";
+export type MomentumSource = {
+  id: string;
+  kind: MomentumSourceKind;
+  label: string;
+  note: string;
+  cost: string;
+  itemId?: string;
+};
+
 export type RelationshipPull = {
   id: string;
   question: string;
@@ -237,6 +247,7 @@ export type RollRecord = RollPreview & {
   margin: number;
   outcome: Outcome;
   momentumSpent: number;
+  momentumSource?: MomentumSource;
   summary: string;
   narrative: string;
   reward?: string;
@@ -634,7 +645,31 @@ export function resolveRoll(preview: RollPreview, state: GameState, spendMomentu
  * calculation the player just inspected. It adds +2 to that exact record.
  */
 export function applyMomentumToRoll(record: RollRecord, state: GameState): RollRecord {
-  if (record.momentumSpent || state.character.vitals.momentum <= 0) return record;
+  const source = getMomentumSources(state)[0];
+  if (record.momentumSpent || !source) return record;
+  return applyMomentumFromSource(record, state, source.id);
+}
+
+export function getMomentumSources(state: GameState): MomentumSource[] {
+  if (state.character.vitals.momentum <= 0) return [];
+  const sources: MomentumSource[] = [];
+  const vitals = state.character.vitals;
+  if (vitals.focus > 0 && vitals.wounds < 6) {
+    sources.push({ id: "vital-focus", kind: "vital", label: "ใจมั่นที่ยังเหลือ", note: "ตั้งสติฝืนแรงกดดันของฉาก", cost: "Focus −1" });
+  }
+  state.character.inventory.filter((entry) => entry.condition === "usable" && entry.kind === "reserve").forEach((entry) => {
+    sources.push({ id: `item-${entry.id}`, kind: "item", itemId: entry.id, label: entry.label, note: entry.description, cost: "ใช้ของ 1 ชิ้น" });
+  });
+  const openFavor = state.economy.obligations.find((entry) => entry.kind === "favor" && entry.status === "open");
+  if (openFavor) {
+    sources.push({ id: `scene-favor-${openFavor.id}`, kind: "scene", label: `คำค้ำของ ${openFavor.holder}`, note: openFavor.note, cost: "ผูกบุญคุณเพิ่ม" });
+  }
+  return sources;
+}
+
+export function applyMomentumFromSource(record: RollRecord, state: GameState, sourceId: string): RollRecord {
+  const source = getMomentumSources(state).find((entry) => entry.id === sourceId);
+  if (record.momentumSpent || !source) return record;
   const momentumSpent = 2;
   const total = record.total + momentumSpent;
   const margin = total - record.difficulty;
@@ -646,6 +681,7 @@ export function applyMomentumToRoll(record: RollRecord, state: GameState): RollR
     margin,
     outcome,
     momentumSpent,
+    momentumSource: source,
     summary: `${copy.label}: ${record.intent}`,
     narrative: localOutcomeNarration(record, state, outcome, copy.consequence),
     reward: outcome === "failure_with_consequence" ? undefined : "ความคืบหน้าของภารกิจและทางเลือกใหม่",
@@ -727,11 +763,19 @@ export function applyRoll(state: GameState, record: RollRecord): GameState {
   const calendar = advanceCampaignCalendar(state.campaign, clock.progression, clock.dayAdvance);
   const missionResult = progressActiveMission(state, record);
   const activeMission = state.missions.find((entry) => entry.state === "offered" || entry.state === "active");
+  const momentumSource = record.momentumSource;
+  const inventoryAfterMomentum = momentumSource?.kind === "item" && momentumSource.itemId
+    ? missionResult.inventory.map((entry) => entry.id === momentumSource.itemId ? { ...entry, condition: "used" as const } : entry)
+    : missionResult.inventory;
   const updatedCharacter: Character = {
     ...state.character,
     masteries: awarded.masteries,
-    inventory: missionResult.inventory,
-    vitals: { ...state.character.vitals, momentum: Math.max(0, state.character.vitals.momentum - (record.momentumSpent ? 1 : 0)) },
+    inventory: inventoryAfterMomentum,
+    vitals: {
+      ...state.character.vitals,
+      momentum: Math.max(0, state.character.vitals.momentum - (record.momentumSpent ? 1 : 0)),
+      focus: momentumSource?.kind === "vital" ? Math.max(0, state.character.vitals.focus - 1) : state.character.vitals.focus,
+    },
     social: { ...state.character.social, stain: state.character.social.stain + (record.outcome === "failure_with_consequence" ? 1 : 0), information: state.character.social.information + (record.outcome === "partial_success" ? 1 : 0) },
   };
   const memory: WorldMemory = {
@@ -769,7 +813,8 @@ export function applyRoll(state: GameState, record: RollRecord): GameState {
     suggestedActions: success ? ["รับรางวัลแล้วถามเงื่อนไข", "ตามหาคนที่เป็นพยาน", "กลับไปดูภารกิจอื่น"] : ["แก้ความเข้าใจกับผู้คุม", "หาหลักฐานเพิ่ม", "ยอมรับผลแล้วเปลี่ยนแผน"],
   };
   const storedRecord: RollRecord = { ...record, practice: awarded.practice, timeMark: clock.timeMark, missionUpdate: missionResult.update };
-  return { ...state, campaign: calendar.campaign, progression: { ...calendar.progression, lastPractice: awarded.practice }, character: updatedCharacter, currentScene: nextScene, missions, economy: missionResult.transaction ? { ...state.economy, transactions: [...state.economy.transactions, missionResult.transaction] } : state.economy, memories: [...state.memories, memory], rolls: [...state.rolls, storedRecord], tick: record.tick };
+  const momentumMemory = record.momentumSpent && momentumSource ? [{ id: `momentum-${record.id}`, kind: "actor_relation" as const, title: `แรงฮึด: ${momentumSource.label}`, detail: `${momentumSource.note} · ${momentumSource.cost}`, tick: record.tick, tone: "ochre" as const }] : [];
+  return { ...state, campaign: calendar.campaign, progression: { ...calendar.progression, lastPractice: awarded.practice }, character: updatedCharacter, currentScene: nextScene, missions, economy: missionResult.transaction ? { ...state.economy, transactions: [...state.economy.transactions, missionResult.transaction] } : state.economy, memories: [...state.memories, memory, ...momentumMemory], rolls: [...state.rolls, storedRecord], tick: record.tick };
 }
 
 export function buyMarketOffer(state: GameState, offerId: string): { state: GameState; message: string } {
