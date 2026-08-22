@@ -146,6 +146,13 @@ describe("UI Preview click flow", () => {
     expect(screen.getByTestId("dice-two").textContent).toMatch(/^\d+$/);
     fireEvent.click(screen.getByRole("button", { name: /record this result/i }));
     expect(screen.getByTestId("narrative-outcome")).toBeTruthy();
+    expect(screen.queryByText("SKILL LEDGER")).toBeNull();
+    expect(screen.queryByText("POSSIBLE APPROACHES")).toBeNull();
+    expect(screen.queryByText("ฉากแคมเปญสมมติในบริบทเมืองท่าซาไก ค.ศ. 1569 ใช้แรงกดดันของการค้า อาวุธ และเครือข่ายไซกะเป็นฉากหลัง ไม่ได้ยืนยันว่า NPC ในฉากมีตัวตนจริง.")).toBeNull();
+    expect(screen.queryByText("คำตอบใต้ห้องขัง")).toBeNull();
+    expect(screen.getByRole("button", { name: /write next intent/i })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /return to map/i })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /open chronicle/i })).toBeTruthy();
     const nextIntent = screen.getByRole("textbox");
     fireEvent.change(nextIntent, { target: { value: "I will carry the answer to the gate." } });
     expect(screen.getByRole("button", { name: /set this intention/i })).toBeTruthy();

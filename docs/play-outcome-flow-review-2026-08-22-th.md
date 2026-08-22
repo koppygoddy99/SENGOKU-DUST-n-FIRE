@@ -11,3 +11,7 @@
 ที่ viewport 375 × 812 ร้อยแก้วผลลัพธ์ยังนำสายตาก่อน ledger รองและ composer โดยไม่มี horizontal clipping ปุ่ม `WRITE NEXT INTENT` และ `SET THIS INTENTION` เรียงตาม flow เดียวกันและเข้าถึงได้ในหน้าต่อเนื่อง
 
 browser regression `tests/play-dice-outcome-flow.spec.mjs` ผ่าน โดยตรวจว่าหลังคลิก Roll 2D12 มี `dice-decision-window` ที่อยู่ในสถานะหมุนพร้อมลูกเต๋าสองลูก, สถานะหมุนสิ้นสุดภายในห้าวินาทีและเหลือปุ่มบันทึกผล, จากนั้น Narrative Outcome และ textarea ของเจตนาถัดไปยังอยู่หน้าเดียวกัน
+
+## Outcome layout correction
+
+หลังได้รับ feedback ว่าหน้าซ้อนกัน ได้แยก Outcome state ออกจากบล็อกฉากตั้งต้นโดยสมบูรณ์ ผลตรวจที่ 1280 × 720 และ 375 × 812 ยืนยันว่าหน้าแสดงเพียงหัวผลลัพธ์ ร้อยแก้วหลัก ผลกระทบสั้น แถวสรุปสามช่อง ปุ่ม action และ composer เจตนาถัดไปตามลำดับ ไม่มีหัวฉากเก่า Skill Ledger เดิม บทนำเดิม หรือแนวทางเดิมปรากฏซ้ำใต้ Outcome
