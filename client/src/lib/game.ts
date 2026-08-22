@@ -223,6 +223,7 @@ export type RollPreview = {
   contextBonus: number;
   contextReason?: string;
   difficulty: 10 | 14 | 18 | 22;
+  difficultyReason?: string;
   risks: string[];
   witnesses: string[];
   historical?: HistoricalBoundary;
@@ -549,9 +550,16 @@ export function parseAction(action: string, state: GameState): RollPreview {
     return score(b) - score(a) || b.level - a.level;
   })[0];
   const matchingItem = state.character.inventory.find((entry) => entry.condition === "usable" && entry.bonus && entry.bonus.tags.some((tag) => normalized.includes(tag) || match.masteryTags.includes(tag)));
-  const directRisk = normalized.includes("ฆ่า") || normalized.includes("ปลอม") || normalized.includes("ขโมย") || normalized.includes("บุก");
-  const difficult = directRisk || normalized.includes("ด่าน") || normalized.includes("ผู้คุม") || normalized.includes("ค่าย");
-  const difficulty: 10 | 14 | 18 | 22 = directRisk ? 22 : difficult ? 18 : normalized.length < 12 ? 10 : 14;
+  const illicitRisk = normalized.includes("ฆ่า") || normalized.includes("ปลอม") || normalized.includes("ขโมย") || normalized.includes("บุก");
+  const guardedObstacle = normalized.includes("ด่าน") || normalized.includes("ผู้คุม") || normalized.includes("ค่าย");
+  const hasRelevantMastery = selectedMastery?.tags.some((tag) => match.masteryTags.includes(tag) || normalized.includes(tag)) ?? false;
+  const isPrepared = Boolean(matchingItem?.bonus?.value);
+  const difficulty: 10 | 14 | 18 | 22 = illicitRisk && guardedObstacle && !hasRelevantMastery && !isPrepared ? 22 : illicitRisk || guardedObstacle ? 18 : 14;
+  const difficultyReason = difficulty === 22
+    ? "วิกฤต: การเสี่ยงผิดกฎหมายปะทะด่านหรือผู้คุม โดยยังไม่มีวิชาหรือเครื่องมือที่ช่วย"
+    : difficulty === 18
+      ? illicitRisk ? "เสี่ยงสูง: การกระทำนี้ทิ้งพยานหรือข้อครหา แม้ทำสำเร็จก็มีราคา" : "อุปสรรคจริง: มีด่าน ผู้คุม หรือคนคอยขวาง จึงต้องใช้ฝีมือหรือการเตรียมตัว"
+      : "เดิมพันมีความหมาย: หากสำเร็จฉากขยับ หากพลาดเรื่องยังเดินต่อพร้อมผลตามมา";
   return {
     action: action.trim(),
     intent: action.trim() || "ยังไม่ได้ระบุการกระทำ",
@@ -561,8 +569,9 @@ export function parseAction(action: string, state: GameState): RollPreview {
     contextBonus: matchingItem?.bonus?.value ?? 0,
     contextReason: matchingItem ? `ใช้ ${matchingItem.label}` : undefined,
     difficulty,
-    risks: directRisk ? ["เกิดพยาน", "ข้อครหาเพิ่ม", "สถานการณ์ปะทุ"] : difficult ? ["ชื่อถูกจด", "ผู้คุมตั้งคำถาม", "เสียเวลา"] : ["ใช้เสบียง", "มีคนได้ยิน", "เกิดหนี้เล็กน้อย"],
-    witnesses: difficult ? ["ผู้คุมด่าน", "เสมียน", "คนรอคิว"] : ["คนในพื้นที่"],
+    difficultyReason,
+    risks: illicitRisk ? ["เกิดพยาน", "ข้อครหาเพิ่ม", "สถานการณ์ปะทุ"] : guardedObstacle ? ["ชื่อถูกจด", "ผู้คุมตั้งคำถาม", "เสียเวลา"] : ["ใช้เสบียง", "มีคนได้ยิน", "เกิดหนี้เล็กน้อย"],
+    witnesses: guardedObstacle ? ["ผู้คุมด่าน", "เสมียน", "คนรอคิว"] : ["คนในพื้นที่"],
     canUseMomentum: state.character.vitals.momentum > 0,
   };
 }

@@ -79,6 +79,32 @@
 .play-dice-result__tray > span > b { font: inherit; }
 .play-dice-result__plus { font-size: 22px; text-align: center; }
 .play-dice-result__rolling-note { margin: 16px 17px 0; color: var(--ink-soft); font-size: 13px; text-align: center; }
+.play-dice-result__formula { margin: 14px 17px 0; border: 1px solid var(--rule-strong); background: color-mix(in srgb, var(--ochre) 4%, var(--paper)); }
+.play-dice-result__formula-heading { display: flex; justify-content: space-between; gap: 18px; align-items: baseline; padding: 11px 13px; border-bottom: 1px solid var(--rule); }
+.play-dice-result__formula-heading strong { color: var(--ink); font-family: Poppins, sans-serif; font-size: 14px; letter-spacing: .1px; white-space: nowrap; }
+.play-dice-result__formula-parts { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.play-dice-result__formula-parts article { min-width: 0; padding: 11px 12px; border-right: 1px solid var(--rule); }
+.play-dice-result__formula-parts article:last-child { border-right: 0; }
+.play-dice-result__formula-parts small, .play-dice-result__formula-parts strong, .play-dice-result__formula-parts span { display: block; }
+.play-dice-result__formula-parts small { color: var(--ink-soft); font-family: Poppins, sans-serif; font-size: 8px; font-weight: 700; letter-spacing: .7px; }
+.play-dice-result__formula-parts strong { margin-top: 4px; color: var(--ink); font-size: 16px; }
+.play-dice-result__formula-parts span { margin-top: 4px; color: var(--ink-soft); font-size: 10px; line-height: 1.35; overflow-wrap: anywhere; }
+.play-dice-result__formula-verdict { display: flex; align-items: baseline; gap: 7px; margin: 0; padding: 11px 13px; border-top: 1px solid var(--rule); background: var(--paper-strong); }
+.play-dice-result__formula-verdict > span { color: var(--ink-soft); font-family: Poppins, sans-serif; font-size: 9px; font-weight: 700; letter-spacing: .8px; }
+.play-dice-result__formula-verdict strong { color: var(--vermilion); font-family: Poppins, sans-serif; font-size: 25px; }
+.play-dice-result__formula-verdict i { color: var(--ink-soft); font-size: 12px; font-style: normal; }
+.play-dice-result__formula-verdict em { margin-left: auto; color: var(--teal); font-family: Poppins, sans-serif; font-size: 10px; font-style: normal; font-weight: 700; text-align: right; }
+.play-outcome-draft { border: 1px solid var(--rule-strong); border-top: 5px solid var(--teal); background: var(--paper-strong); box-shadow: 0 15px 30px var(--shadow); }
+.play-outcome-draft > header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 21px 24px; border-bottom: 1px solid var(--rule); }
+.play-outcome-draft h2 { margin: 8px 0 0; font-family: "Noto Serif Thai", serif; font-size: 31px; font-weight: 500; }
+.play-outcome-draft > header > span { color: var(--teal); font-family: Poppins, sans-serif; font-size: 10px; font-weight: 700; letter-spacing: .6px; text-align: right; }
+.play-outcome-draft__status { display: grid; gap: 5px; padding: 13px 24px; border-bottom: 1px solid var(--rule); background: color-mix(in srgb, var(--teal) 5%, var(--paper)); }
+.play-outcome-draft__status span { color: var(--teal); font-family: Poppins, sans-serif; font-size: 9px; font-weight: 700; letter-spacing: .9px; }
+.play-outcome-draft__status small { color: var(--ink-soft); font-size: 12px; line-height: 1.5; }
+.play-outcome-draft__prose { padding: 30px clamp(22px, 8vw, 96px); background: color-mix(in srgb, var(--teal) 3%, var(--paper)); }
+.play-outcome-draft__prose > small { color: var(--vermilion); font-family: Poppins, sans-serif; font-size: 10px; font-weight: 700; letter-spacing: 1px; }
+.play-outcome-draft__action { display: flex; justify-content: flex-end; padding: 18px 24px; border-top: 1px solid var(--rule); }
+.play-outcome-draft__wait { margin: 0; padding: 14px 24px; border-top: 1px solid var(--rule); color: var(--ink-soft); font-size: 12px; }
 .play-outcome-card__calculation { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-bottom: 1px solid var(--rule); background: color-mix(in srgb, var(--ochre) 4%, var(--paper)); }
 .play-outcome-card__calculation > span { min-width: 0; padding: 12px 14px; border-right: 1px solid var(--rule); }
 .play-outcome-card__calculation > span:last-child { border-right: 0; }
@@ -96,6 +122,16 @@
   .play-dice-result--rolling-stage .play-dice-result__tray { grid-template-columns: 70px 18px 70px minmax(0, 1fr); }
   .play-dice-result--rolling-stage .play-dice-result__tray > span { width: 64px; height: 64px; font-size: 28px; }
   .play-dice-result__stage-heading { align-items: flex-start; flex-direction: column; gap: 6px; }
+  .play-dice-result__formula-heading { align-items: flex-start; flex-direction: column; gap: 5px; }
+  .play-dice-result__formula-heading strong { white-space: normal; }
+  .play-dice-result__formula-parts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .play-dice-result__formula-parts article:nth-child(2n) { border-right: 0; }
+  .play-dice-result__formula-parts article:nth-child(-n+4) { border-bottom: 1px solid var(--rule); }
+  .play-dice-result__formula-parts article:last-child { grid-column: 1 / -1; border-right: 0; }
+  .play-dice-result__formula-verdict { flex-wrap: wrap; }
+  .play-dice-result__formula-verdict em { margin-left: 0; flex-basis: 100%; text-align: left; }
+  .play-outcome-draft > header { flex-direction: column; }
+  .play-outcome-draft > header > span { text-align: left; }
   .play-outcome-card__calculation { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .play-outcome-card__calculation > span:nth-child(2n) { border-right: 0; }
   .play-outcome-card__calculation > span:nth-child(-n+2) { border-bottom: 1px solid var(--rule); }

@@ -23,7 +23,7 @@ vi.mock("@/lib/trpc", () => ({ trpc: { profile: { credits: { useQuery: mocks.cre
 
 import Home from "./Home";
 import { createSaikaSafehouseDemo } from "../lib/game";
-import { ROLL_ANIMATION_MS } from "../features/play/PlayScene";
+import { OUTCOME_WORD_CADENCE_MS, ROLL_ANIMATION_MS } from "../features/play/PlayScene";
 
 function openChronicle(child: "Chronicle") {
   const group = screen.getAllByRole("button", { name: "Chronicle" }).find((button) => button.hasAttribute("aria-expanded"));
@@ -41,6 +41,10 @@ function openMore(child: "Campaign Library" | "Save Game" | "Load Game") {
 
 function settleDiceStage() {
   act(() => vi.advanceTimersByTime(ROLL_ANIMATION_MS));
+}
+
+function finishNarrativeDraft() {
+  act(() => vi.advanceTimersByTime(OUTCOME_WORD_CADENCE_MS * 600));
 }
 
 describe("UI Preview click flow", () => {
@@ -154,7 +158,13 @@ describe("UI Preview click flow", () => {
     expect(screen.getByTestId("dice-one").textContent).toMatch(/^\d+$/);
     expect(screen.getByTestId("dice-two").textContent).toMatch(/^\d+$/);
     settleDiceStage();
+    expect(screen.getByTestId("roll-formula")).toBeTruthy();
+    expect(screen.getByText("HOW THIS RESULT WAS BUILT")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /record this result/i }));
+    expect(screen.getByTestId("narrative-outcome-draft")).toBeTruthy();
+    expect(screen.queryByTestId("narrative-outcome")).toBeNull();
+    finishNarrativeDraft();
+    fireEvent.click(screen.getByRole("button", { name: /view full outcome/i }));
     expect(screen.getByTestId("narrative-outcome")).toBeTruthy();
     expect(screen.getByTestId("outcome-roll-breakdown")).toBeTruthy();
     expect(screen.getByText("POSSIBLE NEXT APPROACHES")).toBeTruthy();
