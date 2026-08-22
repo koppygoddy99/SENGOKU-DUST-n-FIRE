@@ -26,6 +26,16 @@ test("Play Scene retains the visible two-dice rolling stage even when reduced mo
     await expect(page.getByText(/how this result was built/i)).toBeVisible();
     await expect(page.getByRole("button", { name: /record this result/i })).toBeVisible();
 
+    const firstDieBeforeMomentum = await page.getByTestId("dice-one").innerText();
+    const secondDieBeforeMomentum = await page.getByTestId("dice-two").innerText();
+    const totalBeforeMomentum = Number(await page.locator(".play-dice-result__formula-verdict strong").innerText());
+    await page.getByRole("button", { name: /spend momentum/i }).click();
+    await expect(page.getByTestId("roll-formula")).toBeVisible();
+    await expect(page.getByTestId("dice-one")).toHaveText(firstDieBeforeMomentum);
+    await expect(page.getByTestId("dice-two")).toHaveText(secondDieBeforeMomentum);
+    await expect(page.getByText(/momentum/i).last()).toBeVisible();
+    await expect(page.locator(".play-dice-result__formula-verdict strong")).toHaveText(String(totalBeforeMomentum + 2));
+
     await page.getByRole("button", { name: /record this result/i }).click();
     await expect(page.getByTestId("narrative-outcome-draft")).toBeVisible();
     await expect(page.getByRole("button", { name: /view full outcome/i })).toBeVisible({ timeout: 5_000 });

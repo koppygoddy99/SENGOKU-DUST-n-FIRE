@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createSaikaSafehouseDemo, parseAction } from "./game";
+import { applyMomentumToRoll, createSaikaSafehouseDemo, parseAction, resolveRoll } from "./game";
 
 function outcomeForMargin(margin: number) {
   if (margin >= 5) return "decisive";
@@ -52,5 +52,21 @@ describe("DN balance guardrails", () => {
     const outcomes = distribution(3, unprepared.difficulty);
     expect(outcomes.failure).toBe(89);
     expect(outcomes.partial).toBe(34);
+  });
+
+  it("spends Momentum on the inspected result instead of rerolling or dropping its breakdown", () => {
+    const game = createSaikaSafehouseDemo();
+    const record = resolveRoll(parseAction("ข้าจะเสนอแผนให้กันทาโร่", game), game, false);
+    const boosted = applyMomentumToRoll(record, game);
+
+    expect(boosted.dice).toEqual(record.dice);
+    expect(boosted.id).toBe(record.id);
+    expect(boosted.tick).toBe(record.tick);
+    expect(boosted.axis).toBe(record.axis);
+    expect(boosted.mastery).toEqual(record.mastery);
+    expect(boosted.contextBonus).toBe(record.contextBonus);
+    expect(boosted.total).toBe(record.total + 2);
+    expect(boosted.margin).toBe(record.margin + 2);
+    expect(boosted.momentumSpent).toBe(2);
   });
 });

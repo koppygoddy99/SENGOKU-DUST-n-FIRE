@@ -629,6 +629,30 @@ export function resolveRoll(preview: RollPreview, state: GameState, spendMomentu
   };
 }
 
+/**
+ * Momentum is a post-roll decision: it never rerolls dice or discards the
+ * calculation the player just inspected. It adds +2 to that exact record.
+ */
+export function applyMomentumToRoll(record: RollRecord, state: GameState): RollRecord {
+  if (record.momentumSpent || state.character.vitals.momentum <= 0) return record;
+  const momentumSpent = 2;
+  const total = record.total + momentumSpent;
+  const margin = total - record.difficulty;
+  const outcome = outcomeFromMargin(margin);
+  const copy = outcomeCopy[outcome];
+  return {
+    ...record,
+    total,
+    margin,
+    outcome,
+    momentumSpent,
+    summary: `${copy.label}: ${record.intent}`,
+    narrative: localOutcomeNarration(record, state, outcome, copy.consequence),
+    reward: outcome === "failure_with_consequence" ? undefined : "ความคืบหน้าของภารกิจและทางเลือกใหม่",
+    consequence: copy.consequence,
+  };
+}
+
 function awardPractice(masteries: Mastery[], record: RollRecord) {
   const used = record.mastery ? masteries.find((entry) => entry.id === record.mastery?.id) : undefined;
   if (!used) return { masteries, practice: undefined as SkillPractice | undefined };
