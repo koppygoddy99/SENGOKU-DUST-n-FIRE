@@ -146,6 +146,8 @@ describe("UI Preview click flow", () => {
     expect(screen.getByTestId("dice-two").textContent).toMatch(/^\d+$/);
     fireEvent.click(screen.getByRole("button", { name: /record this result/i }));
     expect(screen.getByTestId("narrative-outcome")).toBeTruthy();
+    expect(screen.getByTestId("outcome-roll-breakdown")).toBeTruthy();
+    expect(screen.getByText("POSSIBLE NEXT APPROACHES")).toBeTruthy();
     expect(screen.queryByText("SKILL LEDGER")).toBeNull();
     expect(screen.queryByText("POSSIBLE APPROACHES")).toBeNull();
     expect(screen.queryByText("ฉากแคมเปญสมมติในบริบทเมืองท่าซาไก ค.ศ. 1569 ใช้แรงกดดันของการค้า อาวุธ และเครือข่ายไซกะเป็นฉากหลัง ไม่ได้ยืนยันว่า NPC ในฉากมีตัวตนจริง.")).toBeNull();

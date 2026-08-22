@@ -66,3 +66,33 @@
 @media (prefers-reduced-motion: reduce) {
   .play-outcome-card__typed > span { animation: none; }
 }
+
+.play-dice-result__stage-heading { display: flex; justify-content: space-between; align-items: end; gap: 16px; padding: 0 17px; }
+.play-dice-result__stage-heading h2 { margin: 0; color: var(--ink); font-family: "Noto Serif Thai", serif; font-size: 25px; font-weight: 500; }
+.play-dice-result--rolling-stage { min-height: 300px; padding-top: 22px; background: color-mix(in srgb, var(--vermilion) 4%, var(--paper-strong)); }
+.play-dice-result--rolling-stage .play-dice-result__tray { min-height: 132px; margin-top: 18px; grid-template-columns: 84px 24px 84px minmax(0, 1fr) auto; }
+.play-dice-result--rolling-stage .play-dice-result__tray > span { width: 76px; height: 76px; border-width: 2px; border-radius: 22px; font-size: 34px; box-shadow: 0 10px 0 rgba(0,0,0,.2); }
+.play-dice-result__tray > span > b { font: inherit; }
+.play-dice-result__plus { font-size: 22px; text-align: center; }
+.play-dice-result__rolling-note { margin: 16px 17px 0; color: var(--ink-soft); font-size: 13px; text-align: center; }
+.play-outcome-card__calculation { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-bottom: 1px solid var(--rule); background: color-mix(in srgb, var(--ochre) 4%, var(--paper)); }
+.play-outcome-card__calculation > span { min-width: 0; padding: 12px 14px; border-right: 1px solid var(--rule); }
+.play-outcome-card__calculation > span:last-child { border-right: 0; }
+.play-outcome-card__calculation small, .play-outcome-card__calculation strong { display: block; }
+.play-outcome-card__calculation small { color: var(--ink-soft); font-family: Poppins, sans-serif; font-size: 8px; font-weight: 700; letter-spacing: .7px; }
+.play-outcome-card__calculation strong { margin-top: 4px; color: var(--ink); font-size: 12px; line-height: 1.45; overflow-wrap: anywhere; }
+.play-outcome-card__approaches { display: grid; gap: 4px; padding: 16px clamp(20px, 7vw, 80px); border-top: 1px solid var(--rule); background: color-mix(in srgb, var(--teal) 4%, var(--paper)); }
+.play-outcome-card__approaches > p { margin-bottom: 5px; }
+.play-outcome-card__approaches button { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 9px; align-items: center; border: 0; background: transparent; color: var(--ink); padding: 8px 0; text-align: left; font-size: 13px; }
+.play-outcome-card__approaches button:hover { color: var(--vermilion); }
+.play-outcome-card__approaches button svg { color: var(--vermilion); }
+
+@media (max-width: 780px) {
+  .play-dice-result--rolling-stage { min-height: 0; }
+  .play-dice-result--rolling-stage .play-dice-result__tray { grid-template-columns: 70px 18px 70px minmax(0, 1fr); }
+  .play-dice-result--rolling-stage .play-dice-result__tray > span { width: 64px; height: 64px; font-size: 28px; }
+  .play-dice-result__stage-heading { align-items: flex-start; flex-direction: column; gap: 6px; }
+  .play-outcome-card__calculation { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .play-outcome-card__calculation > span:nth-child(2n) { border-right: 0; }
+  .play-outcome-card__calculation > span:nth-child(-n+2) { border-bottom: 1px solid var(--rule); }
+}

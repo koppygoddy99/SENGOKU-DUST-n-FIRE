@@ -15,13 +15,18 @@ test("Play Scene rolls two persistent dice and continues from narrative outcome 
     const decision = page.getByTestId("dice-decision-window");
     await expect(decision).toBeVisible();
     await expect(decision).toHaveClass(/is-rolling/);
+    await expect(page.getByText(/rolling 2d12/i)).toBeVisible();
+    await expect(page.getByText(/the dice are still moving/i)).toBeVisible();
     await expect(page.getByTestId("dice-one")).toBeVisible();
     await expect(page.getByTestId("dice-two")).toBeVisible();
     await expect(decision).not.toHaveClass(/is-rolling/, { timeout: 5_000 });
+    await expect(page.getByText(/dice result.*decision window/i)).toBeVisible();
     await expect(page.getByRole("button", { name: /record this result/i })).toBeVisible();
 
     await page.getByRole("button", { name: /record this result/i }).click();
     await expect(page.getByTestId("narrative-outcome")).toBeVisible();
+    await expect(page.getByTestId("outcome-roll-breakdown")).toBeVisible();
+    await expect(page.getByText(/possible next approaches/i)).toBeVisible();
     await expect(page.locator("#play-intent-field")).toBeVisible();
     await page.locator("#play-intent-field").fill("I will carry the reply into the night.");
     await expect(page.getByRole("button", { name: /set this intention/i })).toBeEnabled();
