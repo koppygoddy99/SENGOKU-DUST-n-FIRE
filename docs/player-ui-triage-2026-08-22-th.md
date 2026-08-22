@@ -34,3 +34,19 @@
 ตรวจ Character, Gear, Market, Services และ Obligations ที่ 1280 × 720 แล้ว พบว่า Market และหน้ารองต่าง ๆ สื่อบทบาทเป็น ledger ได้ค่อนข้างชัด ส่วน **Character Dossier** มีคำสั่ง `View related records` ที่กว้างและไม่บอกปลายทาง จึงเป็นจุดเสี่ยงสูงสุดต่อ one-question rule ในกลุ่มนี้ รอบถัดไปควรเปลี่ยนเป็นคำสั่งที่ระบุปลายทางหรือย้ายการนำทางรองเข้ากลุ่ม record ที่สัมพันธ์กัน โดยไม่เปลี่ยนค่าตัวละครหรือระบบ progression
 
 แก้แล้วเป็น `Open this campaign's Chronicle` / `เปิดพงศาวดารของแคมเปญนี้` และตรวจภาพที่ 1280 × 720 กับ 375 × 812 แล้ว label อ่านได้ครบ ไม่ชนกับข้อมูลตัวตนหรือ status ledger และยังนำไป Chronicle ของแคมเปญเดียวกันตามเดิม
+
+## Prepare guidance verification
+
+ผลตรวจ desktop ของ Gear, This Market, Services & Hands และ Debts & Favors ยืนยันว่าทุก tab มี ledger guidance ในตำแหน่งเดียวกันใต้เนื้อหาหลัก: Gear และ Debts เป็น record อ่านอย่างเดียว, Services ระบุว่าผู้ติดต่อจะใช้งานได้เมื่อฉากทำให้ติดต่อกัน, ส่วน This Market ระบุให้เลือกข้อเสนอหนึ่งรายการและทุกแถวมี CTA `TAKE OFFER` ของตนเอง จึงไม่มี action ที่ดูเหมือนกดได้แต่ไม่ทำงาน การจับภาพ Agreements รอบแรกใช้ query ที่ไม่อยู่ใน manifest จึงได้หน้า Campaign Command; จะจับภาพใหม่ผ่าน `review=exchanges` ก่อนปิดรอบ
+
+ตรวจ `review=exchanges` แล้ว Agreements & Consequences แสดงเป็น record อ่านอย่างเดียวโดยไม่มี CTA ปลอม ทั้งห้าหน้าตรวจซ้ำที่ 375 × 812 แล้ว tab strip ห่อข้อความตามความกว้างจอโดยยังเลือกได้ครบ, เนื้อหาอยู่ใน flow เดียวและ ledger guidance ไม่ถูกตัด แม้ชื่อ tab บางรายการใช้สองถึงสามบรรทัดตามพื้นที่แคบ
+
+## Prepare hierarchy correction
+
+รอบแก้ QA ย้าย guidance ของทุก tab ไปอยู่ใต้ tab strip และก่อนเนื้อหาหลัก: This Market แสดงคำสั่งเลือกหนึ่งข้อเสนอก่อนรายการและ CTA `TAKE OFFER`, ส่วน Gear, Services, Debts และ Agreements ระบุ read-only campaign record ก่อนอ่าน detail. Gear มีป้าย `RECORD` ระดับ item; Services มี role/availability/record และประโยค risk ที่บอกชัดว่าเกิดเมื่อถูกติดต่อในฉาก; Debts และ Agreements มี `RECORD` ในหัวและแต่ละรายการ จึงไม่สื่อว่าแถวใดกดใช้ได้ทันที ผล desktop ครบทั้งห้า route แสดง hierarchy ตามนี้โดยไม่เกิด horizontal clipping
+
+ผล mobile ที่ 375 × 812 ยืนยันว่า guidance นำมาก่อน content ทุก tab, CTA `TAKE OFFER` ของ market ยังแยกเป็นปุ่มเต็มแถวและเข้าถึงได้, ส่วน Gear/Services/Debts/Agreements ไม่มี action ปลอมและป้าย `RECORD` อ่านได้ แม้ชื่อ tab จะห่อหลายบรรทัดตามความกว้าง แต่ไม่ล้นแนวนอนและยังแยก tab active ได้ชัด
+
+browser regression ใหม่ตรวจพบ overflow จริงจาก tab strip และ top bar (`app-shell` กว้างถึง 498px ที่ viewport 375px) จึงเปลี่ยน tab strip ของ Market Hub เป็น five-column grid ที่ยอมตัดบรรทัด พร้อมลด gap และ padding ของ top bar ที่ breakpoint มือถือ หลังแก้ `pnpm test:market-mobile-layout` ผ่านครบ 5/5 routes และภาพ `review=market` ยืนยันว่าหน้าไม่มี horizontal clipping
+
+ชุดตรวจรับเต็มหลังแก้ผ่านครบ: TypeScript, Vitest 91 tests / 28 files, Campaign Command layout 2 scenarios, mobile keyboard audit 1 scenario, Play dice flow 1 scenario และ Market Hub mobile layout 5 routes. Regression ระดับ component ยืนยัน guidance อยู่ก่อน content สำหรับ Market tab, CTA `TAKE OFFER` มีอยู่จริง, และแต่ละ tab แสดง read-only/status label ตามหน้าที่ของตน

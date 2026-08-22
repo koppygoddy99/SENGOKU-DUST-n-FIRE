@@ -141,3 +141,18 @@ button { cursor: pointer; }
 .market-concordance { grid-template-columns: repeat(5, minmax(0, 1fr)); margin-top: 0; }
 .campaign-reward-ribbon { display: flex; gap: 10px; align-items: baseline; margin: -12px 0 20px; padding: 10px 12px; border-left: 3px solid var(--teal); background: color-mix(in srgb, var(--teal) 6%, var(--paper)); color: var(--ink-soft); font-size: 12px; line-height: 1.45; }.campaign-reward-ribbon span { flex: none; color: var(--teal); font-family: Poppins, sans-serif; font-size: 8px; font-weight: 700; letter-spacing: .65px; }
 @media (max-width: 700px) { .campaign-ledger-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }.campaign-ledger-strip > span:nth-child(2n) { border-right: 0; }.campaign-ledger-strip > span:last-child { grid-column: span 2; } }
+
+@media (max-width: 760px) {
+  .topbar { gap: 8px; padding: 0 12px; }
+  .brand { gap: 7px; min-width: 0; }
+  .brand-mark { width: 34px; height: 34px; }
+  .brand-copy strong { font-size: 18px; }
+  .brand-copy small { font-size: 6px; letter-spacing: 1.35px; }
+  .topbar-safekeeping { min-width: 0; gap: 4px; }
+  .topbar-safekeeping span { font-size: 11px; }
+  .management-trigger { min-width: 0; font-size: 10px; }
+  .mobile-menu { margin-left: 0; padding: 7px; }
+  .market-view .tab-strip { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); width: 100%; }
+  .market-view .tab-strip button { display: grid; min-width: 0; place-items: center; gap: 3px; padding: 10px 2px; overflow-wrap: anywhere; text-align: center; }
+  .market-view .tab-strip button svg { margin: 0; }
+}

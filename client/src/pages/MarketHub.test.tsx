@@ -15,14 +15,25 @@ describe("Market and gear hub", () => {
     expect(screen.getByText(/XP$/)).toBeTruthy();
     expect(screen.getByText("สัญญาค้าง")).toBeTruthy();
     expect(screen.getByTestId("market-reward-context").textContent).toContain("ยังไม่มีรางวัลเข้าสมุดแคมเปญ");
+    expect(screen.getByTestId("market-ledger-guidance").textContent).toContain("เลือกข้อเสนอหนึ่งรายการด้านล่างเพื่อรับไว้");
+    expect(screen.getAllByRole("button", { name: "รับข้อเสนอ" }).length).toBeGreaterThan(0);
+    expect(screen.getByTestId("market-ledger-guidance").compareDocumentPosition(screen.getByTestId("market-tab-content")) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /ของที่พกอยู่/i }));
     expect(screen.getByText("ปืนคาบศิลาเปียกชื้น")).toBeTruthy();
+    expect(screen.getByTestId("market-ledger-guidance").textContent).toContain("บันทึกแคมเปญแบบอ่านอย่างเดียว");
+    expect(screen.getAllByText("บันทึก").length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole("button", { name: /บริการและคนรับจ้าง/i }));
     expect(screen.getByText("คนส่งสารท่าเรือ")).toBeTruthy();
+    expect(screen.getByTestId("market-ledger-guidance").textContent).toContain("อ่านอย่างเดียวจนกว่าฉากจะทำให้ติดต่อกัน");
+    expect(screen.getAllByText(/· บันทึก$/).length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole("button", { name: /เครดิต \/ หนี้ \/ บุญคุณ/i }));
     expect(screen.getByText("หนี้ชีวิตจากการลากซาเนฟุยุขึ้นจากน้ำ")).toBeTruthy();
+    expect(screen.getByTestId("market-ledger-guidance").textContent).toContain("บันทึกแคมเปญแบบอ่านอย่างเดียว");
+    expect(screen.getByText("ไม่มีเครดิตสกอร์เดียวทั้งแผ่นดิน · บันทึก")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /สมุดสัญญาและผลประโยชน์/i }));
     expect(screen.getByText("กันทาโร่ลากซาเนฟุยุขึ้นจากน้ำ")).toBeTruthy();
+    expect(screen.getByTestId("market-ledger-guidance").textContent).toContain("บันทึกแคมเปญแบบอ่านอย่างเดียว");
+    expect(screen.getByText("สมุดสัญญาและผลประโยชน์ · บันทึก")).toBeTruthy();
   });
 
   it("records a local market exchange across inventory, availability, and history", () => {

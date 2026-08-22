@@ -45,8 +45,15 @@
 - [x] จัดทำ Markdown แผนรีเซ็ต Dust & Fire ตาม UI Reset และ Per-Page Design Placement Blueprint พร้อมเกณฑ์ตรวจรับรายหน้า
 - [x] เชื่อม route-to-screen manifest เข้ากับ review renderer เพื่อบังคับ heading และ seed state รายหน้าจริง พร้อม integration regression
 - [x] รีเซ็ต global player shell ให้ใช้ top bar, collapsible rail และลำดับ Story / Prepare / Chronicle / More ตาม blueprint
-- [ ] ปรับหน้าผู้เล่นกลุ่มถัดไปโดยยึด one-question rule, 3-layer hierarchy และหนึ่ง CTA หลักใน viewport แรก
+- [x] ปรับหน้าผู้เล่นกลุ่มถัดไปโดยยึด one-question rule, 3-layer hierarchy และหนึ่ง CTA หลักใน viewport แรก
 - [x] ปรับ Character Dossier ให้ทางเข้า related records ระบุปลายทางชัดและไม่แข่งขันกับการอ่านสถานะตัวละคร
+- [x] ปรับ Gear และ This Market ให้ลำดับข้อมูลเสนอการตัดสินใจหลักก่อนข้อมูลรอง
+- [x] ปรับ Services & Hands และ Debts & Favors ให้แยกชัดว่าแถวใดอ่านอย่างเดียวและแถวใดเป็น action ของผู้เล่น
+- [x] ตรวจ Agreements & Consequences ให้มี action หรือสถานะอ่านอย่างเดียวที่ไม่กำกวม
+- [x] เพิ่ม regression และ visual review ระดับหน้าสำหรับ Gear, Market, Services, Obligations และ Agreements
+- [x] ย้ายคำแนะนำและ CTA หลักของ Gear และ This Market ให้ปรากฏก่อนข้อมูลรองใน viewport แรก พร้อม regression ลำดับ DOM
+- [x] เพิ่มป้ายสถานะระดับแถวสำหรับ Services และ Debts เพื่อลด affordance ที่ดูเหมือนกดได้เมื่อยังเป็น record
+- [x] เพิ่ม regression ครอบคลุม guidance และ CTA ของทั้งห้า tab ใน MarketHub
 - [x] ปรับกลุ่ม Play, Campaign Command, Chronicle และ World Archive ตาม one-question rule, 3-layer hierarchy และ CTA หลักของรอบนี้
 - [x] ปรับ World Archive ให้ record ที่อ่านอย่างเดียวไม่ใช้ chevron หรือ affordance ที่สื่อว่ากดเปิดรายละเอียดได้
 - [x] เพิ่ม animation ลูกเต๋าหมุนและหยุดตามลำดับราวสี่วินาทีในหน้า Play ก่อนเปิดผลการทอย
