@@ -21,3 +21,7 @@ browser regression `tests/play-dice-outcome-flow.spec.mjs` ผ่าน โด�
 รอบล่าสุดแยก flow เป็นสามจังหวะชัดเจน: หลัง `ROLL 2D12` แสดง stage ลูกเต๋า 2 ลูกเด้งและหมุนโดยมีหัว `ROLLING 2D12`; เมื่อลูกเต๋าหยุดจึงเปลี่ยนเป็น `DICE RESULT · DECISION WINDOW` พร้อม total, DN, Momentum และปุ่ม `RECORD THIS RESULT`; จากนั้น Narrative Outcome เปิดเป็นหน้าผลเฉพาะของตนเอง
 
 Outcome ใหม่วางแถวคำนวณขนาดย่อใต้หัวผลลัพธ์ ได้แก่ผลลูกเต๋า, วิชาที่ใช้พร้อมโบนัส, แกน/บริบท และผลรวมเทียบ DN จากค่าที่คำนวณจริง แล้วจึงแสดงร้อยแก้ว, ledger ผลลัพธ์สามช่อง, แนวทางถัดไป และ composer สำหรับเจตนาถัดไป ผลตรวจ desktop 1280 × 720 และ mobile 375 × 812 ยืนยันว่าไม่มีบล็อกฉากเดิมซ้อน และ composer อยู่หลัง action row ตามลำดับที่ผู้ใช้ระบุ
+
+## Follow-up: visible roll when the OS requests reduced motion
+
+พบว่า implementation เดิมข้าม stage การทอยทั้งหมดเมื่อ browser รายงาน `prefers-reduced-motion: reduce` จึงทำให้ผู้เล่นเห็นผลตัดสินใจทันทีแทนลูกเต๋าหมุน แก้ให้ทุกการกด `ROLL 2D12` เข้าสู่ stage สี่วินาทีเสมอ พร้อมสลับหน้าลูกเต๋าแบบ JavaScript และ motion ที่ช้าลงใน reduced-motion mode ก่อนเปิดช่วงตัดสินใจ เพิ่ม Playwright regression ที่จำลองค่า reduced motion โดยตรงเพื่อยืนยันว่า `ROLLING 2D12` และลูกเต๋าสองลูกยังปรากฏก่อนปุ่มบันทึกผล

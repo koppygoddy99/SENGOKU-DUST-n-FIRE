@@ -42,8 +42,12 @@
 @keyframes df-dice-settle-dark { 0% { transform: translateY(-5px) rotate(-14deg); } 65% { transform: translateY(2px) rotate(11deg); } 100% { transform: translateY(0) rotate(8deg); } }
 @keyframes df-dice-settle-light { 0% { transform: translateY(5px) rotate(14deg); } 65% { transform: translateY(-2px) rotate(-11deg); } 100% { transform: translateY(0) rotate(-8deg); } }
 
+/* A player-triggered roll must remain visible for the full decision beat; the JavaScript face shuffle is retained even when the OS requests less motion. */
 @media (prefers-reduced-motion: reduce) {
-  .play-dice-result.is-rolling, .play-dice-result.is-rolling .play-dice-result__tray, .play-dice-result.is-rolling .play-dice-result__tray > span { animation: none; }
+  .play-dice-result.is-rolling { animation: none; }
+  .play-dice-result.is-rolling .play-dice-result__tray { animation: df-dice-tray-shudder .5s linear infinite; }
+  .play-dice-result.is-rolling .play-dice-result__tray > span { animation: df-dice-tumble-dark .55s linear infinite; }
+  .play-dice-result.is-rolling .play-dice-result__tray > span.is-light { animation: df-dice-tumble-light .6s linear infinite; }
 }
 
 @media (max-width: 900px) {

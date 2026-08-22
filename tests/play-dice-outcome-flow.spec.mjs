@@ -2,11 +2,12 @@ import { chromium, expect, test } from "@playwright/test";
 
 const baseUrl = process.env.CAMPAIGN_COMMAND_TEST_URL ?? "http://127.0.0.1:3000";
 
-test("Play Scene rolls two persistent dice and continues from narrative outcome without leaving the page", async () => {
+test("Play Scene retains the visible two-dice rolling stage even when reduced motion is requested", async () => {
   const browser = await chromium.launch({ executablePath: "/usr/bin/chromium", headless: true });
   const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
 
   try {
+    await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto(`${baseUrl}/?review=play`, { waitUntil: "networkidle" });
     await page.locator("#play-intent-field").fill("I will offer the clerk a favor before the gate closes.");
     await page.getByRole("button", { name: /set this intention/i }).click();

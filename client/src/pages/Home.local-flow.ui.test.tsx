@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from "react";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
@@ -37,6 +37,10 @@ function openMore(child: "Campaign Library" | "Save Game" | "Load Game") {
   if (group.getAttribute("aria-expanded") !== "true") fireEvent.click(group);
   const childButton = screen.getAllByRole("button", { name: child }).find((button) => !button.hasAttribute("aria-expanded") && button.closest(".campaign-nav__items"));
   fireEvent.click(childButton!);
+}
+
+function settleDiceStage() {
+  act(() => vi.advanceTimersByTime(ROLL_ANIMATION_MS));
 }
 
 describe("UI Preview click flow", () => {
@@ -92,12 +96,14 @@ describe("UI Preview click flow", () => {
   });
 
   it("plays a Local Trial, records an outcome, saves it, and restores it without GM or credit mutations", () => {
+    vi.useFakeTimers();
     render(<Home />);
     expect(mocks.creditsQuery).toHaveBeenCalledWith(undefined, expect.objectContaining({ enabled: false }));
     fireEvent.click(screen.getByRole("button", { name: /Return to/i }));
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "I will show the rice ledger to the clerk." } });
     fireEvent.click(screen.getByRole("button", { name: /set this intention/i }));
     fireEvent.click(screen.getByRole("button", { name: /roll 2d12/i }));
+    settleDiceStage();
     fireEvent.click(screen.getByRole("button", { name: /record this result/i }));
     expect(screen.getAllByText(/LEAF 1/i).length).toBeGreaterThan(0);
     expect(mocks.gmAnalyzeMutate).not.toHaveBeenCalled();
@@ -109,22 +115,24 @@ describe("UI Preview click flow", () => {
     openMore("Load Game");
     fireEvent.click(screen.getAllByRole("button", { name: "LOAD" })[1]);
     expect(screen.getByText(/PLAY SCENE · LEAF/i)).toBeTruthy();
+    vi.useRealTimers();
   });
 
-  it("offers Momentum only after the local 2d12 result is visible and persists the spent token", async () => {
+  it("offers Momentum only after the local 2d12 result is visible and persists the spent token", () => {
+    vi.useFakeTimers();
     render(<Home />);
     fireEvent.click(screen.getByRole("button", { name: /Return to/i }));
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "I will use the ledger to ask the clerk for time." } });
     fireEvent.click(screen.getByRole("button", { name: /set this intention/i }));
     fireEvent.click(screen.getByRole("button", { name: /roll 2d12/i }));
+    settleDiceStage();
     expect(screen.getByRole("button", { name: /spend momentum/i })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /spend momentum/i }));
     fireEvent.click(screen.getByRole("button", { name: /record this result/i }));
-    await waitFor(() => {
-      const saved = JSON.parse(window.localStorage.getItem("dust-fire-local-game-v3-saika") ?? "{}");
-      expect(saved.game.rolls[0].momentumSpent).toBe(2);
-      expect(saved.game.character.vitals.momentum).toBe(0);
-    });
+    const saved = JSON.parse(window.localStorage.getItem("dust-fire-local-game-v3-saika") ?? "{}");
+    expect(saved.game.rolls[0].momentumSpent).toBe(2);
+    expect(saved.game.character.vitals.momentum).toBe(0);
+    vi.useRealTimers();
   });
 
   it("uses one direct intent CTA without a risk-preview button and preserves the four-second roll cadence", () => {
@@ -136,6 +144,7 @@ describe("UI Preview click flow", () => {
   });
 
   it("keeps two dice in the decision window and lets a saved narrative outcome accept the next intent immediately", () => {
+    vi.useFakeTimers();
     render(<Home />);
     fireEvent.click(screen.getByRole("button", { name: /Return to/i }));
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "I will offer the clerk a favor." } });
@@ -144,6 +153,7 @@ describe("UI Preview click flow", () => {
     expect(screen.getByTestId("dice-decision-window")).toBeTruthy();
     expect(screen.getByTestId("dice-one").textContent).toMatch(/^\d+$/);
     expect(screen.getByTestId("dice-two").textContent).toMatch(/^\d+$/);
+    settleDiceStage();
     fireEvent.click(screen.getByRole("button", { name: /record this result/i }));
     expect(screen.getByTestId("narrative-outcome")).toBeTruthy();
     expect(screen.getByTestId("outcome-roll-breakdown")).toBeTruthy();
@@ -158,6 +168,7 @@ describe("UI Preview click flow", () => {
     const nextIntent = screen.getByRole("textbox");
     fireEvent.change(nextIntent, { target: { value: "I will carry the answer to the gate." } });
     expect(screen.getByRole("button", { name: /set this intention/i })).toBeTruthy();
+    vi.useRealTimers();
   });
 
   it("presents World Archive cards as readonly records rather than navigation controls", () => {
@@ -230,7 +241,8 @@ describe("UI Preview click flow", () => {
     expect(screen.getByText(/NATIONAL MAP/)).toBeTruthy();
   });
 
-  it("falls back to Local Trial without spending a credit when an AI GM resolution fails", async () => {
+  it("falls back to Local Trial without spending a credit when an AI GM resolution fails", () => {
+    vi.useFakeTimers();
     mocks.gmAnalyzeMutate.mockImplementation((_input, callbacks) => callbacks.onSuccess({ intentSummary: "Show the rice ledger", suggestedMastery: null, axis: "mind", contextBonus: 0, contextReason: "The clerk can inspect the ledger", difficulty: 14, risk: "The clerk may remember the request", confirmation: "Show the ledger before the clerk", historicalStatus: "campaign-fiction", historicalFence: "This is campaign fiction." }));
     mocks.gmResolveMutate.mockImplementation((_input, callbacks) => callbacks.onError(new Error("provider exhausted")));
     render(<Home forceUiPreviewMode={false} />);
@@ -238,14 +250,14 @@ describe("UI Preview click flow", () => {
     fireEvent.change(screen.getByRole("textbox"), { target: { value: "I will show the rice ledger to the clerk." } });
     fireEvent.click(screen.getByRole("button", { name: /set this intention/i }));
     fireEvent.click(screen.getByRole("button", { name: /roll 2d12/i }));
+    settleDiceStage();
     fireEvent.click(screen.getByRole("button", { name: /record this result/i }));
     expect(screen.getAllByText(/AI unavailable/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/LEAF 1/i).length).toBeGreaterThan(0);
     expect(mocks.spendCreditMutate).not.toHaveBeenCalled();
-    await waitFor(() => {
-      const saved = JSON.parse(window.localStorage.getItem("dust-fire-local-game-v3-saika") ?? "{}");
-      expect(saved.game.tick).toBe(2);
-      expect(saved.game.rolls).toHaveLength(1);
-    });
+    const saved = JSON.parse(window.localStorage.getItem("dust-fire-local-game-v3-saika") ?? "{}");
+    expect(saved.game.tick).toBe(2);
+    expect(saved.game.rolls).toHaveLength(1);
+    vi.useRealTimers();
   });
 });
