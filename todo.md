@@ -311,7 +311,7 @@
 - [x] สร้าง Character Sheet แบบ player-safe และ Chronicle → Relationships/ความสัมพันธ์ พร้อม card/detail UI และไอคอน NPC
 - [x] เพิ่ม regression สำหรับ spoiler boundary, daily relationship log, navigation, scroll และ responsive behavior
 - [x] ตรวจ TypeScript, tests, build, visual flow และ push ชุด Character Sheet/Relationships ขึ้น main
-- [ ] Commit และ push ทุกชิ้นของชุดงานเก่าที่ผ่านการตรวจรับขึ้น GitHub repository ที่เชื่อมไว้
+- [x] Commit และ push ทุกชิ้นของชุดงานเก่าที่ผ่านการตรวจรับขึ้น GitHub repository ที่เชื่อมไว้
 - [ ] ตรวจและจัดทำ audit จากข้อมูลเดิมของระบบเดินเรือ แผนที่ ไทม์ไลน์ปี และ content reset โดยไม่เริ่มงานวิจัยใหม่
 - [ ] สร้างสไลด์ละเอียดจากข้อมูลเดิมของโปรเจกต์: content reset, แผนที่/ไทม์ไลน์/เดินเรือ และขอบเขตความรู้ AI GM
 - [ ] ตรวจว่ามีไทม์ไลน์ประวัติศาสตร์รายปีเรียงละเอียดในรีโปเพียงใด และวางรายการรีเซ็ต/เติมต่อจากข้อมูลเดิม
