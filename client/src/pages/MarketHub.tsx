@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { ArrowRight, BriefcaseBusiness, Handshake, History, MapPin, ShoppingBasket, UsersRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SengokuIcon } from "@/components/SengokuIcon";
-import { buyMarketOffer, xpNeededForRank, type GameState } from "@/lib/game";
+import { buyMarketOffer, xpNeededForMasteryLevel, type GameState } from "@/lib/game";
 import { localized } from "@/lib/localization";
 
 type Language = "en" | "th";
@@ -44,10 +44,9 @@ export function MarketHub({ game, language, onUpdate, initialTab = "market" }: {
     services: [], obligations: [], transactions: [],
   };
   const openObligations = economy.obligations.filter((entry) => entry.status === "open" || entry.status === "called_in").length;
-  const highestMastery = game.character.masteries.reduce((highest, mastery) => Math.max(highest, mastery.rank ?? mastery.level ?? 1), 1);
-  const leadingMastery = game.character.masteries.reduce((best, mastery) => (mastery.rank ?? mastery.level ?? 1) > (best.rank ?? best.level ?? 1) ? mastery : best, game.character.masteries[0]);
-  const leadingRank = leadingMastery?.rank ?? leadingMastery?.level ?? 1;
-  const xpContext = leadingMastery ? leadingRank >= 20 ? copy(language, `${leadingMastery.label}: mastered`, `${leadingMastery.label}: อาจารย์ที่เชี่ยวชาญ`) : `${leadingMastery.label}: ${leadingMastery.xp ?? 0}/${xpNeededForRank(leadingRank)} XP` : "—";
+  const highestMastery = game.character.masteries.reduce((highest, mastery) => Math.max(highest, mastery.level), 0);
+  const leadingMastery = game.character.masteries.reduce((best, mastery) => mastery.level > best.level ? mastery : best, game.character.masteries[0]);
+  const xpContext = leadingMastery ? leadingMastery.level >= 5 ? copy(language, `${leadingMastery.label}: peerless`, `${leadingMastery.label}: หาตัวจับไม่ได้`) : `${leadingMastery.label}: ${leadingMastery.xp ?? 0}/${xpNeededForMasteryLevel(leadingMastery.level)} Progress` : "—";
   const latestReward = game.rolls.slice().reverse().find((roll) => roll.reward)?.reward ?? game.missions.slice().reverse().find((mission) => mission.state === "resolved")?.reward;
   const rewardContext = latestReward ? copy(language, `Latest reward context: ${latestReward}`, `สรุปรางวัลล่าสุด: ${latestReward}`) : copy(language, "No reward has entered the campaign record yet.", "ยังไม่มีรางวัลเข้าสมุดแคมเปญ");
 
@@ -56,7 +55,7 @@ export function MarketHub({ game, language, onUpdate, initialTab = "market" }: {
 
   return <div className="page market-view">
     <div className="page-heading"><div><div className="section-kicker">MARKET & GEAR · LOCAL CONTEXT</div><h1>{copy(language, "Markets are made of people", "ตลาดคือคน ของ และคำติดค้าง")}</h1><p>{copy(language, "These five ledgers describe one changing situation: what you carry, who can help, what you owe, and which promises now shape the road ahead.", "ห้าบัญชีนี้คือเหตุการณ์เดียวกันคนละมุม: ของที่พก คนที่ช่วยได้ สิ่งที่ค้าง และคำมั่นที่กำลังเปลี่ยนทางข้างหน้า")}</p></div><div className="resource-tally"><span>{copy(language, "Property", "ทรัพย์สิน")}<b>{game.character.resources.property}</b></span><span>{copy(language, "Supplies", "เสบียง")}<b>{game.character.resources.supplies}</b></span><span>{copy(language, "Credit", "เครดิต")}<b>{game.character.resources.credit}</b></span></div></div>
-    <section className="campaign-ledger-strip market-concordance"><span><small>{copy(language, "PAGE", "หน้าเรื่อง")}</small><b>{game.progression?.leaf ?? game.tick}</b></span><span><small>{copy(language, "HIGHEST STEP", "ขั้นสูงสุด")}</small><b>{highestMastery}/20</b></span><span><small>{copy(language, "NEXT PRACTICE", "ฝึกสู่ขั้นถัดไป")}</small><b>{xpContext}</b></span><span><small>{copy(language, "OPEN AGREEMENTS", "สัญญาค้าง")}</small><b>{openObligations}</b></span><span><small>{copy(language, "RECORDS", "บันทึก")}</small><b>{economy.transactions.length}</b></span></section>
+    <section className="campaign-ledger-strip market-concordance"><span><small>{copy(language, "PAGE", "หน้าเรื่อง")}</small><b>{game.progression?.leaf ?? game.tick}</b></span><span><small>{copy(language, "HIGHEST MASTERY", "Mastery สูงสุด")}</small><b>{highestMastery}/5</b></span><span><small>{copy(language, "NEXT PROGRESS", "ความก้าวหน้าถัดไป")}</small><b>{xpContext}</b></span><span><small>{copy(language, "OPEN AGREEMENTS", "สัญญาค้าง")}</small><b>{openObligations}</b></span><span><small>{copy(language, "RECORDS", "บันทึก")}</small><b>{economy.transactions.length}</b></span></section>
     <p className="campaign-reward-ribbon" data-testid="market-reward-context"><span>{copy(language, "REWARD CONTEXT", "สรุปรางวัลล่าสุด")}</span>{rewardContext}</p>
     {tabButtons}
     <LedgerGuidance tab={tab} language={language} marketTitle={economy.marketTitle} />

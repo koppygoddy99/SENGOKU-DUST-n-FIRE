@@ -66,18 +66,18 @@ QA ต้องอ่านเอกสารหลักสองฉบับ�
 | Momentum หักไม่เกินครั้งเดียว | integration/retry test | double click ใช้ Momentum สองแต้ม |
 | outcome มีทางไปต่อ | narrative/UI review | failure แสดงข้อความจบเกมโดยไม่มี option หรือ consequence |
 
-### 4.2 Step, XP และ Mastery Mark
+### 4.2 Mastery Level, Progress และ Special Item
 
-Step มีช่วง 1–20, XP ติด skill ไม่ใช่เลเวลรวม, threshold สำหรับการได้ XP เพิ่มตามช่วง และ Step 20 ไม่รับ XP เพิ่มแต่สร้าง Mastery Mark ตามกติกา QA ต้องตรวจทั้งการคำนวณและข้อความที่อธิบายว่าทำไมงานนั้นให้หรือไม่ให้ XP ไม่เช่นนั้นผู้เล่นจะเข้าใจว่าเกมแจกค่าปลอมตามจำนวนครั้งที่กด
+Mastery มี Level 0–5, Progress ติด skill ไม่ใช่เลเวลรวม, ทุก Level 0–4 ใช้ 5 Progress และ Level 5 ไม่รับ Progress เพิ่ม. งานที่ใช้ Mastery จริงและ DN ตั้งแต่ 10 ให้ +1 หรือ +2 เมื่อ decisive success; DN 8 และการผ่านด้วยไอเทมเฉพาะทางให้ 0. QA ต้องตรวจทั้งการคำนวณและข้อความที่อธิบายว่าทำไมงานนั้นให้หรือไม่ให้ Progress เพื่อไม่ให้ผู้เล่นเข้าใจว่าเกมแจกค่าเพิ่มจากทุกครั้งที่กด
 
 | Invariant | Acceptance expectation |
 |---|---|
-| XP ต่อ roll ไม่เกิน 2 | ไม่มีเส้นทาง input ใดเพิ่มเกินเพดานแม้มีหลาย tag |
-| DN ต่ำกว่า threshold ไม่สร้าง XP สูงเกินจริง | แสดงเหตุผลชัดและ state ไม่เปลี่ยน |
-| Step ไม่เกิน 20 | migration, import และ resolve ทั้งหมด clamp อย่างถูกต้อง |
-| Step 20 ไม่เพิ่ม XP | ผลลัพธ์เปลี่ยนเป็น Mastery Mark/ผลเรื่องตาม contract |
-| โบนัสตาม Step สอดคล้องทุกหน้า | Play, Character Dossier และ result ledger แสดงค่าเดียวกัน |
-| skill ที่ไม่เกี่ยวไม่รับ XP | intent/tag mapping ไม่หลุดไปเพิ่มวิชาที่ไม่ใช่หัวใจของ action |
+| Progress ต่อ roll ไม่เกิน 2 | ไม่มีเส้นทาง input ใดเพิ่มเกินเพดานแม้มีหลาย tag |
+| DN 8 และ special pass ไม่สร้าง Progress | แสดงเหตุผลชัดและ state ไม่เปลี่ยน |
+| Level อยู่ 0–5 | migration, import และ resolve ทั้งหมด clamp อย่างถูกต้อง |
+| Level 5 ไม่เพิ่ม Progress | เพดานไม่สร้างความก้าวหน้าซ้ำ |
+| โบนัสตาม Level สอดคล้องทุกหน้า | Play, Character Dossier และ result ledger แสดงค่าเดียวกัน |
+| skill ที่ไม่เกี่ยวไม่รับ Progress | intent/tag mapping ไม่หลุดไปเพิ่มวิชาที่ไม่ใช่หัวใจของ action |
 
 ### 4.3 เวลา อายุ Leaf และ Mission
 
@@ -123,7 +123,7 @@ fixture ของเกมต้อง deterministic ใช้ seed/review seed 
 
 ### 5.2 Test data governance
 
-ใช้ชื่อ NPC, campaign, agreement และ prose ที่เป็น original test fixture เท่านั้น อย่าใส่ข้อมูลส่วนบุคคล, token, save ของผู้เล่น, หรือตัวละครจากแหล่งลิขสิทธิ์ใน snapshot/log หลีกเลี่ยง fixture ที่ “สวยเกินจริง” จนไม่ครอบ edge cases; ต้องมี save เก่าที่ขาด field, input ไทย/อังกฤษยาว, intent ว่างหรือผิดรูป, resource ติดลบ, Step 20, มุม boundary ของ margin และ provider error.
+ใช้ชื่อ NPC, campaign, agreement และ prose ที่เป็น original test fixture เท่านั้น อย่าใส่ข้อมูลส่วนบุคคล, token, save ของผู้เล่น, หรือตัวละครจากแหล่งลิขสิทธิ์ใน snapshot/log หลีกเลี่ยง fixture ที่ “สวยเกินจริง” จนไม่ครอบ edge cases; ต้องมี save เก่าที่ขาด field, input ไทย/อังกฤษยาว, intent ว่างหรือผิดรูป, resource ติดลบ, Mastery Level 5, มุม boundary ของ margin และ provider error.
 
 ## 6. Playtest และการตรวจความยาก
 
@@ -262,7 +262,7 @@ QA triage ร่วมกับเจ้าของระบบอย่าง�
 ก่อน release ทุกครั้ง QA ต้องยืนยันหลักฐาน ไม่ยึดจากคำบอกเล่าว่า “น่าจะผ่าน” Checklist นี้เป็นขั้นต่ำ; release scope ที่เปลี่ยน data/AI/UI ต้องเพิ่มรายการตาม impact analysis.
 
 - [ ] TypeScript check และ automated test suite ผ่านใน revision ที่จะ release
-- [ ] Core invariant: roll, margin, Momentum, XP, Step 20, time/age/Leaf, mission, agreement ผ่าน test ที่เกี่ยวข้อง
+- [ ] Core invariant: roll, margin, Momentum, Mastery Progress/Level 5, time/age/Leaf, mission, agreement ผ่าน test ที่เกี่ยวข้อง
 - [ ] Local Save new/load/autosave และ migration fixture สำคัญผ่าน
 - [ ] AI GM success, timeout/error และ Local Trial fallback แสดงความจริง ไม่หักเครดิตผิด และเล่นต่อได้
 - [ ] Visual route manifest ครบตามหน้าที่เปลี่ยน ทั้ง rail เปิด/ย่อและ viewport เป้าหมาย

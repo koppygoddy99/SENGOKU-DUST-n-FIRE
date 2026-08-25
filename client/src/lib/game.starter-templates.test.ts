@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { RELATIONSHIP_QUESTIONS, STARTER_TEMPLATES, createGameState, masteryTierForRank, startingAttributesForTemplate, type CharacterDraft } from "./game";
+import { RELATIONSHIP_QUESTIONS, STARTER_TEMPLATES, createGameState, startingAttributesForTemplate, type CharacterDraft } from "./game";
 
 function draftFor(templateId: string, overrides: Partial<CharacterDraft> = {}): CharacterDraft {
   return {
@@ -28,8 +28,8 @@ describe("starter occupation templates", () => {
       expect(template.mission.title).not.toHaveLength(0);
       expect(template.social.rank).toBeLessThanOrEqual(1);
       template.masteries.forEach((mastery) => {
-        expect(masteryTierForRank(mastery.rank ?? 1).bonus).toBeGreaterThanOrEqual(1);
-        expect(masteryTierForRank(mastery.rank ?? 1).bonus).toBeLessThanOrEqual(3);
+        expect(mastery.level).toBeGreaterThanOrEqual(1);
+        expect(mastery.level).toBeLessThanOrEqual(3);
       });
     });
   });

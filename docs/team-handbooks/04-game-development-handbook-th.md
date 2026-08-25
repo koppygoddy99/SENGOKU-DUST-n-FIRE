@@ -74,18 +74,18 @@ persist(next)
 render(next)
 ```
 
-สูตรที่ทุก implementation ต้องใช้คือ `d12 + d12 + axis + mastery + context + momentum` `context` ถูก clamp 0..2, `momentum` ใช้ได้เฉพาะเมื่อมีมากกว่า 0, และ client canonicalizes DN เป็น 10/14/18/22 ทุก RollRecord final ต้องเก็บ dice, total, difficulty, margin, outcome, axis, mastery, reason และ timestamps/trace ที่จำเป็นต่อ Chronicle
+สูตรที่ทุก implementation ต้องใช้คือ `d12 + d12 + traitValue + masteryLevel + context + flaw + momentum` โดย Trait เป็นค่าจริง 1–10, `context` ถูก clamp 0..2, `flaw` เป็น 0/−2 และ `momentum` ใช้ได้เฉพาะเมื่อมีมากกว่า 0. client canonicalizes DN ปกติเป็น 8/10/14/18/22/26; DN 0 เกิดได้เฉพาะจาก item `special` ที่ usable, action มี document/pass cue และ tags ตรงกัน. ทุก RollRecord final ต้องเก็บ dice, total, difficulty, margin, outcome, axis, mastery, reason และ timestamps/trace ที่จำเป็นต่อ Chronicle
 
 ### 4.2 applyRoll atomic sequence
 
-ลำดับต่อไปนี้ห้ามสลับตามสะดวกของหน้าจอ: เพิ่ม roll/tick; ปรับ social/vitals/scene; คำนวณ practice; เลื่อน Step; สร้าง lastPractice; เดิน time/age; ตรวจ mission; ให้ reward และ agreement เฉพาะครั้งแรก; เพิ่ม memory; normalize; คืน state ใหม่ หากขั้นใด error ระหว่างพัฒนา ต้องไม่ persist state ครึ่งเดียว โดยเฉพาะ reward duplication และ mission resolve ซ้ำเป็น risk ระดับสูง
+ลำดับต่อไปนี้ห้ามสลับตามสะดวกของหน้าจอ: เพิ่ม roll/tick; ปรับ social/vitals/scene; คำนวณ Mastery Progress (เฉพาะ DN ตั้งแต่ 10 ที่ไม่ใช่ special pass); เพิ่ม Level เมื่อ Progress ครบ 5; สร้าง lastPractice; เดิน time/age; ตรวจ mission; ให้ reward และ agreement เฉพาะครั้งแรก; เพิ่ม memory; normalize; คืน state ใหม่ หากขั้นใด error ระหว่างพัฒนา ต้องไม่ persist state ครึ่งเดียว โดยเฉพาะ reward duplication และ mission resolve ซ้ำเป็น risk ระดับสูง
 
 | Invariant | เหตุผล | Regression ที่ต้องมี |
 |---|---|---|
-| Step อยู่ 1–20 | ป้องกัน bonus เกิน design | normalize/level-up test |
-| Step 20 รับ XP 0 | ป้องกัน farm ตอนเพดาน | practice test |
-| XP ต่อ roll ไม่เกิน 2 | รักษาจังหวะ staircase | positive/negative outcome test |
-| DN ต่ำกว่า threshold ไม่ได้ XP | กัน routine farm | high-step low-DN test |
+| Mastery Level อยู่ 0–5 | ป้องกันโบนัสเกิน design | normalize/level-up test |
+| Level 5 รับ Progress 0 | ป้องกัน farm ตอนเพดาน | practice test |
+| Progress ต่อ roll ไม่เกิน 2 | รักษาจังหวะ progression | positive/negative outcome test |
+| DN 8 และ special pass ไม่ได้ Progress | กัน routine/item bypass farm | low-DN and special-item test |
 | Momentum ไม่ติดลบ | ป้องกัน exploit | use/non-use test |
 | Leaf ไม่เพิ่มทุก roll | รักษาจังหวะเรื่อง | multi-day test |
 | age ไม่เพิ่มจาก roll | calendar semantics | birth-season crossing test |
@@ -94,7 +94,7 @@ render(next)
 
 ## 5. Progression, Time and Mission Implementation
 
-`Mastery` ต้องเก็บ `rank`, `xp`, `totalXp` และ metadata เดิม เช่น origin/tags/level bonus ที่ compatibility ต้องรักษา `masteryTierForRank()` เป็น owner ของชื่อช่วง, bonus และ DN threshold ห้าม hardcode Step label อีกชุดใน CharacterView หรือ PlayScene; component ต้อง import helper เดียวกัน
+`Mastery` ต้องเก็บ `level`, `xp`, `totalXp` และ metadata เดิม เช่น origin/tags/legacy `rank` ที่ compatibility ต้องรักษา. `masteryLevelDetails()` และ `xpNeededForMasteryLevel()` เป็น owner ของชื่อระดับ โบนัส และ Progress threshold; ห้าม hardcode label อีกชุดใน CharacterView หรือ PlayScene; component ต้อง import helper เดียวกัน
 
 `ProgressionState` เก็บ `leaf`, `segment`, `timeMarksSinceLeaf`, `daysSinceLeaf`, `ageAtCampaignStart`, `currentAge`, `birthSeason`, `campaignStartYear` `advanceTime()` หรือ helper ที่เทียบเท่าต้องเป็น owner ของการข้าม dawn/day/dusk/night, day/season/year และ age transition
 

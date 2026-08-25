@@ -10,9 +10,9 @@ describe("Market and gear hub", () => {
     const game = createSaikaSafehouseDemo();
     render(<MarketHub game={game} language="th" onUpdate={vi.fn()} />);
     expect(screen.getByText("ตลาดท่าเรือซาไก — เช้าหลังคืนวุ่นวาย")).toBeTruthy();
-    expect(screen.getByText("ขั้นสูงสุด")).toBeTruthy();
-    expect(screen.getByText("ฝึกสู่ขั้นถัดไป")).toBeTruthy();
-    expect(screen.getByText(/XP$/)).toBeTruthy();
+    expect(screen.getByText("Mastery สูงสุด")).toBeTruthy();
+    expect(screen.getByText("ความก้าวหน้าถัดไป")).toBeTruthy();
+    expect(screen.getByText(/Progress$/)).toBeTruthy();
     expect(screen.getByText("สัญญาค้าง")).toBeTruthy();
     expect(screen.getByTestId("market-reward-context").textContent).toContain("ยังไม่มีรางวัลเข้าสมุดแคมเปญ");
     expect(screen.getByTestId("market-ledger-guidance").textContent).toContain("เลือกข้อเสนอหนึ่งรายการด้านล่างเพื่อรับไว้");

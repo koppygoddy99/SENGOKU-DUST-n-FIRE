@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyRoll, bonusForMasteryRank, createSaikaSafehouseDemo, masteryTierForRank, normalizeGameState, parseAction, type RollRecord } from "./game";
+import { applyRoll, createSaikaSafehouseDemo, masteryLevelDetails, normalizeGameState, parseAction, type RollRecord, xpNeededForMasteryLevel } from "./game";
 
 function recordFor(state: ReturnType<typeof createSaikaSafehouseDemo>, outcome: RollRecord["outcome"]): RollRecord {
   const preview = parseAction("ข้าจะยิงปืนคาบศิลาเพื่อคุ้มกันเอจิยะ", state);
@@ -7,23 +7,20 @@ function recordFor(state: ReturnType<typeof createSaikaSafehouseDemo>, outcome: 
 }
 
 describe("skill progression and campaign time", () => {
-  it("migrates an older local save by retaining mastery bonus and adding progression defaults", () => {
+  it("migrates an older local save to the corresponding Mastery Level and adds progression defaults", () => {
     const base = createSaikaSafehouseDemo();
     const migrated = normalizeGameState({ ...base, progression: undefined, character: { ...base.character, masteries: base.character.masteries.map((mastery) => ({ ...mastery, rank: undefined, xp: undefined, totalXp: undefined })) } });
     expect(migrated.progression?.currentAge).toBe(13);
-    expect(migrated.character.masteries[0].rank).toBe(8);
-    expect(migrated.character.masteries[0].level).toBe(2);
+    expect(migrated.character.masteries[0]).toMatchObject({ rank: 2, level: 2, xp: 0, totalXp: 0 });
   });
 
-  it("awards meaningful practice, climbs the first threshold, advances time, resolves the mission, and grants its contextual reward", () => {
+  it("awards meaningful Progress, climbs a five-Progress threshold, advances time, resolves the mission, and grants its contextual reward", () => {
     const base = createSaikaSafehouseDemo();
-    const ready = { ...base, character: { ...base.character, masteries: base.character.masteries.map((mastery, index) => index === 0 ? { ...mastery, rank: 4, level: 1, xp: 4, totalXp: 4 } : mastery) } };
+    const ready = { ...base, character: { ...base.character, masteries: base.character.masteries.map((mastery, index) => index === 0 ? { ...mastery, rank: 1, level: 1, xp: 4, totalXp: 4 } : mastery) } };
     const next = applyRoll(ready, recordFor(ready, "decisive_success"));
     const firearm = next.character.masteries[0];
-    expect(firearm.rank).toBe(5);
-    expect(firearm.level).toBe(2);
-    expect(firearm.xp).toBe(1);
-    expect(next.progression?.lastPractice).toMatchObject({ masteryId: "saika-firearm", gained: 2, rankBefore: 4, rankAfter: 5 });
+    expect(firearm).toMatchObject({ rank: 2, level: 2, xp: 1, totalXp: 6 });
+    expect(next.progression?.lastPractice).toMatchObject({ masteryId: "saika-firearm", gained: 2, rankBefore: 1, rankAfter: 2, xp: 1, xpNeeded: 5 });
     expect(next.progression?.lastTimeMark?.to).toBe("night");
     expect(next.missions[0].state).toBe("resolved");
     expect(next.missions[0].progress).toMatchObject({ current: 2, required: 2, rewardGranted: true });
@@ -47,18 +44,18 @@ describe("skill progression and campaign time", () => {
     expect(next.progression?.currentAge).toBe(14);
   });
 
-  it("uses a genuine XP staircase: higher steps require harder work while their roll bonus increases", () => {
+  it("uses one five-Progress threshold at every non-cap level and stops at Level 5", () => {
     const base = createSaikaSafehouseDemo();
-    const veteran = { ...base, character: { ...base.character, masteries: base.character.masteries.map((mastery, index) => index === 0 ? { ...mastery, rank: 13, level: 4, xp: 0, totalXp: 88 } : mastery) } };
-    const lowPressureRecord = recordFor(veteran, "success_with_cost");
-    expect(lowPressureRecord.difficulty).toBe(10);
-    const next = applyRoll(veteran, lowPressureRecord);
-    expect(next.progression?.lastPractice).toMatchObject({ gained: 0, rankAfter: 13, note: "ต้องเผชิญงาน DN 18+ เพื่อฝึกขั้นนี้" });
-    expect(bonusForMasteryRank(4)).toBe(1);
-    expect(bonusForMasteryRank(5)).toBe(2);
-    expect(bonusForMasteryRank(13)).toBe(4);
-    expect(masteryTierForRank(17)).toMatchObject({ minimumDifficulty: 22, bonus: 5 });
-    expect(masteryTierForRank(20)).toMatchObject({ bonus: 6 });
+    const expert = { ...base, character: { ...base.character, masteries: base.character.masteries.map((mastery, index) => index === 0 ? { ...mastery, rank: 4, level: 4, xp: 0, totalXp: 15 } : mastery) } };
+    const normalRecord = recordFor(expert, "success_with_cost");
+    expect(normalRecord.difficulty).toBe(10);
+    const next = applyRoll(expert, normalRecord);
+    expect(next.progression?.lastPractice).toMatchObject({ gained: 1, rankBefore: 4, rankAfter: 4, xp: 1, xpNeeded: 5 });
+    expect(masteryLevelDetails(4)).toMatchObject({ bonus: 4, th: "อาจารย์" });
+    expect(masteryLevelDetails(5)).toMatchObject({ bonus: 5, th: "หาตัวจับไม่ได้" });
+    expect(xpNeededForMasteryLevel(4)).toBe(5);
+    const capped = { ...expert, character: { ...expert.character, masteries: expert.character.masteries.map((mastery, index) => index === 0 ? { ...mastery, rank: 5, level: 5, xp: 0, totalXp: 20 } : mastery) } };
+    expect(applyRoll(capped, recordFor(capped, "decisive_success")).progression?.lastPractice).toMatchObject({ gained: 0, rankBefore: 5, rankAfter: 5, xpNeeded: 0 });
   });
 
   it("opens a new Page only after the campaign has accumulated several days of movement", () => {

@@ -87,6 +87,7 @@ export type InventoryItem = {
   description: string;
   functions: ("unlock" | "bonus" | "exchange")[];
   bonus?: { stat?: StatId; value: number; tags: string[] };
+  special?: { mode: "auto_pass" | "dn_zero"; tags: string[]; reason: string };
   condition: "usable" | "used" | "damaged" | "evidence";
   location?: "carried" | "safehouse" | "stored" | "hidden";
   ownership?: "owned" | "borrowed" | "held_for_other" | "disputed";
@@ -248,6 +249,7 @@ export type RollPreview = {
   contextReason?: string;
   difficulty: Difficulty;
   difficultyReason?: string;
+  specialItem?: { itemId: string; label: string; mode: "auto_pass" | "dn_zero"; reason: string };
   flawTriggered?: boolean;
   flawBonus?: -2 | 0;
   triggeredFlaw?: string;
@@ -336,18 +338,19 @@ export type StarterTemplate = {
   mission: Omit<Mission, "id" | "state">;
 };
 
-const item = (id: string, label: string, kind: ItemKind, description: string, slots: number, functions: InventoryItem["functions"], bonus?: InventoryItem["bonus"]): InventoryItem => ({ id, label, kind, description, slots, functions, bonus, condition: "usable" });
-export const MAX_MASTERY_RANK = 20;
+const item = (id: string, label: string, kind: ItemKind, description: string, slots: number, functions: InventoryItem["functions"], bonus?: InventoryItem["bonus"], special?: InventoryItem["special"]): InventoryItem => ({ id, label, kind, description, slots, functions, bonus, special, condition: "usable" });
+export const MAX_MASTERY_LEVEL = 5;
+export const MASTERY_PROGRESS_PER_LEVEL = 5;
 export const MIN_STAT_VALUE = 1;
 export const MAX_STAT_VALUE = 10;
-export type Difficulty = 8 | 10 | 14 | 18 | 22 | 26;
+export type Difficulty = 0 | 8 | 10 | 14 | 18 | 22 | 26;
 
 export function normalizeStatValue(value: number) {
   return Math.max(MIN_STAT_VALUE, Math.min(MAX_STAT_VALUE, Math.round(value)));
 }
 
-export function bonusForStatValue(value: number) {
-  return Math.ceil(normalizeStatValue(value) / 2);
+export function traitValueForRoll(value: number) {
+  return normalizeStatValue(value);
 }
 
 export function statXpNeededForValue(value: number) {
@@ -364,44 +367,40 @@ export function defaultStatXp(): StatXp {
   return { body: { xp: 0, totalXp: 0 }, hand: { xp: 0, totalXp: 0 }, wit: { xp: 0, totalXp: 0 }, mind: { xp: 0, totalXp: 0 }, heart: { xp: 0, totalXp: 0 } };
 }
 
-export function xpNeededForRank(rank: number) {
-  if (rank >= MAX_MASTERY_RANK) return 0;
-  if (rank <= 4) return 5;
-  if (rank <= 8) return 7;
-  if (rank <= 12) return 10;
-  if (rank <= 16) return 14;
-  return 18;
+export function xpNeededForMasteryLevel(level: number) {
+  return level >= MAX_MASTERY_LEVEL ? 0 : MASTERY_PROGRESS_PER_LEVEL;
 }
 
-export function bonusForMasteryRank(rank: number) {
-  if (rank >= 20) return 6;
-  if (rank >= 17) return 5;
-  if (rank >= 13) return 4;
-  if (rank >= 9) return 3;
-  if (rank >= 5) return 2;
-  return 1;
+export function masteryBonusForLevel(level: number) {
+  return Math.max(0, Math.min(MAX_MASTERY_LEVEL, Math.round(level)));
 }
 
-export function masteryTierForRank(rank: number) {
-  if (rank >= 20) return { id: "mastered", en: "Mastered", th: "อาจารย์ที่เชี่ยวชาญ", minimumDifficulty: 0, bonus: 6, note: "ชื่อและลายมือของเจ้าเปลี่ยนวิธีที่โลกตอบกลับ" };
-  if (rank >= 17) return { id: "renowned", en: "Renowned", th: "มีชื่อเสียง", minimumDifficulty: 22, bonus: 5, note: "ต้องเจองานที่เดิมพันสูงจึงจะขัดเกลาต่อได้" };
-  if (rank >= 13) return { id: "proven", en: "Proven", th: "มีฝีมือไร้คนสงสัย", minimumDifficulty: 18, bonus: 4, note: "งานธรรมดาไม่ทำให้ฝีมือขยับอีกแล้ว" };
-  if (rank >= 9) return { id: "trusted", en: "Trusted", th: "เชื่อมือได้", minimumDifficulty: 14, bonus: 3, note: "เริ่มเติบโตจากงานที่มีคนและผลประโยชน์เกี่ยวข้อง" };
-  if (rank >= 5) return { id: "steady", en: "Steady Hand", th: "กำลังก้าวหน้า", minimumDifficulty: 10, bonus: 2, note: "ฝึกจากงานที่มีผลจริง ไม่ใช่การลองซ้ำ" };
-  return { id: "learning", en: "Learning", th: "มือใหม่", minimumDifficulty: 10, bonus: 1, note: "ทุกงานที่มีความเสี่ยงคือการตั้งมือ" };
+export function masteryLevelDetails(level: number) {
+  const normalized = masteryBonusForLevel(level);
+  const levels = [
+    { id: "untrained", en: "Untrained", th: "ยังไม่ชำนาญ", bonus: 0, note: "ทำได้ด้วยเหตุผลในเรื่อง แต่ไม่มีการฝึกเฉพาะทาง" },
+    { id: "familiar", en: "Familiar", th: "คุ้นมือ", bonus: 1, note: "เริ่มทำสิ่งนี้ได้เป็นระบบ" },
+    { id: "skilled", en: "Skilled", th: "ชำนาญ", bonus: 2, note: "เป็นคนที่ทีมพึ่งพาได้ในงานนี้" },
+    { id: "expert", en: "Expert", th: "เชี่ยวชาญ", bonus: 3, note: "รับมือกับความกดดันและงานยากได้" },
+    { id: "master", en: "Master", th: "อาจารย์", bonus: 4, note: "ความเชี่ยวชาญหายาก มีชื่อในสายงานนั้น" },
+    { id: "peerless", en: "Peerless", th: "หาตัวจับไม่ได้", bonus: 5, note: "ในแผ่นดินหาคนฝีมือใกล้กันแทบไม่ได้" },
+  ] as const;
+  return levels[normalized];
 }
 
-export function rankForLegacyMasteryBonus(level: number) {
-  if (level >= 5) return 20;
-  if (level === 4) return 16;
-  if (level === 3) return 12;
-  if (level === 2) return 8;
-  return 4;
+function levelForLegacyMastery(entry: Mastery) {
+  if (typeof entry.level === "number") return masteryBonusForLevel(entry.level);
+  const legacyRank = entry.rank ?? 0;
+  if (legacyRank >= 17) return 5;
+  if (legacyRank >= 13) return 4;
+  if (legacyRank >= 9) return 3;
+  if (legacyRank >= 5) return 2;
+  return legacyRank > 0 ? 1 : 0;
 }
 
-export function normalizeMasteryProgress(entry: Mastery): Mastery {
-  const rank = Math.max(1, Math.min(MAX_MASTERY_RANK, entry.rank ?? rankForLegacyMasteryBonus(entry.level)));
-  return { ...entry, rank, level: bonusForMasteryRank(rank), xp: rank >= MAX_MASTERY_RANK ? 0 : Math.max(0, Math.min(entry.xp ?? 0, xpNeededForRank(rank) - 1)), totalXp: Math.max(0, entry.totalXp ?? 0) };
+export function normalizeMasteryProgress(entry: Mastery, legacy = false): Mastery {
+  const level = legacy ? levelForLegacyMastery(entry) : masteryBonusForLevel(entry.level);
+  return { ...entry, rank: level, level, xp: level >= MAX_MASTERY_LEVEL ? 0 : Math.max(0, Math.min(entry.xp ?? 0, xpNeededForMasteryLevel(level) - 1)), totalXp: Math.max(0, entry.totalXp ?? 0) };
 }
 
 function defaultProgression(context: CampaignContext, ageAtCampaignStart = 20, birthSeason: Season = context.season): ProgressionState {
@@ -446,7 +445,7 @@ export const STARTER_TEMPLATES: StarterTemplate[] = [
   },
   {
     id: "daimyo_attendant", label: "คนรับใช้บ้านไดเมียว / ผู้ถือคำสั่ง", short: "ผู้ช่วยหนุ่มในบ้านใหญ่ที่เข้าถึงเอกสารได้บ้าง แต่ยังไม่มีอำนาจพอจะปฏิเสธคำสั่ง", start: "อะซุจิ แคว้นโอมิ", age: 19, pressure: "คำสั่งเร็วและความหวาดระแวงในบ้านใหญ่", compatibleRegions: ["Omi"],
-    attributes: { body: 1, hand: 2, wit: 2, mind: 3, heart: 2 }, social: { rank: 1, honor: 1, influence: 1, information: 1, stain: 0 }, resources: { property: 2, supplies: 2, credit: 1 }, masteries: [mastery("orders-and-seals", "คำสั่งและตราปิดผนึก", 3, "งานรับใช้บ้านใหญ่", ["document", "authority"]), mastery("room-reading", "อ่านอารมณ์ในห้องสั่งการ", 2, "งานเฝ้าประตู", ["social", "wit"]), mastery("escort", "คุ้มกันระยะใกล้", 1, "หน้าที่คนถือของ", ["protect", "fight"])], inventory: [item("sealed-order", "คำสั่งปิดผนึก", "document", "คำสั่งที่เปิดประตูได้ แต่ไม่ควรถูกอ่านต่อหน้าคนผิด", 1, ["unlock", "bonus"], { stat: "mind", value: 1, tags: ["order", "authority"] }), item("house-badge", "ป้ายผ้าของบ้าน", "status", "สวมแล้วผ่านบางประตูได้ แต่ทำให้คนรู้ว่าเจ้าอยู่ฝ่ายใด", 0, ["unlock"], { stat: "heart", value: 1, tags: ["house", "authority"] })], mission: { issuer: "เสมียนของบ้าน", issuerType: "ruler", title: "คำสั่งที่มาถึงเร็วเกินไป", request: "นำคำสั่งไปถึงผู้รับโดยไม่ทำให้ข่าวรั่ว", pressure: "คนในบ้านกำลังจับตาว่าคำสั่งเกี่ยวกับใคร", deadline: "ก่อนประชุม", reward: "คำรับรองและสิทธิ์เข้าถึง", risk: "ถูกโยงกับการกวาดล้าง", options: ["ส่งตรง", "ใช้คนกลาง", "อ่านอารมณ์ผู้รับ"] }
+    attributes: { body: 1, hand: 2, wit: 2, mind: 3, heart: 2 }, social: { rank: 1, honor: 1, influence: 1, information: 1, stain: 0 }, resources: { property: 2, supplies: 2, credit: 1 }, masteries: [mastery("orders-and-seals", "คำสั่งและตราปิดผนึก", 3, "งานรับใช้บ้านใหญ่", ["document", "authority"]), mastery("room-reading", "อ่านอารมณ์ในห้องสั่งการ", 2, "งานเฝ้าประตู", ["social", "wit"]), mastery("escort", "คุ้มกันระยะใกล้", 1, "หน้าที่คนถือของ", ["protect", "fight"])], inventory: [item("sealed-order", "คำสั่งปิดผนึก", "document", "คำสั่งที่เปิดประตูได้ แต่ไม่ควรถูกอ่านต่อหน้าคนผิด", 1, ["unlock", "bonus"], { stat: "mind", value: 1, tags: ["order", "authority"] }, { mode: "auto_pass", tags: ["order", "authority", "คำสั่ง", "ตรา", "ด่าน", "ผู้คุม", "ผ่าน"], reason: "คำสั่งปิดผนึกแท้เปิดทางตามขอบเขตของเอกสาร" }), item("house-badge", "ป้ายผ้าของบ้าน", "status", "สวมแล้วผ่านบางประตูได้ แต่ทำให้คนรู้ว่าเจ้าอยู่ฝ่ายใด", 0, ["unlock"], { stat: "heart", value: 1, tags: ["house", "authority"] })], mission: { issuer: "เสมียนของบ้าน", issuerType: "ruler", title: "คำสั่งที่มาถึงเร็วเกินไป", request: "นำคำสั่งไปถึงผู้รับโดยไม่ทำให้ข่าวรั่ว", pressure: "คนในบ้านกำลังจับตาว่าคำสั่งเกี่ยวกับใคร", deadline: "ก่อนประชุม", reward: "คำรับรองและสิทธิ์เข้าถึง", risk: "ถูกโยงกับการกวาดล้าง", options: ["ส่งตรง", "ใช้คนกลาง", "อ่านอารมณ์ผู้รับ"] }
   },
   {
     id: "mounted_samurai", label: "นักรบม้าซามูไร / นายกองทหารม้า", short: "นักรบหนุ่มที่นำคนไม่กี่คนได้ในสนาม แต่ยังต้องพิสูจน์ว่าคำสั่งของตนคุ้มกับชีวิตผู้ใต้บังคับ", start: "มุซาชิหรือชินาโนะ", age: 20, pressure: "ม้าหายหนึ่งตัว และคำสั่งลาดตระเวนจะกลายเป็นความผิดของนายกอง", compatibleRegions: ["Musashi", "Shinano"],
@@ -535,7 +534,7 @@ export function createGameState(context: CampaignContext, draft: CharacterDraft)
   const mission: Mission = { ...template.mission, id: `mission-${Date.now()}`, state: "offered" as MissionState, progress: { current: 0, required: 2, triggerPhrases: template.mission.options } };
   const opening = openingScene(character, context, mission);
   return {
-    schemaVersion: 3,
+    schemaVersion: 4,
     credits: 50,
     campaign: context,
     character,
@@ -567,12 +566,12 @@ export function createSaikaSafehouseDemo(): GameState {
     ],
     speaker: "กันทาโร่", prompt: "ซาเนฟุยุจะตอบกันทาโร่ว่าอย่างไร?", pressure: mission.pressure, suggestedActions: mission.options,
   };
-  return { schemaVersion: 3, credits: 50, campaign, character, community: { food: 2, labor: 2, voice: 1, safety: 1, cohesion: 2, lastChange: "เมืองซาไกเพิ่มเวรยามและตรวจเรือ" }, currentScene: opening, missions: [mission], market: buildSaikaMarket(), economy: buildSaikaEconomy(), memories: [{ id: "memory-saika-opening", kind: "stain", title: "คืนที่เมืองซาไกตื่น", detail: opening.body.join("\n\n"), tick: 1, tone: "vermilion" }], rolls: [], progression: defaultProgression(campaign, 13, "Spring"), tick: 1 };
+  return { schemaVersion: 4, credits: 50, campaign, character, community: { food: 2, labor: 2, voice: 1, safety: 1, cohesion: 2, lastChange: "เมืองซาไกเพิ่มเวรยามและตรวจเรือ" }, currentScene: opening, missions: [mission], market: buildSaikaMarket(), economy: buildSaikaEconomy(), memories: [{ id: "memory-saika-opening", kind: "stain", title: "คืนที่เมืองซาไกตื่น", detail: opening.body.join("\n\n"), tick: 1, tone: "vermilion" }], rolls: [], progression: defaultProgression(campaign, 13, "Spring"), tick: 1 };
 }
 
 export function normalizeGameState(state: GameState): GameState {
   const campaign = state.campaign;
-  const legacyState = state.schemaVersion < 3;
+  const legacyState = state.schemaVersion < 4;
   const progression = state.progression ?? defaultProgression(campaign, state.character.identity.includes("สิบสาม") ? 13 : 20, campaign.season);
   const missions = state.missions.map((mission) => mission.progress ? mission : { ...mission, progress: { current: mission.state === "resolved" ? 2 : 0, required: 2, triggerPhrases: mission.options } });
   const legacyRolls = state.rolls as Array<RollRecord & { axis?: StatId }>;
@@ -586,8 +585,8 @@ export function normalizeGameState(state: GameState): GameState {
   const flaws = Array.from(new Set((state.character.flaws?.length ? state.character.flaws : [state.character.weakness]).map((entry) => entry.trim()).filter(Boolean))).slice(0, 2);
   return {
     ...state,
-    schemaVersion: 3,
-    character: { ...state.character, weakness: flaws[0] ?? "มีหนี้ที่ยังไม่กล้าพูดถึง", flaws: flaws.length ? flaws : ["มีหนี้ที่ยังไม่กล้าพูดถึง"], attributes, statXp, inventory, masteries: state.character.masteries.map(normalizeMasteryProgress) },
+    schemaVersion: 4,
+    character: { ...state.character, weakness: flaws[0] ?? "มีหนี้ที่ยังไม่กล้าพูดถึง", flaws: flaws.length ? flaws : ["มีหนี้ที่ยังไม่กล้าพูดถึง"], attributes, statXp, inventory, masteries: state.character.masteries.map((entry) => normalizeMasteryProgress(entry, legacyState)) },
     missions,
     rolls,
     progression: { ...progression, currentAge: Math.max(progression.currentAge, progression.ageAtCampaignStart) },
@@ -647,14 +646,19 @@ export function parseAction(action: string, state: GameState): RollPreview {
   });
   const selectedMastery = rankedMasteries.find((mastery) => mastery.tags.some((tag) => match.masteryTags.includes(tag) || normalized.includes(tag)));
   const matchingItem = state.character.inventory.find((entry) => entry.condition === "usable" && entry.bonus && entry.bonus.tags.some((tag) => normalized.includes(tag) || match.masteryTags.includes(tag)));
+  const namesSpecialDocumentUse = ["คำสั่ง", "ตรา", "ใบผ่าน", "order", "seal", "pass"].some((tag) => normalized.includes(tag));
+  const specializedItem = state.character.inventory.find((entry) => namesSpecialDocumentUse && entry.condition === "usable" && entry.functions.includes("unlock") && entry.special && entry.special.tags.some((tag) => normalized.includes(tag)));
   const illicitRisk = normalized.includes("ฆ่า") || normalized.includes("ปลอม") || normalized.includes("ขโมย") || normalized.includes("บุก");
   const guardedObstacle = normalized.includes("ด่าน") || normalized.includes("ผู้คุม") || normalized.includes("ค่าย");
   const hasRelevantMastery = selectedMastery?.tags.some((tag) => match.masteryTags.includes(tag) || normalized.includes(tag)) ?? false;
-  const isPrepared = Boolean(matchingItem?.bonus?.value);
+  const contextBonus = Math.max(0, Math.min(2, matchingItem?.bonus?.value ?? 0));
+  const isPrepared = Boolean(contextBonus);
   const veryEasy = /(พัก|ฟื้น|ทำแผล|คุย|ทัก|ถามเพื่อน|งานประจำ)/.test(normalized) && !illicitRisk && !guardedObstacle;
   const easy = hasRelevantMastery && !illicitRisk && !guardedObstacle;
-  const difficulty: Difficulty = illicitRisk && guardedObstacle && !hasRelevantMastery && !isPrepared ? 26 : illicitRisk && guardedObstacle ? 22 : illicitRisk || guardedObstacle ? 18 : veryEasy ? 8 : easy ? 10 : 14;
-  const difficultyReason = difficulty === 26
+  const difficulty: Difficulty = specializedItem?.special ? 0 : illicitRisk && guardedObstacle && !hasRelevantMastery && !isPrepared ? 26 : illicitRisk && guardedObstacle ? 22 : illicitRisk || guardedObstacle ? 18 : veryEasy ? 8 : easy ? 10 : 14;
+  const difficultyReason = specializedItem?.special
+    ? `${specializedItem.label}: ${specializedItem.special.reason}`
+    : difficulty === 26
     ? "วิกฤต: การเสี่ยงผิดกฎหมายปะทะด่านหรือผู้คุม โดยยังไม่มีวิชาหรือเครื่องมือที่ช่วย"
     : difficulty === 22
       ? "อุปสรรค: ฉากมีแรงกดดันซ้อนกัน ต้องมีแผน เครื่องมือ หรือยอมรับราคา"
@@ -671,10 +675,11 @@ export function parseAction(action: string, state: GameState): RollPreview {
     method: match.method,
     stat: match.stat,
     mastery: selectedMastery,
-    contextBonus: matchingItem?.bonus?.value ?? 0,
-    contextReason: matchingItem ? `ใช้ ${matchingItem.label}` : undefined,
+    contextBonus,
+    contextReason: specializedItem?.special ? `ใช้ ${specializedItem.label}` : matchingItem ? `ใช้ ${matchingItem.label}` : undefined,
     difficulty,
     difficultyReason,
+    specialItem: specializedItem?.special ? { itemId: specializedItem.id, label: specializedItem.label, mode: specializedItem.special.mode, reason: specializedItem.special.reason } : undefined,
     flawTriggered: false,
     flawBonus: 0,
     risks: illicitRisk ? ["เกิดพยาน", "ข้อครหาเพิ่ม", "สถานการณ์ปะทุ"] : guardedObstacle ? ["ชื่อถูกจด", "ผู้คุมตั้งคำถาม", "เสียเวลา"] : ["ใช้เสบียง", "มีคนได้ยิน", "เกิดหนี้เล็กน้อย"],
@@ -712,14 +717,16 @@ function localOutcomeNarration(preview: RollPreview, state: GameState, outcome: 
 }
 
 export function resolveRoll(preview: RollPreview, state: GameState, spendMomentum: boolean): RollRecord {
-  const dice: [number, number] = [Math.floor(Math.random() * 12) + 1, Math.floor(Math.random() * 12) + 1];
-  const statValue = bonusForStatValue(state.character.attributes[preview.stat]);
+  const bypassesRoll = Boolean(preview.specialItem && preview.difficulty === 0);
+  const dice: [number, number] = bypassesRoll ? [0, 0] : [Math.floor(Math.random() * 12) + 1, Math.floor(Math.random() * 12) + 1];
+  const statValue = traitValueForRoll(state.character.attributes[preview.stat]);
   const masteryValue = preview.mastery?.level ?? 0;
   const momentumSpent = spendMomentum && state.character.vitals.momentum > 0 ? 2 : 0;
   const flawBonus = preview.flawTriggered && preview.flawBonus === -2 ? -2 : 0;
-  const total = dice[0] + dice[1] + statValue + masteryValue + preview.contextBonus + flawBonus + momentumSpent;
+  const contextBonus = Math.max(0, Math.min(2, preview.contextBonus));
+  const total = dice[0] + dice[1] + statValue + masteryValue + contextBonus + flawBonus + momentumSpent;
   const margin = total - preview.difficulty;
-  const outcome = outcomeFromMargin(margin);
+  const outcome = bypassesRoll ? "decisive_success" : outcomeFromMargin(margin);
   const copy = outcomeCopy[outcome];
   return {
     ...preview,
@@ -790,21 +797,20 @@ function awardPractice(masteries: Mastery[], record: RollRecord) {
   const used = record.mastery ? masteries.find((entry) => entry.id === record.mastery?.id) : undefined;
   if (!used) return { masteries, practice: undefined as SkillPractice | undefined };
   const before = normalizeMasteryProgress(used);
-  const normalizedRank = before.rank ?? 1;
-  if (normalizedRank >= MAX_MASTERY_RANK) return { masteries, practice: { masteryId: before.id, masteryLabel: before.label, gained: 0, rankBefore: normalizedRank, rankAfter: normalizedRank, xp: 0, xpNeeded: 0, masteryMark: before.masteryMark ?? "Mastered" } };
-  const tier = masteryTierForRank(normalizedRank);
-  const eligible = record.difficulty >= tier.minimumDifficulty;
+  const levelBefore = before.level;
+  if (levelBefore >= MAX_MASTERY_LEVEL) return { masteries, practice: { masteryId: before.id, masteryLabel: before.label, gained: 0, rankBefore: levelBefore, rankAfter: levelBefore, xp: 0, xpNeeded: 0, masteryMark: before.masteryMark ?? "Peerless" } };
+  const eligible = record.difficulty >= 10 && !record.specialItem;
   const gained = eligible ? (record.outcome === "decisive_success" ? 2 : 1) : 0;
-  let rank = normalizedRank;
+  let level = levelBefore;
   let xp = (before.xp ?? 0) + gained;
   let masteryMark = before.masteryMark;
-  while (rank < MAX_MASTERY_RANK && xp >= xpNeededForRank(rank)) {
-    xp -= xpNeededForRank(rank);
-    rank += 1;
-    if (rank === MAX_MASTERY_RANK) { xp = 0; masteryMark = "Mastered"; }
+  while (level < MAX_MASTERY_LEVEL && xp >= xpNeededForMasteryLevel(level)) {
+    xp -= xpNeededForMasteryLevel(level);
+    level += 1;
+    if (level === MAX_MASTERY_LEVEL) { xp = 0; masteryMark = "Peerless"; }
   }
-  const after: Mastery = { ...before, rank, level: bonusForMasteryRank(rank), xp, totalXp: (before.totalXp ?? 0) + gained, masteryMark };
-  const practice: SkillPractice = { masteryId: after.id, masteryLabel: after.label, gained, rankBefore: normalizedRank, rankAfter: rank, xp: after.xp ?? 0, xpNeeded: xpNeededForRank(rank), masteryMark, note: eligible ? tier.note : `ต้องเผชิญงาน DN ${tier.minimumDifficulty}+ เพื่อฝึกขั้นนี้` };
+  const after: Mastery = { ...before, rank: level, level, xp, totalXp: (before.totalXp ?? 0) + gained, masteryMark };
+  const practice: SkillPractice = { masteryId: after.id, masteryLabel: after.label, gained, rankBefore: levelBefore, rankAfter: level, xp: after.xp ?? 0, xpNeeded: xpNeededForMasteryLevel(level), masteryMark, note: level >= MAX_MASTERY_LEVEL ? "ถึงระดับหาตัวจับไม่ได้แล้ว" : eligible ? "ฝึกจากการใช้ความชำนาญในงานที่มีความเสี่ยง" : record.specialItem ? "ไอเทมเฉพาะทางเปิดทางให้โดยไม่ต้องฝึกทอย" : "งาน DN 8 เป็นงานคุ้นมือ จึงไม่เพิ่ม Mastery Progress" };
   return { masteries: masteries.map((entry) => entry.id === after.id ? after : entry), practice };
 }
 
@@ -884,7 +890,6 @@ export function applyRoll(state: GameState, record: RollRecord): GameState {
   const success = record.outcome !== "failure_with_consequence";
   const initialProgression = state.progression ?? defaultProgression(state.campaign, state.character.identity.includes("สิบสาม") ? 13 : 20, state.campaign.season);
   const awarded = awardPractice(state.character.masteries, record);
-  const awardedStat = awardStatPractice(state.character.attributes, state.character.statXp, record);
   const clock = advanceClock(initialProgression, record.outcome);
   const calendar = advanceCampaignCalendar(state.campaign, clock.progression, clock.dayAdvance);
   const missionResult = progressActiveMission(state, record);
@@ -895,8 +900,6 @@ export function applyRoll(state: GameState, record: RollRecord): GameState {
     : missionResult.inventory;
   const updatedCharacter: Character = {
     ...state.character,
-    attributes: awardedStat.attributes,
-    statXp: awardedStat.statXp,
     masteries: awarded.masteries,
     inventory: inventoryAfterMomentum,
     vitals: {
@@ -940,9 +943,9 @@ export function applyRoll(state: GameState, record: RollRecord): GameState {
     pressure: record.consequence ?? state.currentScene.pressure,
     suggestedActions: success ? ["รับรางวัลแล้วถามเงื่อนไข", "ตามหาคนที่เป็นพยาน", "กลับไปดูภารกิจอื่น"] : ["แก้ความเข้าใจกับผู้คุม", "หาหลักฐานเพิ่ม", "ยอมรับผลแล้วเปลี่ยนแผน"],
   };
-  const storedRecord: RollRecord = { ...record, practice: awarded.practice, statPractice: awardedStat.practice, timeMark: clock.timeMark, missionUpdate: missionResult.update };
+  const storedRecord: RollRecord = { ...record, practice: awarded.practice, timeMark: clock.timeMark, missionUpdate: missionResult.update };
   const momentumMemory = record.momentumSpent && momentumSource ? [{ id: `momentum-${record.id}`, kind: "actor_relation" as const, title: `แรงฮึด: ${momentumSource.label}`, detail: `${momentumSource.note} · ${momentumSource.cost}`, tick: record.tick, tone: "ochre" as const }] : [];
-  return { ...state, campaign: calendar.campaign, progression: { ...calendar.progression, lastPractice: awarded.practice, lastStatPractice: awardedStat.practice }, character: updatedCharacter, currentScene: nextScene, missions, economy: missionResult.transaction ? { ...state.economy, transactions: [...state.economy.transactions, missionResult.transaction] } : state.economy, memories: [...state.memories, memory, ...momentumMemory], rolls: [...state.rolls, storedRecord], tick: record.tick };
+  return { ...state, campaign: calendar.campaign, progression: { ...calendar.progression, lastPractice: awarded.practice, lastStatPractice: undefined }, character: updatedCharacter, currentScene: nextScene, missions, economy: missionResult.transaction ? { ...state.economy, transactions: [...state.economy.transactions, missionResult.transaction] } : state.economy, memories: [...state.memories, memory, ...momentumMemory], rolls: [...state.rolls, storedRecord], tick: record.tick };
 }
 
 export function buyMarketOffer(state: GameState, offerId: string): { state: GameState; message: string } {
