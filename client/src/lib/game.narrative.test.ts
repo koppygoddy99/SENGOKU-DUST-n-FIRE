@@ -30,6 +30,6 @@ describe("narrative baseline", () => {
   });
 
   it("keeps Reader Mode paragraphs separate", () => {
-    expect(splitStoryParagraphs("ย่อหน้าแรก\n\nย่อหน้าที่สอง\n\nย่อหน้าที่สาม")).toEqual(["ย่อหน้าแรก", "ย่อหน้าที่สอง", "ย่อหน้าที่สาม"]);
+    expect(splitStoryParagraphs("ย่อหน้าเรื่องแรก\n\nย่อหน้าที่สอง\n\nย่อหน้าที่สาม")).toEqual(["ย่อหน้าเรื่องแรก", "ย่อหน้าที่สอง", "ย่อหน้าที่สาม"]);
   });
 });

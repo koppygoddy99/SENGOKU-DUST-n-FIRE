@@ -3,7 +3,7 @@ import { invokeLLM } from "./_core/llm";
 import { sengokuSocialFacts, type SengokuSocialFact } from "../shared/sengokuSocialFacts";
 
 const languageSchema = z.enum(["en", "th"]);
-const axisSchema = z.enum(["body", "hand", "wit", "mind", "heart"]);
+const statSchema = z.enum(["body", "hand", "wit", "mind", "heart"]);
 const toneSchema = z.enum(["navy", "teal", "vermilion", "ochre"]);
 const historicalStatusSchema = z.enum(["fact-supported", "contextual-play", "campaign-fiction", "insufficient-evidence"]);
 const GM_RESPONSE_TIMEOUT_MS = 45_000;
@@ -24,7 +24,7 @@ export function withGMResponseTimeout<T>(operation: (signal: AbortSignal) => Pro
 
 const contextSchema = z.object({
   campaign: z.object({ title: z.string().max(120), year: z.number().int().min(1454).max(1616), season: z.string().max(20), region: z.string().max(80), location: z.string().max(160), warShadow: z.number().int().min(0).max(6), day: z.number().int().min(1).max(366) }),
-  character: z.object({ name: z.string().max(100), occupation: z.string().max(120), origin: z.string().max(240), strengths: z.string().max(240), weakness: z.string().max(240), attributes: z.record(axisSchema, z.number().int().min(0).max(6)), masteries: z.array(z.object({ name: z.string().max(100), level: z.number().int().min(0).max(3), source: z.string().max(180) })).max(10) }),
+  character: z.object({ name: z.string().max(100), occupation: z.string().max(120), origin: z.string().max(240), strengths: z.string().max(240), weakness: z.string().max(240), attributes: z.record(statSchema, z.number().int().min(0).max(6)), masteries: z.array(z.object({ name: z.string().max(100), level: z.number().int().min(0).max(3), source: z.string().max(180) })).max(10) }),
   currentScene: z.object({ title: z.string().max(160), location: z.string().max(160), summary: z.string().max(4000), pressure: z.string().max(300), declaredChoices: z.array(z.string().max(180)).max(6) }),
   activeMission: z.object({ title: z.string().max(160), giver: z.string().max(120), objective: z.string().max(500), deadline: z.string().max(160), reward: z.string().max(300) }).optional(),
   socialState: z.object({ honor: z.number().int().min(0).max(6), influence: z.number().int().min(0).max(6), stain: z.number().int().min(0).max(6), rumors: z.array(z.string().max(200)).max(5), oaths: z.array(z.string().max(200)).max(5), debts: z.array(z.string().max(200)).max(5) }),
@@ -41,7 +41,7 @@ export const resolveInputSchema = z.object({
 
 const analyzeResultSchema = z.object({
   intentSummary: z.string().min(2).max(260),
-  axis: axisSchema,
+  stat: statSchema,
   suggestedMastery: z.string().max(100).nullable(),
   difficulty: z.number().int().min(5).max(30),
   contextBonus: z.number().int().min(0).max(2),
@@ -68,9 +68,9 @@ const analyzeOutputSchema = {
   schema: {
     type: "object", additionalProperties: false,
     properties: {
-      intentSummary: { type: "string" }, axis: { type: "string", enum: ["body", "hand", "wit", "mind", "heart"] }, suggestedMastery: { type: ["string", "null"] }, difficulty: { type: "integer" }, contextBonus: { type: "integer" }, contextReason: { type: "string" }, risk: { type: "string" }, confirmation: { type: "string" }, historicalFence: { type: "string" }, historicalStatus: { type: "string", enum: ["fact-supported", "contextual-play", "campaign-fiction", "insufficient-evidence"] },
+      intentSummary: { type: "string" }, stat: { type: "string", enum: ["body", "hand", "wit", "mind", "heart"] }, suggestedMastery: { type: ["string", "null"] }, difficulty: { type: "integer" }, contextBonus: { type: "integer" }, contextReason: { type: "string" }, risk: { type: "string" }, confirmation: { type: "string" }, historicalFence: { type: "string" }, historicalStatus: { type: "string", enum: ["fact-supported", "contextual-play", "campaign-fiction", "insufficient-evidence"] },
     },
-    required: ["intentSummary", "axis", "suggestedMastery", "difficulty", "contextBonus", "contextReason", "risk", "confirmation", "historicalFence", "historicalStatus"],
+    required: ["intentSummary", "stat", "suggestedMastery", "difficulty", "contextBonus", "contextReason", "risk", "confirmation", "historicalFence", "historicalStatus"],
   },
 } as const;
 
@@ -88,7 +88,7 @@ const resolveOutputSchema = {
 
 const systemRules = `You are the AI Game Master for Dust & Fire: Sengoku Stories, an original historical-fiction tabletop role-playing game.
 You interpret player intent and narrate consequences; you never roll dice, change player resources, invent bonuses above +2, or override the deterministic 2d12 engine.
-The five axes are exactly: body (Prowess), hand (Craft), wit (Instinct), mind (Judgment), heart (Resolve). Recommend only these DN bands: DN14 for a meaningful attempt with ordinary stakes; DN18 for a guarded obstacle, direct danger, or an illicit act that will leave a trace; DN22 only for a compounded crisis where an illicit act meets a guarded obstacle and the character has no relevant mastery or prepared tool. Do not recommend DN10 for a declared action that reaches the roll screen. The client rounds any number to a canonical tier.
+The five stats are exactly: body (Prowess), hand (Craft), wit (Instinct), mind (Judgment), heart (Resolve). Recommend only these DN bands: DN14 for a meaningful attempt with ordinary stakes; DN18 for a guarded obstacle, direct danger, or an illicit act that will leave a trace; DN22 only for a compounded crisis where an illicit act meets a guarded obstacle and the character has no relevant mastery or prepared tool. Do not recommend DN10 for a declared action that reaches the roll screen. The client rounds any number to a canonical tier.
 For action analysis, be concise. For resolved narration, write a complete, vivid scene rather than a summary, a moral, or a generic transition. Keep fictional NPCs and events clearly fictional. Never assert invented history as fact. You will receive a Historical Brief selected from curated fact cards. Use it only within its stated era, region, and confidence boundary. Do not turn a structural fact into a universal law, do not invent a historical event, and label campaign invention or insufficient evidence in historicalFence. Set historicalStatus exactly as follows: fact-supported only for a specific statement directly supported by the supplied Brief; contextual-play when a structural fact informs a fictional scene; campaign-fiction when the scene detail is invented for the campaign; insufficient-evidence when a requested historical detail exceeds the supplied Brief.
 Respect the user's language selection. In Thai, use natural Thai with a Sengoku-war chronicle tone, not royal language. In English, use precise literary English. For suggestedMastery, provide only the exact mastery name from the supplied character data, or null; never put an explanation in that field. Output only JSON matching the schema.`;
 
@@ -111,10 +111,12 @@ function normalizeAnalysisCandidate(value: unknown) {
     const number = typeof candidate[field] === "number" && Number.isFinite(candidate[field]) ? candidate[field] : fallback;
     return Math.max(minimum, Math.min(maximum, Math.round(number)));
   };
-  const axis = typeof candidate.axis === "string" && ["body", "hand", "wit", "mind", "heart"].includes(candidate.axis) ? candidate.axis : "wit";
+  const legacyStat = typeof candidate.axis === "string" ? candidate.axis : undefined;
+  const statCandidate = typeof candidate.stat === "string" ? candidate.stat : legacyStat;
+  const stat = typeof statCandidate === "string" && ["body", "hand", "wit", "mind", "heart"].includes(statCandidate) ? statCandidate : "wit";
   return {
     ...candidate,
-    axis,
+    stat,
     difficulty: clampNumber("difficulty", 5, 30, 14),
     contextBonus: clampNumber("contextBonus", 0, 2, 0),
     intentSummary: truncate("intentSummary", 260),

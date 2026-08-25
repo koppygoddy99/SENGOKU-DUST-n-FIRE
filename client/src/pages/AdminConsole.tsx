@@ -17,7 +17,7 @@ type AdminTimelineFacts = { storage: string; reviewedYears: number[]; recordCoun
 type AdminOperationsFacts = { visitorAnalytics: { status: string; detail: string }; playerData: { status: string; detail: string }; controls: { status: string; detail: string } };
 
 const adminMenu: Array<{ id: AdminSection; icon: typeof Gauge; label: string; thai: string; path: string; folio: string }> = [
-  { id: "overview", icon: Gauge, label: "Office Overview", thai: "ภาพรวมสำนักงาน", path: "/admin", folio: "01" },
+  { id: "overview", icon: Gauge, label: "Office Overview", thai: "ภาพรวมการทำงาน", path: "/admin", folio: "01" },
   { id: "campaigns", icon: ArchiveRestore, label: "Campaign Boundaries", thai: "ขอบเขตแคมเปญ", path: "/admin/campaigns", folio: "02" },
   { id: "content", icon: BookMarked, label: "Historical Reference", thai: "หลักฐานและบริบท", path: "/admin/content", folio: "03" },
   { id: "operations", icon: Landmark, label: "Runtime & Fallbacks", thai: "การทำงานและทางสำรอง", path: "/admin/operations", folio: "04" },

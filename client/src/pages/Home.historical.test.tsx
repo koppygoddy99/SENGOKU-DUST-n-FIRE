@@ -11,7 +11,7 @@ function previewFor(status: (typeof statuses)[number]): RollPreview {
     action: "I show the rice ledger.",
     intent: "Buy time with the ledger.",
     method: "Present the document and wait for the clerk's reply.",
-    axis: "mind",
+    stat: "mind",
     contextBonus: 0,
     difficulty: 14,
     risks: ["A witness may remember your name."],
@@ -23,7 +23,7 @@ function previewFor(status: (typeof statuses)[number]): RollPreview {
 
 describe("historical boundary shown to the player", () => {
   it.each(statuses)("renders the %s status and fence in English", (status) => {
-    const html = renderToStaticMarkup(<RollPreviewPanel preview={previewFor(status)} language="en" momentum={0} spendMomentum={false} setSpendMomentum={() => undefined} onCancel={() => undefined} onResolve={() => undefined} isResolving={false} />);
+    const html = renderToStaticMarkup(<RollPreviewPanel preview={previewFor(status)} language="en" momentum={0} spendMomentum={false} setSpendMomentum={() => undefined} onCancel={() => undefined} onGrit={() => undefined} isResolving={false} />);
     expect(html).toContain("HISTORICAL BOUNDARY");
     expect(html).toContain(historicalStatusLabel(status, "en"));
     expect(html).toContain(`Fence for ${status}.`);

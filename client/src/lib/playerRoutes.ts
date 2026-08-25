@@ -57,7 +57,7 @@ export const REVIEW_SCREEN_MANIFEST: readonly ReviewScreen[] = [
   { page: "gear", reviewQuery: "gear", screenshotFile: "06-gear.png", pageTitle: "Carried Gear", seed: "saika-gear" },
   { page: "market", reviewQuery: "market", screenshotFile: "07-market.png", pageTitle: "This Market", seed: "saika-market" },
   { page: "services", reviewQuery: "services", screenshotFile: "08-services.png", pageTitle: "Services & Hands", seed: "saika-services" },
-  { page: "obligations", reviewQuery: "obligations", screenshotFile: "09-debts-favors.png", pageTitle: "Debts & Favors", seed: "saika-obligations" },
+  { page: "obligations", reviewQuery: "obligations", screenshotFile: "09-debts-favors.png", pageTitle: "Leverage", seed: "saika-obligations" },
   { page: "exchanges", reviewQuery: "exchanges", screenshotFile: "10-agreements-consequences.png", pageTitle: "Agreements & Consequences", seed: "saika-exchanges" },
   { page: "character", reviewQuery: "character", screenshotFile: "11-character.png", pageTitle: "Character Dossier", seed: "saika-character" },
   { page: "log", reviewQuery: "log", screenshotFile: "12-chronicle.png", pageTitle: "Chronicle", seed: "saika-chronicle", reader: "library" },

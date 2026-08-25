@@ -38,7 +38,7 @@ function authContext(): TrpcContext {
 describe("gm router", () => {
   it("serves structured analysis to an authenticated caller", async () => {
     mocks.getUserTrialCredits.mockResolvedValueOnce(50);
-    mocks.analyzeWithGM.mockResolvedValueOnce({ intentSummary: "Ask the clerk for time.", axis: "mind", suggestedMastery: null, difficulty: 14, contextBonus: 1, contextReason: "The ledger is visible.", risk: "The witness may remember you.", confirmation: "Show the ledger and ask.", historicalFence: "Fictional context." });
+    mocks.analyzeWithGM.mockResolvedValueOnce({ intentSummary: "Ask the clerk for time.", stat: "mind", suggestedMastery: null, difficulty: 14, contextBonus: 1, contextReason: "The ledger is visible.", risk: "The witness may remember you.", confirmation: "Show the ledger and ask.", historicalFence: "Fictional context." });
     const result = await appRouter.createCaller(authContext()).gm.analyze({ action: "I show the ledger and ask for time.", language: "en", context });
     expect(result.mode).toBe("ai");
     expect(result.difficulty).toBe(14);

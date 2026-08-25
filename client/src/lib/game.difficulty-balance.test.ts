@@ -62,7 +62,7 @@ describe("DN balance guardrails", () => {
     expect(boosted.dice).toEqual(record.dice);
     expect(boosted.id).toBe(record.id);
     expect(boosted.tick).toBe(record.tick);
-    expect(boosted.axis).toBe(record.axis);
+    expect(boosted.stat).toBe(record.stat);
     expect(boosted.mastery).toEqual(record.mastery);
     expect(boosted.contextBonus).toBe(record.contextBonus);
     expect(boosted.total).toBe(record.total + 2);

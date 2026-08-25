@@ -10,7 +10,7 @@ describe("ChronicleView ledger context", () => {
     const html = renderToStaticMarkup(<ChronicleView game={game} language="en" readerMode={false} setReaderMode={vi.fn()} />);
 
     expect(html).toContain("CAMPAIGN FOLIO");
-    expect(html).toContain("LEAF 1");
+    expect(html).toContain("PAGE 1");
     expect(html).toContain("Day 1");
     expect(html).toContain("ACTIVE THREAD");
     expect(html).toContain(game.missions[0].title);

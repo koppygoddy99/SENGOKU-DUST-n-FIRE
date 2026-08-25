@@ -44,12 +44,12 @@ for (const template of STARTER_TEMPLATES) {
 }
 
 const preview = parseAction("ข้าจะใช้บัญชีผลผลิตขอเวลาเจรจากับเสมียน", state);
-assert.equal(preview.axis, "mind", "ledger action selects the judgment axis");
+assert.equal(preview.stat, "mind", "ledger action selects the judgment stat");
 assert.ok(preview.difficulty >= 10, "a valid difficulty is created");
 
 const record = resolveRoll(preview, state, false);
 assert.equal(record.dice.length, 2, "the engine rolls exactly 2d12");
-assert.equal(record.total, record.dice[0] + record.dice[1] + state.character.attributes[preview.axis] + (preview.mastery?.level ?? 0) + preview.contextBonus, "roll total follows the canonical formula");
+assert.equal(record.total, record.dice[0] + record.dice[1] + state.character.attributes[preview.stat] + (preview.mastery?.level ?? 0) + preview.contextBonus, "roll total follows the canonical formula");
 
 const afterRoll = applyRoll(state, record);
 assert.equal(afterRoll.rolls.length, 1, "resolved rolls are persisted");

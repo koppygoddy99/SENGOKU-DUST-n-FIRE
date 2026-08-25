@@ -20,9 +20,9 @@ describe("StoryMap", () => {
 
     expect(html).toContain("CAMPAIGN COMMAND");
     expect(html).toContain(game.currentScene.location);
-    expect(html).toContain(game.missions[0].title);
+    expect(html).toContain("An Answer Beneath the Cell");
     expect(html).toContain("LAST ROLL");
-    expect(html).toContain("NATIONAL MAP");
+    expect(html).toContain("story-map-card--map");
     expect(html).toContain("Izumi Province");
     expect(html).toContain("Current position");
     expect(html).toContain("Continue scene");
@@ -32,7 +32,7 @@ describe("StoryMap", () => {
     expect(html).not.toContain("PROVINCE MAP");
     expect(html).not.toContain("territorial control");
     expect(html).not.toContain("national-context-map__land");
-    expect(html).toContain("WORLD STATE PULSE");
+    expect(html).toContain("WORLD CURRENTS");
   });
 
   it("uses Thai labels without manufacturing a different campaign state", () => {

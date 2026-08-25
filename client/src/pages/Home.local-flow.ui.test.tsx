@@ -77,7 +77,7 @@ describe("UI Preview click flow", () => {
     render(<Home />);
     openMore("Load Game");
     fireEvent.click(screen.getAllByRole("button", { name: "LOAD" })[1]);
-    expect(screen.getAllByText(/PLAY SCENE · LEAF 1/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/PLAY SCENE · PAGE 1/i).length).toBeGreaterThan(0);
     openChronicle("Chronicle");
     expect(screen.getAllByText("คืนที่เมืองซาไกตื่น").length).toBeGreaterThan(0);
   });
@@ -109,7 +109,7 @@ describe("UI Preview click flow", () => {
     fireEvent.click(screen.getByRole("button", { name: /roll 2d12/i }));
     settleDiceStage();
     fireEvent.click(screen.getByRole("button", { name: /record this result/i }));
-    expect(screen.getAllByText(/LEAF 1/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/PAGE 1/i).length).toBeGreaterThan(0);
     expect(mocks.gmAnalyzeMutate).not.toHaveBeenCalled();
     expect(mocks.gmResolveMutate).not.toHaveBeenCalled();
     expect(mocks.spendCreditMutate).not.toHaveBeenCalled();
@@ -118,7 +118,7 @@ describe("UI Preview click flow", () => {
     fireEvent.click(screen.getAllByRole("button", { name: "SAVE HERE" })[0]);
     openMore("Load Game");
     fireEvent.click(screen.getAllByRole("button", { name: "LOAD" })[1]);
-    expect(screen.getByText(/PLAY SCENE · LEAF/i)).toBeTruthy();
+    expect(screen.getByText(/PLAY SCENE · PAGE/i)).toBeTruthy();
     vi.useRealTimers();
   });
 
@@ -193,16 +193,16 @@ describe("UI Preview click flow", () => {
   it("routes the Prepare group through gear, market, services, obligations, and exchange history", () => {
     render(<Home />);
     fireEvent.click(screen.getByRole("button", { name: "Prepare" }));
-    ["Carried Gear", "This Market", "Services & Hands", "Debts & Favors", "Agreements & Consequences"].forEach((item) => expect(screen.getByRole("button", { name: item })).toBeTruthy());
+    ["Carried Gear", "This Market", "Services & Hands", "Leverage", "Bonds"].forEach((item) => expect(screen.getByRole("button", { name: item })).toBeTruthy());
     fireEvent.click(screen.getByRole("button", { name: "Carried Gear" }));
     expect(screen.getByText("Carried slots")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "This Market" }));
-    expect(screen.getAllByText(/Why this price:/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/Market Factor:/i).length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole("button", { name: "Services & Hands" }));
     expect(screen.getByText("คนส่งสารท่าเรือ")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Debts & Favors" }));
+    fireEvent.click(screen.getAllByRole("button", { name: "Leverage" })[0]);
     expect(screen.getByText("หนี้ชีวิตจากการลากซาเนฟุยุขึ้นจากน้ำ")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Agreements & Consequences" }));
+    fireEvent.click(screen.getByRole("button", { name: "Bonds" }));
     expect(screen.getByText("กันทาโร่ลากซาเนฟุยุขึ้นจากน้ำ")).toBeTruthy();
   });
 
@@ -253,7 +253,7 @@ describe("UI Preview click flow", () => {
 
   it("falls back to Local Trial without spending a credit when an AI GM resolution fails", () => {
     vi.useFakeTimers();
-    mocks.gmAnalyzeMutate.mockImplementation((_input, callbacks) => callbacks.onSuccess({ intentSummary: "Show the rice ledger", suggestedMastery: null, axis: "mind", contextBonus: 0, contextReason: "The clerk can inspect the ledger", difficulty: 14, risk: "The clerk may remember the request", confirmation: "Show the ledger before the clerk", historicalStatus: "campaign-fiction", historicalFence: "This is campaign fiction." }));
+    mocks.gmAnalyzeMutate.mockImplementation((_input, callbacks) => callbacks.onSuccess({ intentSummary: "Show the rice ledger", suggestedMastery: null, stat: "mind", contextBonus: 0, contextReason: "The clerk can inspect the ledger", difficulty: 14, risk: "The clerk may remember the request", confirmation: "Show the ledger before the clerk", historicalStatus: "campaign-fiction", historicalFence: "This is campaign fiction." }));
     mocks.gmResolveMutate.mockImplementation((_input, callbacks) => callbacks.onError(new Error("provider exhausted")));
     render(<Home forceUiPreviewMode={false} />);
     fireEvent.click(screen.getByRole("button", { name: "Play Scene" }));
@@ -263,7 +263,7 @@ describe("UI Preview click flow", () => {
     settleDiceStage();
     fireEvent.click(screen.getByRole("button", { name: /record this result/i }));
     expect(screen.getAllByText(/AI unavailable/i).length).toBeGreaterThan(0);
-    expect(screen.getAllByText(/LEAF 1/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/PAGE 1/i).length).toBeGreaterThan(0);
     expect(mocks.spendCreditMutate).not.toHaveBeenCalled();
     const saved = JSON.parse(window.localStorage.getItem("dust-fire-local-game-v3-saika") ?? "{}");
     expect(saved.game.tick).toBe(2);

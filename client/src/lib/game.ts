@@ -4,21 +4,21 @@
  */
 
 export type Season = "Spring" | "Summer" | "Autumn" | "Winter";
-export type AxisId = "body" | "hand" | "wit" | "mind" | "heart";
+export type StatId = "body" | "hand" | "wit" | "mind" | "heart";
 export type Outcome = "decisive_success" | "success_with_cost" | "partial_success" | "failure_with_consequence";
 export type MissionState = "offered" | "active" | "resolved" | "failed";
 export type ItemKind = "immediate" | "reserve" | "equipment" | "document" | "status" | "bond";
 export type MemoryKind = "news" | "witness" | "debt" | "favor" | "oath" | "stain" | "injury" | "market_change" | "community_change" | "actor_relation";
 
-export const AXES: { id: AxisId; en: string; th: string; hint: string }[] = [
-  { id: "body", en: "Prowess", th: "พละกำลัง", hint: "แรง อึด แบก ฝ่าอุปสรรค" },
-  { id: "hand", en: "Craft", th: "ฝีมือ", hint: "อาวุธ งานช่าง การลงมือแม่น" },
+export const STATS: { id: StatId; en: string; th: string; hint: string }[] = [
+  { id: "body", en: "strength", th: "พลังกาย", hint: "แรง อึด แบก ฝ่าอุปสรรค" },
+  { id: "hand", en: "Finesse", th: "ฝีมือ", hint: "อาวุธ งานช่าง การลงมือแม่น" },
   { id: "wit", en: "Instinct", th: "ไหวพริบ", hint: "หลบ ลวง สังเกต อ่านจังหวะ" },
-  { id: "mind", en: "Judgment", th: "ปัญญา", hint: "เอกสาร ข่าว แผน และเหตุผล" },
-  { id: "heart", en: "Resolve", th: "พลังใจ", hint: "ยืนหยัด คำสัตย์ และแรงกดดัน" },
+  { id: "mind", en: "Insight", th: "ปัญญา", hint: "เอกสาร ข่าว แผน และเหตุผล" },
+  { id: "heart", en: "Grit", th: "ใจสู้", hint: "ยืนหยัด คำสัตย์ และแรงกดดัน" },
 ];
 
-export type Attributes = Record<AxisId, number>;
+export type Attributes = Record<StatId, number>;
 
 export type Mastery = {
   id: string;
@@ -74,7 +74,7 @@ export type InventoryItem = {
   slots: number;
   description: string;
   functions: ("unlock" | "bonus" | "exchange")[];
-  bonus?: { axis?: AxisId; value: number; tags: string[] };
+  bonus?: { stat?: StatId; value: number; tags: string[] };
   condition: "usable" | "used" | "damaged" | "evidence";
   location?: "carried" | "safehouse" | "stored" | "hidden";
   ownership?: "owned" | "borrowed" | "held_for_other" | "disputed";
@@ -228,7 +228,7 @@ export type RollPreview = {
   isRiskOnly?: boolean;
   intent: string;
   method: string;
-  axis: AxisId;
+  stat: StatId;
   mastery?: Mastery;
   contextBonus: number;
   contextReason?: string;
@@ -333,12 +333,12 @@ export function bonusForMasteryRank(rank: number) {
 }
 
 export function masteryTierForRank(rank: number) {
-  if (rank >= 20) return { id: "mastered", en: "Mastered", th: "ถึงขีดสุด", minimumDifficulty: 0, bonus: 5, note: "ชื่อและลายมือของเจ้าเปลี่ยนวิธีที่โลกตอบกลับ" };
-  if (rank >= 17) return { id: "renowned", en: "Renowned", th: "ชื่อเสียงเป็นเดิมพัน", minimumDifficulty: 22, bonus: 5, note: "ต้องเจองานที่เดิมพันสูงจึงจะขัดเกลาต่อได้" };
-  if (rank >= 13) return { id: "proven", en: "Proven", th: "ผ่านงานหนัก", minimumDifficulty: 18, bonus: 4, note: "งานธรรมดาไม่ทำให้ฝีมือขยับอีกแล้ว" };
-  if (rank >= 9) return { id: "trusted", en: "Trusted", th: "คนเริ่มเรียกหา", minimumDifficulty: 14, bonus: 3, note: "เริ่มเติบโตจากงานที่มีคนและผลประโยชน์เกี่ยวข้อง" };
-  if (rank >= 5) return { id: "steady", en: "Steady Hand", th: "ชำนาญมือ", minimumDifficulty: 10, bonus: 2, note: "ฝึกจากงานที่มีผลจริง ไม่ใช่การลองซ้ำ" };
-  return { id: "learning", en: "Learning", th: "ตั้งหลัก", minimumDifficulty: 10, bonus: 1, note: "ทุกงานที่มีความเสี่ยงคือการตั้งมือ" };
+  if (rank >= 20) return { id: "mastered", en: "Mastered", th: "อาจารย์ที่เชี่ยวชาญ", minimumDifficulty: 0, bonus: 5, note: "ชื่อและลายมือของเจ้าเปลี่ยนวิธีที่โลกตอบกลับ" };
+  if (rank >= 17) return { id: "renowned", en: "Renowned", th: "มีชื่อเสียง", minimumDifficulty: 22, bonus: 5, note: "ต้องเจองานที่เดิมพันสูงจึงจะขัดเกลาต่อได้" };
+  if (rank >= 13) return { id: "proven", en: "Proven", th: "มีฝีมือไร้คนสงสัย", minimumDifficulty: 18, bonus: 4, note: "งานธรรมดาไม่ทำให้ฝีมือขยับอีกแล้ว" };
+  if (rank >= 9) return { id: "trusted", en: "Trusted", th: "เชื่อมือได้", minimumDifficulty: 14, bonus: 3, note: "เริ่มเติบโตจากงานที่มีคนและผลประโยชน์เกี่ยวข้อง" };
+  if (rank >= 5) return { id: "steady", en: "Steady Hand", th: "กำลังก้าวหน้า", minimumDifficulty: 10, bonus: 2, note: "ฝึกจากงานที่มีผลจริง ไม่ใช่การลองซ้ำ" };
+  return { id: "learning", en: "Learning", th: "มือใหม่", minimumDifficulty: 10, bonus: 1, note: "ทุกงานที่มีความเสี่ยงคือการตั้งมือ" };
 }
 
 export function rankForLegacyMasteryBonus(level: number) {
@@ -372,43 +372,43 @@ export const RELATIONSHIP_QUESTIONS = [
 export const STARTER_TEMPLATES: StarterTemplate[] = [
   {
     id: "kokujin", label: "โคคูจิน / เจ้าเมืองชายแดน", short: "ผู้ถือสิทธิ์ในที่ดินที่ถูกอำนาจใหญ่บีบให้เลือกข้าง", start: "ชินาโนะหรือมิกาวะ", pressure: "คำรับรองสองฝ่ายและผลผลิตของบ้าน", compatibleRegions: ["Mikawa", "Shinano"],
-    attributes: { body: 1, hand: 1, wit: 2, mind: 3, heart: 3 }, masteries: [mastery("land", "ที่ดินและผลผลิต", 2, "หน้าที่ของบ้าน", ["rice", "village"]), mastery("kin", "เครือญาติ", 2, "บ้านและผู้พึ่งพา", ["family", "negotiation"]), mastery("council", "การประชุม", 1, "เจ้าภาพการเจรจา", ["politics"])], inventory: [item("seal", "ตรารับรองของบ้าน", "document", "เอกสารที่เปิดการพูดคุยต่อหน้าผู้คุม", 1, ["unlock", "bonus"], { axis: "mind", value: 1, tags: ["document", "authority"] })], mission: { issuer: "เสมียนของบ้านใหญ่", issuerType: "samurai", title: "คำรับรองที่ไม่มีฝ่ายสะอาด", request: "ตัดสินใจว่าจะส่งข้าวและแรงงานให้ผู้ใดก่อนเส้นตาย", pressure: "บ้านสองฝ่ายส่งคนมารอคำตอบ", deadline: "ก่อนค่ำ", reward: "ใบผ่านชั่วคราวและคำคุ้มครอง", risk: "ชื่อของบ้านจะถูกบันทึก", options: ["ส่งข้าว", "ต่อรองเวลา", "ใช้เครือญาติ"] }
+    attributes: { body: 1, hand: 1, wit: 2, mind: 3, heart: 3 }, masteries: [mastery("land", "ที่ดินและผลผลิต", 2, "หน้าที่ของบ้าน", ["rice", "village"]), mastery("kin", "เครือญาติ", 2, "บ้านและผู้พึ่งพา", ["family", "negotiation"]), mastery("council", "การประชุม", 1, "เจ้าภาพการเจรจา", ["politics"])], inventory: [item("seal", "ตรารับรองของบ้าน", "document", "เอกสารที่เปิดการพูดคุยต่อหน้าผู้คุม", 1, ["unlock", "bonus"], { stat: "mind", value: 1, tags: ["document", "authority"] })], mission: { issuer: "เสมียนของบ้านใหญ่", issuerType: "samurai", title: "คำรับรองที่ไม่มีฝ่ายสะอาด", request: "ตัดสินใจว่าจะส่งข้าวและแรงงานให้ผู้ใดก่อนเส้นตาย", pressure: "บ้านสองฝ่ายส่งคนมารอคำตอบ", deadline: "ก่อนค่ำ", reward: "ใบผ่านชั่วคราวและคำคุ้มครอง", risk: "ชื่อของบ้านจะถูกบันทึก", options: ["ส่งข้าว", "ต่อรองเวลา", "ใช้เครือญาติ"] }
   },
   {
     id: "jizamurai", label: "จิซามูไร / ซามูไรชาวนา", short: "ผู้ถือที่ดินท้องถิ่นระหว่างชุมชนกับคำสั่งทหาร", start: "โอมิหรือโอวาริ", pressure: "ฤดูเก็บเกี่ยวปะทะการเกณฑ์แรงงาน", compatibleRegions: ["Omi", "Owari"],
-    attributes: { body: 3, hand: 1, wit: 1, mind: 3, heart: 2 }, masteries: [mastery("harvest", "ผลผลิตและคลอง", 2, "ดูแลที่ดิน", ["rice", "water"]), mastery("labor", "ระดมแรงงาน", 2, "คนในหมู่บ้าน", ["village", "leadership"]), mastery("oath", "รักษาคำมั่น", 1, "ชื่อของครอบครัว", ["oath"])], inventory: [item("harvest-ledger", "บัญชีผลผลิต", "document", "หลักฐานจำนวนข้าวและแรงงานของหมู่บ้าน", 1, ["unlock", "bonus"], { axis: "mind", value: 1, tags: ["ledger", "rice"] })], mission: { issuer: "ผู้ใหญ่บ้าน", issuerType: "commoner", title: "คนทำนากับคนถือหอก", request: "ช่วยกันแรงงานสำคัญไม่ให้ถูกเรียกออกไปก่อนเก็บเกี่ยว", pressure: "นายกองยืนยันคำสั่งเกณฑ์", deadline: "2 วัน", reward: "เสบียงและคำค้ำจากชุมชน", risk: "ขัดคำสั่งต่อหน้าพยาน", options: ["ยื่นบัญชี", "หาคนแทน", "ต่อรองข้าว"] }
+    attributes: { body: 3, hand: 1, wit: 1, mind: 3, heart: 2 }, masteries: [mastery("harvest", "ผลผลิตและคลอง", 2, "ดูแลที่ดิน", ["rice", "water"]), mastery("labor", "ระดมแรงงาน", 2, "คนในหมู่บ้าน", ["village", "leadership"]), mastery("oath", "รักษาคำมั่น", 1, "ชื่อของครอบครัว", ["oath"])], inventory: [item("harvest-ledger", "บัญชีผลผลิต", "document", "หลักฐานจำนวนข้าวและแรงงานของหมู่บ้าน", 1, ["unlock", "bonus"], { stat: "mind", value: 1, tags: ["ledger", "rice"] })], mission: { issuer: "ผู้ใหญ่บ้าน", issuerType: "commoner", title: "คนทำนากับคนถือหอก", request: "ช่วยกันแรงงานสำคัญไม่ให้ถูกเรียกออกไปก่อนเก็บเกี่ยว", pressure: "นายกองยืนยันคำสั่งเกณฑ์", deadline: "2 วัน", reward: "เสบียงและคำค้ำจากชุมชน", risk: "ขัดคำสั่งต่อหน้าพยาน", options: ["ยื่นบัญชี", "หาคนแทน", "ต่อรองข้าว"] }
   },
   {
     id: "ronin", label: "โรนิน / ผู้ไร้นาย", short: "ผู้มีฝีมือแต่ไม่มีผู้ค้ำหรือรายได้แน่นอน", start: "ยามะชิโระหรือเซตสึ", pressure: "ด่านถามว่าเจ้าเป็นคนของใคร", compatibleRegions: ["Yamashiro", "Settsu"],
-    attributes: { body: 2, hand: 3, wit: 3, mind: 1, heart: 2 }, masteries: [mastery("blade", "อาวุธที่ถนัด", 2, "อดีตการรับใช้", ["fight", "weapon"]), mastery("road", "เดินทางและอ่านภัย", 2, "ชีวิตบนถนน", ["travel", "route"]), mastery("survival", "เอาตัวรอด", 1, "ไม่มีบ้านค้ำ", ["escape", "camp"])], inventory: [item("travel-pass", "หนังสือผ่านทางเก่า", "document", "เอกสารที่ยังพอใช้ต่อรองได้ แต่ถูกตรวจละเอียด", 1, ["unlock"], { axis: "mind", value: 1, tags: ["gate", "travel"] })], mission: { issuer: "เจ้าของขบวนสินค้า", issuerType: "merchant", title: "ค่าจ้างระหว่างทาง", request: "พาคนส่งสารข้ามด่านก่อนผู้คุมเปลี่ยนเวร", pressure: "เอกสารของผู้ว่าจ้างไม่สมบูรณ์", deadline: "ก่อนด่านปิด", reward: "ค่าจ้างและผู้ค้ำชั่วคราว", risk: "ผู้คุมจดชื่อและอาวุธ", options: ["คุ้มกันตรง", "ลอบผ่าน", "ต่อรองค่าผ่านทาง"] }
+    attributes: { body: 2, hand: 3, wit: 3, mind: 1, heart: 2 }, masteries: [mastery("blade", "อาวุธที่ถนัด", 2, "อดีตการรับใช้", ["fight", "weapon"]), mastery("road", "เดินทางและอ่านภัย", 2, "ชีวิตบนถนน", ["travel", "route"]), mastery("survival", "เอาตัวรอด", 1, "ไม่มีบ้านค้ำ", ["escape", "camp"])], inventory: [item("travel-pass", "หนังสือผ่านทางเก่า", "document", "เอกสารที่ยังพอใช้ต่อรองได้ แต่ถูกตรวจละเอียด", 1, ["unlock"], { stat: "mind", value: 1, tags: ["gate", "travel"] })], mission: { issuer: "เจ้าของขบวนสินค้า", issuerType: "merchant", title: "ค่าจ้างระหว่างทาง", request: "พาคนส่งสารข้ามด่านก่อนผู้คุมเปลี่ยนเวร", pressure: "เอกสารของผู้ว่าจ้างไม่สมบูรณ์", deadline: "ก่อนด่านปิด", reward: "ค่าจ้างและผู้ค้ำชั่วคราว", risk: "ผู้คุมจดชื่อและอาวุธ", options: ["คุ้มกันตรง", "ลอบผ่าน", "ต่อรองค่าผ่านทาง"] }
   },
   {
     id: "sakai_merchant", label: "พ่อค้าเมืองซะไก", short: "นายหน้าการค้าที่มีเครดิต ข่าว และคู่แข่ง", start: "ซะไก แคว้นอิซุมิ", pressure: "หนี้ สินค้าควบคุม และตลาดที่ถูกจับตา", compatibleRegions: ["Sakai", "Izumi", "Settsu"],
-    attributes: { body: 1, hand: 1, wit: 2, mind: 3, heart: 2 }, masteries: [mastery("accounting", "บัญชีและเครดิต", 3, "งานค้า", ["ledger", "credit", "market"]), mastery("route-deal", "ต่อรองเส้นทาง", 2, "นายหน้า", ["route", "negotiation"]), mastery("buyer", "อ่านผู้ซื้อ", 1, "ตลาดเมืองท่า", ["market", "wit"])], inventory: [item("merchant-ledger", "บัญชีหนี้ของร้าน", "document", "บันทึกยอดค้างที่มีค่า แต่ทำให้คนอยากแย่งไป", 1, ["unlock", "bonus"], { axis: "mind", value: 1, tags: ["ledger", "credit"] }), item("gift-cloth", "ผ้าเนื้อดี", "status", "ของกำนัลที่ช่วยเปิดบทสนทนา", 1, ["exchange"], { value: 1, tags: ["gift", "negotiation"] })], mission: { issuer: "นายหน้าท่าเรือ", issuerType: "merchant", title: "สินค้าใต้ตรา", request: "ตรวจที่มาของสินค้าและหาทางส่งออกก่อนผู้คุมตลาดมาถึง", pressure: "คู่แข่งกำลังชี้ว่าของเจ้าไม่มีสิทธิ์ผ่าน", deadline: "ก่อนเรือออก", reward: "เครดิตและสิทธิ์ตลาด", risk: "หนี้ใหม่หรือคู่แข่งจำชื่อ", options: ["เปิดบัญชี", "จ่ายสินบน", "เปลี่ยนเส้นทาง"] }
+    attributes: { body: 1, hand: 1, wit: 2, mind: 3, heart: 2 }, masteries: [mastery("accounting", "บัญชีและเครดิต", 3, "งานค้า", ["ledger", "credit", "market"]), mastery("route-deal", "ต่อรองเส้นทาง", 2, "นายหน้า", ["route", "negotiation"]), mastery("buyer", "อ่านผู้ซื้อ", 1, "ตลาดเมืองท่า", ["market", "wit"])], inventory: [item("merchant-ledger", "บัญชีหนี้ของร้าน", "document", "บันทึกยอดค้างที่มีค่า แต่ทำให้คนอยากแย่งไป", 1, ["unlock", "bonus"], { stat: "mind", value: 1, tags: ["ledger", "credit"] }), item("gift-cloth", "ผ้าเนื้อดี", "status", "ของกำนัลที่ช่วยเปิดบทสนทนา", 1, ["exchange"], { value: 1, tags: ["gift", "negotiation"] })], mission: { issuer: "นายหน้าท่าเรือ", issuerType: "merchant", title: "สินค้าใต้ตรา", request: "ตรวจที่มาของสินค้าและหาทางส่งออกก่อนผู้คุมตลาดมาถึง", pressure: "คู่แข่งกำลังชี้ว่าของเจ้าไม่มีสิทธิ์ผ่าน", deadline: "ก่อนเรือออก", reward: "เครดิตและสิทธิ์ตลาด", risk: "หนี้ใหม่หรือคู่แข่งจำชื่อ", options: ["เปิดบัญชี", "จ่ายสินบน", "เปลี่ยนเส้นทาง"] }
   },
   {
     id: "arms_craftsworker", label: "ช่างยุทโธปกรณ์ / ช่างปืนไฟ", short: "ช่างที่ถูกต้องการตัวเพราะงานฝีมือและความลับ", start: "คุนิโทโมะหรือคิอิ", pressure: "คำสั่งผลิต วัตถุดิบ และร่องรอยงาน", compatibleRegions: ["Omi", "Kii"],
-    attributes: { body: 2, hand: 4, wit: 1, mind: 3, heart: 2 }, masteries: [mastery("metal", "โลหะและกลไก", 3, "งานช่าง", ["repair", "metal"]), mastery("inspection", "ตรวจร่องรอย", 2, "โรงช่าง", ["evidence", "inspection"]), mastery("supply", "จัดหาวัตถุดิบ", 1, "เครือข่ายช่าง", ["market", "materials"])], inventory: [item("tool-roll", "เครื่องมือช่าง", "equipment", "เครื่องมือสำหรับตรวจและซ่อมของละเอียด", 2, ["bonus"], { axis: "hand", value: 1, tags: ["repair", "craft"] })], mission: { issuer: "หัวหน้าโรงช่าง", issuerType: "samurai", title: "ลำกล้องที่มีรอยบิ่น", request: "ตรวจอาวุธที่ถูกกล่าวหาว่าถูกส่งให้คนผิดฝ่าย", pressure: "ผู้คุมคลังต้องการชื่อผู้รับผิด", deadline: "ภายในคืนนี้", reward: "วัสดุและสิทธิ์ใช้โรงช่าง", risk: "ชื่อถูกโยงกับการผลิต", options: ["ตรวจของ", "แก้รอย", "เปิดบัญชีคลัง"] }
+    attributes: { body: 2, hand: 4, wit: 1, mind: 3, heart: 2 }, masteries: [mastery("metal", "โลหะและกลไก", 3, "งานช่าง", ["repair", "metal"]), mastery("inspection", "ตรวจร่องรอย", 2, "โรงช่าง", ["evidence", "inspection"]), mastery("supply", "จัดหาวัตถุดิบ", 1, "เครือข่ายช่าง", ["market", "materials"])], inventory: [item("tool-roll", "เครื่องมือช่าง", "equipment", "เครื่องมือสำหรับตรวจและซ่อมของละเอียด", 2, ["bonus"], { stat: "hand", value: 1, tags: ["repair", "craft"] })], mission: { issuer: "หัวหน้าโรงช่าง", issuerType: "samurai", title: "ลำกล้องที่มีรอยบิ่น", request: "ตรวจอาวุธที่ถูกกล่าวหาว่าถูกส่งให้คนผิดฝ่าย", pressure: "ผู้คุมคลังต้องการชื่อผู้รับผิด", deadline: "ภายในคืนนี้", reward: "วัสดุและสิทธิ์ใช้โรงช่าง", risk: "ชื่อถูกโยงกับการผลิต", options: ["ตรวจของ", "แก้รอย", "เปิดบัญชีคลัง"] }
   },
   {
     id: "shinobi_network_runner", label: "ผู้สืบข่าวจากเครือข่าย", short: "คนเดินข่าวและนำทาง ไม่ใช่นักฆ่าอิสระ", start: "อิกะหรือโคงะ", pressure: "ความไว้ใจ เอกสารผ่านด่าน และคำสั่งขัดชุมชน", compatibleRegions: ["Iga", "Koga"],
-    attributes: { body: 1, hand: 1, wit: 4, mind: 3, heart: 2 }, masteries: [mastery("routes", "เส้นทางและสัญญาณ", 3, "เครือข่ายท้องถิ่น", ["route", "travel", "secret"]), mastery("stealth", "ซ่อนตัว", 2, "งานนำทาง", ["hide", "wit"]), mastery("rumor", "ข่าวและการอ่านคน", 2, "ผู้ส่งสาร", ["news", "social"])], inventory: [item("route-cord", "เชือกสัญญาณ", "bond", "เชือกถักที่ใช้ยืนยันคนในเครือข่าย", 1, ["unlock"], { axis: "wit", value: 1, tags: ["network", "route"] })], mission: { issuer: "คนส่งสารของหมู่บ้าน", issuerType: "commoner", title: "ข่าวที่ไม่ควรถูกอ่าน", request: "นำข่าวผ่านด่านโดยไม่ให้ผู้คุมยึดเอกสาร", pressure: "คำสั่งในข่าวอาจทำร้ายชุมชน", deadline: "ก่อนรุ่งเช้า", reward: "ข่าวและทางลัด", risk: "ถูกสงสัยว่าเป็นสาย", options: ["ลอบผ่าน", "ใช้คนกลาง", "ทำสำเนา"] }
+    attributes: { body: 1, hand: 1, wit: 4, mind: 3, heart: 2 }, masteries: [mastery("routes", "เส้นทางและสัญญาณ", 3, "เครือข่ายท้องถิ่น", ["route", "travel", "secret"]), mastery("stealth", "ซ่อนตัว", 2, "งานนำทาง", ["hide", "wit"]), mastery("rumor", "ข่าวและการอ่านคน", 2, "ผู้ส่งสาร", ["news", "social"])], inventory: [item("route-cord", "เชือกสัญญาณ", "bond", "เชือกถักที่ใช้ยืนยันคนในเครือข่าย", 1, ["unlock"], { stat: "wit", value: 1, tags: ["network", "route"] })], mission: { issuer: "คนส่งสารของหมู่บ้าน", issuerType: "commoner", title: "ข่าวที่ไม่ควรถูกอ่าน", request: "นำข่าวผ่านด่านโดยไม่ให้ผู้คุมยึดเอกสาร", pressure: "คำสั่งในข่าวอาจทำร้ายชุมชน", deadline: "ก่อนรุ่งเช้า", reward: "ข่าวและทางลัด", risk: "ถูกสงสัยว่าเป็นสาย", options: ["ลอบผ่าน", "ใช้คนกลาง", "ทำสำเนา"] }
   },
   {
     id: "temple_protector", label: "ผู้คุ้มกัน寺社 / คนของวัด", short: "ผู้ประสานงานวัด ผู้ลี้ภัย เอกสาร และคำขอคุ้มครอง", start: "คากะ ยามาโตะ หรือคิอิ", pressure: "ที่พักพิงกับความเป็นกลางทางการเมือง", compatibleRegions: ["Kaga", "Yamato", "Kii"],
-    attributes: { body: 1, hand: 1, wit: 2, mind: 3, heart: 4 }, masteries: [mastery("mediation", "ไกล่เกลี่ย", 2, "หน้าที่วัด", ["talk", "temple"]), mastery("script", "เอกสารและการคัดสำเนา", 2, "คลังบันทึก", ["document", "mind"]), mastery("refuge", "ดูแลผู้ลี้ภัย", 1, "เครือข่าย寺社", ["shelter", "community"])], inventory: [item("temple-letter", "จดหมายรับรองของวัด", "document", "เอกสารขอที่พักพิงและเปิดการเจรจา", 1, ["unlock", "bonus"], { axis: "heart", value: 1, tags: ["temple", "request"] })], mission: { issuer: "ผู้ดูแลวัด", issuerType: "temple", title: "คนที่ขอหลบใต้ชายคา", request: "หาทางให้ครอบครัวผู้ลี้ภัยผ่านด่านโดยไม่ทำให้วัดถูกกล่าวหาว่าเลือกข้าง", pressure: "ผู้คุมขอรายชื่อคนพัก", deadline: "ภายในวัน", reward: "ที่พักและข่าวจากวัด", risk: "วัดมีหนี้หรือถูกจับตา", options: ["ไกล่เกลี่ย", "ยื่นจดหมาย", "พาออกทางน้ำ"] }
+    attributes: { body: 1, hand: 1, wit: 2, mind: 3, heart: 4 }, masteries: [mastery("mediation", "ไกล่เกลี่ย", 2, "หน้าที่วัด", ["talk", "temple"]), mastery("script", "เอกสารและการคัดสำเนา", 2, "คลังบันทึก", ["document", "mind"]), mastery("refuge", "ดูแลผู้ลี้ภัย", 1, "เครือข่าย寺社", ["shelter", "community"])], inventory: [item("temple-letter", "จดหมายรับรองของวัด", "document", "เอกสารขอที่พักพิงและเปิดการเจรจา", 1, ["unlock", "bonus"], { stat: "heart", value: 1, tags: ["temple", "request"] })], mission: { issuer: "ผู้ดูแลวัด", issuerType: "temple", title: "คนที่ขอหลบใต้ชายคา", request: "หาทางให้ครอบครัวผู้ลี้ภัยผ่านด่านโดยไม่ทำให้วัดถูกกล่าวหาว่าเลือกข้าง", pressure: "ผู้คุมขอรายชื่อคนพัก", deadline: "ภายในวัน", reward: "ที่พักและข่าวจากวัด", risk: "วัดมีหนี้หรือถูกจับตา", options: ["ไกล่เกลี่ย", "ยื่นจดหมาย", "พาออกทางน้ำ"] }
   },
   {
     id: "daimyo_attendant", label: "คนสนิทไดเมียว / องครักษ์-เลขาธิการ", short: "คนใกล้อำนาจที่มีพยานมากกว่าความเป็นส่วนตัว", start: "อะซุจิ แคว้นโอมิ", pressure: "คำสั่งเร็วและความหวาดระแวงในบ้านใหญ่", compatibleRegions: ["Omi"],
-    attributes: { body: 1, hand: 2, wit: 2, mind: 4, heart: 3 }, masteries: [mastery("protocol", "พิธีสารและคำสั่ง", 3, "งานรับใช้บ้านใหญ่", ["document", "authority"]), mastery("mood", "อ่านอารมณ์", 2, "ห้องสั่งการ", ["social", "wit"]), mastery("guard", "คุ้มกัน", 1, "หน้าที่คนสนิท", ["protect", "fight"])], inventory: [item("sealed-order", "คำสั่งปิดผนึก", "document", "คำสั่งที่เปิดประตูได้ แต่ไม่ควรถูกอ่านต่อหน้าคนผิด", 1, ["unlock", "bonus"], { axis: "mind", value: 1, tags: ["order", "authority"] })], mission: { issuer: "เสมียนของบ้าน", issuerType: "ruler", title: "คำสั่งที่มาถึงเร็วเกินไป", request: "นำคำสั่งไปถึงผู้รับโดยไม่ทำให้ข่าวรั่ว", pressure: "คนในบ้านกำลังจับตาว่าคำสั่งเกี่ยวกับใคร", deadline: "ก่อนประชุม", reward: "คำรับรองและสิทธิ์เข้าถึง", risk: "ถูกโยงกับการกวาดล้าง", options: ["ส่งตรง", "ใช้คนกลาง", "อ่านอารมณ์ผู้รับ"] }
+    attributes: { body: 1, hand: 2, wit: 2, mind: 4, heart: 3 }, masteries: [mastery("protocol", "พิธีสารและคำสั่ง", 3, "งานรับใช้บ้านใหญ่", ["document", "authority"]), mastery("mood", "อ่านอารมณ์", 2, "ห้องสั่งการ", ["social", "wit"]), mastery("guard", "คุ้มกัน", 1, "หน้าที่คนสนิท", ["protect", "fight"])], inventory: [item("sealed-order", "คำสั่งปิดผนึก", "document", "คำสั่งที่เปิดประตูได้ แต่ไม่ควรถูกอ่านต่อหน้าคนผิด", 1, ["unlock", "bonus"], { stat: "mind", value: 1, tags: ["order", "authority"] })], mission: { issuer: "เสมียนของบ้าน", issuerType: "ruler", title: "คำสั่งที่มาถึงเร็วเกินไป", request: "นำคำสั่งไปถึงผู้รับโดยไม่ทำให้ข่าวรั่ว", pressure: "คนในบ้านกำลังจับตาว่าคำสั่งเกี่ยวกับใคร", deadline: "ก่อนประชุม", reward: "คำรับรองและสิทธิ์เข้าถึง", risk: "ถูกโยงกับการกวาดล้าง", options: ["ส่งตรง", "ใช้คนกลาง", "อ่านอารมณ์ผู้รับ"] }
   },
   {
     id: "rear_castle_keeper", label: "ผู้พิทักษ์ปราสาทแนวหลัง", short: "ผู้จัดการคลังและคนในบ้าน เมื่อกำลังหลักออกไปแนวหน้า", start: "มุซาชิหรือปราสาทแนวหลัง", pressure: "เสบียง ผู้ลี้ภัย และการยอมจำนนของบ้าน", compatibleRegions: ["Musashi"],
-    attributes: { body: 2, hand: 1, wit: 2, mind: 3, heart: 4 }, masteries: [mastery("stores", "คลังและเสบียง", 3, "ดูแลบ้าน", ["supplies", "castle"]), mastery("household", "จัดคนในเรือน", 2, "ผู้จัดการบ้าน", ["community", "labor"]), mastery("defense", "ป้องกันบ้าน", 1, "แนวหลัง", ["protect", "siege"])], inventory: [item("store-key", "กุญแจคลัง", "bond", "กุญแจที่เปิดคลังเสบียง แต่ทำให้เป็นผู้รับผิดทันที", 1, ["unlock"], { axis: "mind", value: 1, tags: ["stores", "castle"] })], mission: { issuer: "ผู้ดูแลเรือน", issuerType: "samurai", title: "คลังที่ต้องอยู่ถึงเช้า", request: "ตัดสินใจว่าจะจ่ายเสบียงให้ผู้ลี้ภัยหรือเก็บไว้รับการล้อม", pressure: "ทางน้ำเริ่มขึ้นและคนในบ้านขัดแย้ง", deadline: "ก่อนน้ำขึ้น", reward: "ความไว้ใจของเรือนและเสบียง", risk: "ชื่อถูกจดในคลัง", options: ["เปิดคลัง", "แบ่งส่วน", "ต่อรองข้าว"] }
+    attributes: { body: 2, hand: 1, wit: 2, mind: 3, heart: 4 }, masteries: [mastery("stores", "คลังและเสบียง", 3, "ดูแลบ้าน", ["supplies", "castle"]), mastery("household", "จัดคนในเรือน", 2, "ผู้จัดการบ้าน", ["community", "labor"]), mastery("defense", "ป้องกันบ้าน", 1, "แนวหลัง", ["protect", "siege"])], inventory: [item("store-key", "กุญแจคลัง", "bond", "กุญแจที่เปิดคลังเสบียง แต่ทำให้เป็นผู้รับผิดทันที", 1, ["unlock"], { stat: "mind", value: 1, tags: ["stores", "castle"] })], mission: { issuer: "ผู้ดูแลเรือน", issuerType: "samurai", title: "คลังที่ต้องอยู่ถึงเช้า", request: "ตัดสินใจว่าจะจ่ายเสบียงให้ผู้ลี้ภัยหรือเก็บไว้รับการล้อม", pressure: "ทางน้ำเริ่มขึ้นและคนในบ้านขัดแย้ง", deadline: "ก่อนน้ำขึ้น", reward: "ความไว้ใจของเรือนและเสบียง", risk: "ชื่อถูกจดในคลัง", options: ["เปิดคลัง", "แบ่งส่วน", "ต่อรองข้าว"] }
   },
   {
     id: "suigun_leader", label: "หัวหน้ากองเรือ / ซุยกุน", short: "คนของเรือที่ต่อรองด้วยเส้นทาง น้ำ และคำรับรอง", start: "อิโยะหรือชิมะ", pressure: "ค่าคุ้มกัน ใบผ่าน และแรงบีบจากฝ่ายบนบก", compatibleRegions: ["Iyo", "Shima"],
-    attributes: { body: 2, hand: 2, wit: 4, mind: 2, heart: 2 }, masteries: [mastery("water-route", "ทางน้ำและนำร่อง", 3, "งานเรือ", ["water", "route"]), mastery("crew", "คุมลูกเรือ", 2, "เครือญาติทางน้ำ", ["crew", "leadership"]), mastery("toll", "ค่าผ่านและคำรับรอง", 1, "ท่าเรือ", ["negotiation", "passage"])], inventory: [item("water-pass", "ใบผ่านทางน้ำ", "document", "คำรับรองพื้นที่ที่ใช้ได้กับบางจุดเท่านั้น", 1, ["unlock", "bonus"], { axis: "wit", value: 1, tags: ["water", "passage"] })], mission: { issuer: "นายท้ายผู้เฒ่า", issuerType: "merchant", title: "เรือที่ไม่ควรติดธง", request: "พาสินค้าและคนผ่านทางน้ำโดยไม่จ่ายค่าคุ้มกันซ้ำ", pressure: "เรือสองฝ่ายอ้างสิทธิ์ในช่องแคบ", deadline: "ก่อนกระแสน้ำเปลี่ยน", reward: "เส้นทางน้ำและเครดิตท่าเรือ", risk: "หนี้กับคนเรือหรือศัตรูจำเรือ", options: ["ต่อรอง", "ใช้ทางน้ำแคบ", "แลกข่าว"] }
+    attributes: { body: 2, hand: 2, wit: 4, mind: 2, heart: 2 }, masteries: [mastery("water-route", "ทางน้ำและนำร่อง", 3, "งานเรือ", ["water", "route"]), mastery("crew", "คุมลูกเรือ", 2, "เครือญาติทางน้ำ", ["crew", "leadership"]), mastery("toll", "ค่าผ่านและคำรับรอง", 1, "ท่าเรือ", ["negotiation", "passage"])], inventory: [item("water-pass", "ใบผ่านทางน้ำ", "document", "คำรับรองพื้นที่ที่ใช้ได้กับบางจุดเท่านั้น", 1, ["unlock", "bonus"], { stat: "wit", value: 1, tags: ["water", "passage"] })], mission: { issuer: "นายท้ายผู้เฒ่า", issuerType: "merchant", title: "เรือที่ไม่ควรติดธง", request: "พาสินค้าและคนผ่านทางน้ำโดยไม่จ่ายค่าคุ้มกันซ้ำ", pressure: "เรือสองฝ่ายอ้างสิทธิ์ในช่องแคบ", deadline: "ก่อนกระแสน้ำเปลี่ยน", reward: "เส้นทางน้ำและเครดิตท่าเรือ", risk: "หนี้กับคนเรือหรือศัตรูจำเรือ", options: ["ต่อรอง", "ใช้ทางน้ำแคบ", "แลกข่าว"] }
   },
 ];
 
@@ -446,7 +446,7 @@ function openingScene(character: Character, campaign: CampaignContext, mission: 
     Winter: "ลมหายใจของผู้คนลอยขาวอยู่เหนือพื้นดินแข็ง และทุกคนพูดสั้นกว่าปกติเพราะความหนาว",
   };
   return {
-    id: `scene-${campaign.id}-opening`, chapter: "Leaf 01", title: mission.title, location: campaign.location,
+    id: `scene-${campaign.id}-opening`, chapter: "Page 01", title: mission.title, location: campaign.location,
     publicContext: `เนื้อหานี้เป็นเรื่องสมมติใน ${campaign.region} ค.ศ. ${campaign.year} · ${campaign.season} โดยใช้แรงกดดันของสงครามและเส้นทางเป็นบริบท ไม่ใช่การยืนยันว่า NPC นี้มีอยู่จริง.`,
     body: [
       `ยามบ่ายที่ ${campaign.location} ไม่เคยเงียบจริง ${seasonDetail[campaign.season]} กลิ่นเหงื่อจากหลังม้า กลิ่นฟางเก่าจากเพิงพัก และกลิ่นข้าวหุงค้างหม้อคลุกอยู่ในลมหายใจเดียวกัน เสียงล้อเกวียนบดพื้นดินดังเอี๊ยดเป็นจังหวะอยู่ตรงทางแยก ขณะที่ทหารหน้าด่านใช้ด้ามหอกเคาะพื้นไม้เป็นระยะเหมือนตั้งใจเตือนทุกคนว่าคนผ่านทางมีเวลาของตนเอง เมื่อ ${character.name} ก้าวเข้ามา คนขายน้ำสองคนหยุดเถียงกันทันที แม้กระทั่งเด็กที่กำลังไล่แมลงวันอยู่ข้างคอกม้ายังเงยหน้ามอง ก่อนจะก้มหลบสายตาไปเหมือนไม่อยากถูกนับว่าอยู่ในเหตุการณ์นี้.`,
@@ -482,11 +482,11 @@ export function createGameState(context: CampaignContext, draft: CharacterDraft)
 export function createSaikaSafehouseDemo(): GameState {
   const campaign: CampaignContext = { id: "camp-saika-1569", title: "Smoke Beneath Sakai", year: 1569, season: "Spring", region: "Sakai / Izumi", location: "เซฟเฮาส์ลับของไซกะ — นอกชายเขตเมืองซาไก", warShadow: 5, day: 1 };
   const character: Character = {
-    id: "char-sanefuyu", name: "ซาเนฟุยุ", identity: "เด็กชายวัยสิบสามปี", occupationId: "freeform", occupation: "ทหารรับจ้างถือปืนของไซกะ", origin: "กิอิ", strength: "อ่านผลประโยชน์และพูดในจังหวะที่คนกำลังลังเล", weakness: "บาดเจ็บสาหัสและถูกความหยามเกียรติผลักให้พลั้งมือ", attributes: { body: 1, hand: 3, wit: 3, mind: 2, heart: 3 }, masteries: [mastery("saika-firearm", "ปืนคาบศิลาและคนไซกะ", 2, "งานคุ้มกันและการรบ", ["fight", "weapon", "gunpowder"]), mastery("hard-bargain", "ต่อรองผลประโยชน์", 1, "เอาตัวรอด", ["negotiation", "social"]), mastery("water-escape", "หนีทางน้ำ", 1, "รอดจากการจมน้ำ", ["water", "escape"])], vitals: { wounds: 5, focus: 3, momentum: 1 }, social: { rank: 0, honor: 0, influence: 1, information: 2, stain: 2 }, resources: { property: 1, supplies: 1, credit: 0 }, inventory: [item("bandaged-arm", "ผ้าพันแผลชุ่มยา", "status", "ไหล่ซ้ายและแขนขวาบาดเจ็บ ใช้งานได้จำกัด", 0, []), item("saika-matchlock", "ปืนคาบศิลาเปียกชื้น", "equipment", "ปืนที่ต้องซ่อมและทำให้แห้งก่อนใช้", 2, ["bonus"], { axis: "hand", value: 1, tags: ["fight", "weapon"] }), item("dry-ration", "ข้าวปั้นตากแห้งกับเต้าเจี้ยว", "reserve", "ของกินที่กันทาโร่โยนให้", 1, ["bonus"])], pulls: RELATIONSHIP_QUESTIONS.map(([id, question, tags]) => ({ id, question, answer: id === "stance" ? "ยืนข้างไซกะตราบใดที่ผลประโยชน์ยังตรงกัน" : id === "debts" ? "ติดหนี้ชีวิตกันทาโร่" : "ยังไม่ตอบ", tags: [...tags], weight: id === "stance" || id === "debts" ? 2 : 1 })),
+    id: "char-sanefuyu", name: "ซาเนฟุยุ", identity: "เด็กชายวัยสิบสามปี", occupationId: "freeform", occupation: "ทหารรับจ้างถือปืนของไซกะ", origin: "กิอิ", strength: "อ่านผลประโยชน์และพูดในจังหวะที่คนกำลังลังเล", weakness: "บาดเจ็บสาหัสและถูกความหยามเกียรติผลักให้พลั้งมือ", attributes: { body: 1, hand: 3, wit: 3, mind: 2, heart: 3 }, masteries: [mastery("saika-firearm", "ปืนคาบศิลาและคนไซกะ", 2, "งานคุ้มกันและการรบ", ["fight", "weapon", "gunpowder"]), mastery("hard-bargain", "ต่อรองผลประโยชน์", 1, "เอาตัวรอด", ["negotiation", "social"]), mastery("water-escape", "หนีทางน้ำ", 1, "รอดจากการจมน้ำ", ["water", "escape"])], vitals: { wounds: 5, focus: 3, momentum: 1 }, social: { rank: 0, honor: 0, influence: 1, information: 2, stain: 2 }, resources: { property: 1, supplies: 1, credit: 0 }, inventory: [item("bandaged-arm", "ผ้าพันแผลชุ่มยา", "status", "ไหล่ซ้ายและแขนขวาบาดเจ็บ ใช้งานได้จำกัด", 0, []), item("saika-matchlock", "ปืนคาบศิลาเปียกชื้น", "equipment", "ปืนที่ต้องซ่อมและทำให้แห้งก่อนใช้", 2, ["bonus"], { stat: "hand", value: 1, tags: ["fight", "weapon"] }), item("dry-ration", "ข้าวปั้นตากแห้งกับเต้าเจี้ยว", "reserve", "ของกินที่กันทาโร่โยนให้", 1, ["bonus"])], pulls: RELATIONSHIP_QUESTIONS.map(([id, question, tags]) => ({ id, question, answer: id === "stance" ? "ยืนข้างไซกะตราบใดที่ผลประโยชน์ยังตรงกัน" : id === "debts" ? "ติดหนี้ชีวิตกันทาโร่" : "ยังไม่ตอบ", tags: [...tags], weight: id === "stance" || id === "debts" ? 2 : 1 })),
   };
-  const mission: Mission = { id: "mission-echiya", issuer: "กันทาโร่", issuerType: "samurai", title: "คำตอบใต้ห้องขัง", request: "เสนอทางจัดการเอจิยะและตั๋วสัญญาปืนสามสิบกระบอก โดยไม่ให้สิทธิ์การค้าของไซกะในซาไกพังลง", pressure: "เอโกะชูเพิ่มเวรยาม ปิดประตูเมือง และตรวจเรือเข้าออกตามหาพ่อค้าเอจิยะ", deadline: "ก่อนเมืองซาไกยืนยันข่าวการหายตัว", reward: "การคุ้มครองของกันทาโร่และส่วนแบ่งค่าปืน", risk: "หัวของซาเนฟุยุและเอจิยะอาจถูกส่งไปแลกสิทธิ์การค้า", options: ["เสนอแผนปิดปาก", "สอบเอจิยะ", "หาตั๋วสัญญาปืน"], state: "offered", progress: { current: 0, required: 2, triggerPhrases: ["เอจิยะ", "ตั๋ว", "ปืน", "แผน"], rewardItem: { label: "จดหมายรับรองของกันทาโร่", kind: "document", description: "หลักฐานคุ้มครองชั่วคราวที่ช่วยให้คนของไซกะยอมฟังคำอธิบาย", slots: 0, functions: ["unlock"], bonus: { axis: "heart", value: 1, tags: ["saika", "protection"] }, condition: "usable", location: "carried", ownership: "owned" } } };
+  const mission: Mission = { id: "mission-echiya", issuer: "กันทาโร่", issuerType: "samurai", title: "คำตอบใต้ห้องขัง", request: "เสนอทางจัดการเอจิยะและตั๋วสัญญาปืนสามสิบกระบอก โดยไม่ให้สิทธิ์การค้าของไซกะในซาไกพังลง", pressure: "เอโกะชูเพิ่มเวรยาม ปิดประตูเมือง และตรวจเรือเข้าออกตามหาพ่อค้าเอจิยะ", deadline: "ก่อนเมืองซาไกยืนยันข่าวการหายตัว", reward: "การคุ้มครองของกันทาโร่และส่วนแบ่งค่าปืน", risk: "หัวของซาเนฟุยุและเอจิยะอาจถูกส่งไปแลกสิทธิ์การค้า", options: ["เสนอแผนปิดปาก", "สอบเอจิยะ", "หาตั๋วสัญญาปืน"], state: "offered", progress: { current: 0, required: 2, triggerPhrases: ["เอจิยะ", "ตั๋ว", "ปืน", "แผน"], rewardItem: { label: "จดหมายรับรองของกันทาโร่", kind: "document", description: "หลักฐานคุ้มครองชั่วคราวที่ช่วยให้คนของไซกะยอมฟังคำอธิบาย", slots: 0, functions: ["unlock"], bonus: { stat: "heart", value: 1, tags: ["saika", "protection"] }, condition: "usable", location: "carried", ownership: "owned" } } };
   const opening: Scene = {
-    id: "scene-saika-safehouse-opening", chapter: "Leaf 01", title: mission.title, location: campaign.location,
+    id: "scene-saika-safehouse-opening", chapter: "Page 01", title: mission.title, location: campaign.location,
     publicContext: "ฉากแคมเปญสมมติในบริบทเมืองท่าซาไก ค.ศ. 1569 ใช้แรงกดดันของการค้า อาวุธ และเครือข่ายไซกะเป็นฉากหลัง ไม่ได้ยืนยันว่า NPC ในฉากมีตัวตนจริง.",
     body: [
       "กลิ่นควันยาต้มหญ้าสมุนไพรปนกลิ่นคาวเลือดแห้งกรังคือสิ่งแรกที่กักประสาทสัมผัสของซาเนฟุยุไว้เมื่อลืมตา ความเจ็บแปลบวิ่งจากหัวไหล่ซ้ายที่ถูกพันไว้แน่นลงมาถึงแขนขวา ทุกครั้งที่ขยับลมหายใจ ผ้าพันแผลที่เคยขาวก็รั้งเนื้อเหมือนจะเตือนว่าเมื่อคืนเขาถูกน้ำเค็มและเลือดเกือบเอาไปพร้อมกัน แต่ลมหายใจยังอยู่ และนั่นหมายความว่าเรื่องข้างนอกยังไม่ยอมจบไปกับความมืด.",
@@ -502,10 +502,15 @@ export function normalizeGameState(state: GameState): GameState {
   const campaign = state.campaign;
   const progression = state.progression ?? defaultProgression(campaign, state.character.identity.includes("สิบสาม") ? 13 : 20, campaign.season);
   const missions = state.missions.map((mission) => mission.progress ? mission : { ...mission, progress: { current: mission.state === "resolved" ? 2 : 0, required: 2, triggerPhrases: mission.options } });
+  const legacyRolls = state.rolls as Array<RollRecord & { axis?: StatId }>;
+  const legacyInventory = state.character.inventory as Array<GameState["character"]["inventory"][number] & { bonus?: { axis?: StatId; stat?: StatId; value: number; tags: string[] } }>;
+  const rolls = legacyRolls.map((roll) => roll.stat ? roll : { ...roll, stat: roll.axis ?? "wit" });
+  const inventory = legacyInventory.map((item) => item.bonus?.stat ? item : item.bonus?.axis ? { ...item, bonus: { ...item.bonus, stat: item.bonus.axis } } : item);
   return {
     ...state,
-    character: { ...state.character, masteries: state.character.masteries.map(normalizeMasteryProgress) },
+    character: { ...state.character, inventory, masteries: state.character.masteries.map(normalizeMasteryProgress) },
     missions,
+    rolls,
     progression: { ...progression, currentAge: Math.max(progression.currentAge, progression.ageAtCampaignStart) },
     economy: state.economy ?? (campaign.id === "camp-saika-1569" ? buildSaikaEconomy() : buildCampaignEconomy(campaign)),
   };
@@ -545,12 +550,12 @@ export function buildMarket(season: Season): MarketOffer[] {
   ];
 }
 
-const actionKeywords: { tags: string[]; axis: AxisId; method: string; masteryTags: string[] }[] = [
-  { tags: ["ฟัน", "แทง", "ปัด", "ซ่อม", "ทำ", "จับ", "แกะ", "ยิง"], axis: "hand", method: "ใช้ฝีมือและการลงมือที่แม่นยำ", masteryTags: ["fight", "weapon", "repair", "craft", "metal"] },
-  { tags: ["แบก", "ผลัก", "ยก", "ปีน", "วิ่ง", "ฝ่า", "ยื้อ"], axis: "body", method: "ใช้พละกำลังและความอดทน", masteryTags: ["travel", "labor", "protect"] },
-  { tags: ["หลบ", "ลอบ", "หลอก", "สังเกต", "หนี", "ซ่อน", "นำทาง"], axis: "wit", method: "อ่านจังหวะและใช้ไหวพริบ", masteryTags: ["hide", "route", "travel", "news", "wit"] },
-  { tags: ["บัญชี", "เอกสาร", "แผน", "พิสูจน์", "อ่าน", "คำนวณ", "อ้าง"], axis: "mind", method: "ใช้เอกสาร เหตุผล หรือแผนที่มีอยู่", masteryTags: ["ledger", "document", "mind", "accounting", "inspection"] },
-  { tags: ["ขอ", "สาบาน", "ยืน", "รับผิด", "เกลี้ยกล่อม", "คุ้มครอง", "รักษา"], axis: "heart", method: "ยืนบนคำสัตย์และแรงใจ", masteryTags: ["oath", "temple", "request", "mediation", "talk"] },
+const actionKeywords: { tags: string[]; stat: StatId; method: string; masteryTags: string[] }[] = [
+  { tags: ["ฟัน", "แทง", "ปัด", "ซ่อม", "ทำ", "จับ", "แกะ", "ยิง"], stat: "hand", method: "ใช้ฝีมือและการลงมือที่แม่นยำ", masteryTags: ["fight", "weapon", "repair", "craft", "metal"] },
+  { tags: ["แบก", "ผลัก", "ยก", "ปีน", "วิ่ง", "ฝ่า", "ยื้อ"], stat: "body", method: "ใช้พลังกายและความอดทน", masteryTags: ["travel", "labor", "protect"] },
+  { tags: ["หลบ", "ลอบ", "หลอก", "สังเกต", "หนี", "ซ่อน", "นำทาง"], stat: "wit", method: "อ่านจังหวะและใช้ไหวพริบ", masteryTags: ["hide", "route", "travel", "news", "wit"] },
+  { tags: ["บัญชี", "เอกสาร", "แผน", "พิสูจน์", "อ่าน", "คำนวณ", "อ้าง"], stat: "mind", method: "ใช้เอกสาร เหตุผล หรือแผนที่มีอยู่", masteryTags: ["ledger", "document", "mind", "accounting", "inspection"] },
+  { tags: ["ขอ", "สาบาน", "ยืน", "รับผิด", "เกลี้ยกล่อม", "คุ้มครอง", "รักษา"], stat: "heart", method: "ยืนบนคำสัตย์และแรงใจ", masteryTags: ["oath", "temple", "request", "mediation", "talk"] },
 ];
 
 export function parseAction(action: string, state: GameState): RollPreview {
@@ -575,7 +580,7 @@ export function parseAction(action: string, state: GameState): RollPreview {
     action: action.trim(),
     intent: action.trim() || "ยังไม่ได้ระบุการกระทำ",
     method: match.method,
-    axis: match.axis,
+    stat: match.stat,
     mastery: selectedMastery,
     contextBonus: matchingItem?.bonus?.value ?? 0,
     contextReason: matchingItem ? `ใช้ ${matchingItem.label}` : undefined,
@@ -617,10 +622,10 @@ function localOutcomeNarration(preview: RollPreview, state: GameState, outcome: 
 
 export function resolveRoll(preview: RollPreview, state: GameState, spendMomentum: boolean): RollRecord {
   const dice: [number, number] = [Math.floor(Math.random() * 12) + 1, Math.floor(Math.random() * 12) + 1];
-  const axisValue = state.character.attributes[preview.axis];
+  const statValue = state.character.attributes[preview.stat];
   const masteryValue = preview.mastery?.level ?? 0;
   const momentumSpent = spendMomentum && state.character.vitals.momentum > 0 ? 2 : 0;
-  const total = dice[0] + dice[1] + axisValue + masteryValue + preview.contextBonus + momentumSpent;
+  const total = dice[0] + dice[1] + statValue + masteryValue + preview.contextBonus + momentumSpent;
   const margin = total - preview.difficulty;
   const outcome = outcomeFromMargin(margin);
   const copy = outcomeCopy[outcome];
@@ -720,7 +725,7 @@ function advanceClock(current: ProgressionState, outcome: Outcome): { progressio
   const to = segments[absolute % segments.length];
   const daysSinceLeaf = current.daysSinceLeaf + dayAdvance;
   const leafAdvanced = daysSinceLeaf >= 4;
-  const message = leafAdvanced ? "หลายวันได้ทิ้งร่องรอยพอให้เปิด Leaf ใหม่" : dayAdvance ? "เรื่องยืดผ่านวันเดิมไปแล้ว" : `แสงรอบตัวเคลื่อนจาก ${current.segment} ไปสู่ ${to}`;
+  const message = leafAdvanced ? "หลายวันได้ทิ้งร่องรอยพอให้เปิด Page ใหม่" : dayAdvance ? "เรื่องยืดผ่านวันเดิมไปแล้ว" : `แสงรอบตัวเคลื่อนจาก ${current.segment} ไปสู่ ${to}`;
   const timeMark: TimeMark = { from: current.segment, to, advancedDays: dayAdvance, leafAdvanced, message };
   return { progression: { ...current, leaf: leafAdvanced ? current.leaf + 1 : current.leaf, segment: to, timeMarksSinceLeaf: leafAdvanced ? 0 : current.timeMarksSinceLeaf + marks, daysSinceLeaf: leafAdvanced ? 0 : daysSinceLeaf, lastTimeMark: timeMark }, timeMark, dayAdvance };
 }
@@ -790,7 +795,7 @@ export function applyRoll(state: GameState, record: RollRecord): GameState {
   const nextScene: Scene = {
     ...state.currentScene,
     id: `scene-${record.id}`,
-    chapter: `Leaf ${String(record.tick).padStart(2, "0")}`,
+    chapter: `Page ${String(record.tick).padStart(2, "0")}`,
     title: success ? "ราคาของคำตอบ" : "สิ่งที่โลกไม่ยอมลืม",
     body: success
       ? [
