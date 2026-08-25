@@ -295,3 +295,9 @@
 - [x] จัดทำสไลด์ workflow หลังบ้านและประมาณการค่าพัฒนากับค่าเดินระบบ Dust & Fire เป็นเงินบาท พร้อมสมมติฐานและแหล่งอ้างอิง
 - [x] บล็อกการเริ่มและการเล่นเกมเมื่อ browser ไม่มีเครือข่าย พร้อมหน้าสถานะที่ชัดเจนและไม่ค้าง
 - [x] เพิ่ม regression สำหรับ offline lock และตรวจ checkpoint/GitHub sync ก่อนส่งมอบ
+- [x] ออกแบบ Trait Progression Level 1–10 ที่แยกบทบาทจาก Mastery และไม่ฟาร์มจากการทอยง่าย
+- [x] ปรับตาราง DN และสูตรทอยให้สมดุลกับ Trait 1–10, Mastery 0–5 และไม่มี Momentum
+- [x] ปรับ deterministic engine, migration และ AI contract สำหรับ Trait Progression/DN ใหม่ พร้อมนำ Momentum ออก
+- [x] ปรับหน้าจอและข้อความสองภาษาให้แสดง Trait Progression และตัด Momentum ออกทั้งหมด
+- [x] อัปเดตเอกสารและ regression tests สำหรับ Trait, DN และ Momentum ใหม่
+- [ ] ตรวจ TypeScript, tests, build และ push กติกาใหม่ขึ้น main

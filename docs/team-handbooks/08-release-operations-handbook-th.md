@@ -93,7 +93,7 @@ Performance ต้องวัดจากสิ่งที่ผู้เล�
 |---|---|---|
 | Content/config low-risk | ข้อความ UI ที่ไม่เปลี่ยน state, asset รอง | visual/language review และ smoke test |
 | UI interaction | CTA, rail, responsive, focus behavior | viewport/keyboard regression และ route review |
-| Rule/state | XP, DN, momentum, time, mission/reward | unit + integration + migration/fixture analysis |
+| Rule/state | Trait/Mastery Progress, DN, time, mission/reward | unit + integration + migration/fixture analysis |
 | Persistence/schema | Local Save format, migration, retention | backward compatibility, corruption/recovery exercise |
 | AI/provider contract | prompt schema, timeout, credit handling | contract/error/fallback tests และ disclosure review |
 | Auth/admin | role gate, audit surface, permissions | authorization test, privacy review, manual access check |

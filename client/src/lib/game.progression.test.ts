@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { applyRoll, createSaikaSafehouseDemo, masteryLevelDetails, normalizeGameState, parseAction, type RollRecord, xpNeededForMasteryLevel } from "./game";
+import { applyRoll, createSaikaSafehouseDemo, masteryLevelDetails, normalizeGameState, parseAction, traitProgressNeededForLevel, type RollRecord, xpNeededForMasteryLevel } from "./game";
 
 function recordFor(state: ReturnType<typeof createSaikaSafehouseDemo>, outcome: RollRecord["outcome"]): RollRecord {
   const preview = parseAction("ข้าจะยิงปืนคาบศิลาเพื่อคุ้มกันเอจิยะ", state);
-  return { ...preview, id: `progression-${outcome}`, dice: [6, 6], total: 18, margin: 4, outcome, momentumSpent: 0, summary: "ผลทดสอบความก้าวหน้า", narrative: "ร้อยแก้วทดสอบ", consequence: "ร่องรอยทดสอบ", tick: state.tick + 1 };
+  return { ...preview, id: `progression-${outcome}`, dice: [6, 6], total: 18, margin: 4, outcome, summary: "ผลทดสอบความก้าวหน้า", narrative: "ร้อยแก้วทดสอบ", consequence: "ร่องรอยทดสอบ", tick: state.tick + 1 };
 }
 
 describe("skill progression and campaign time", () => {
@@ -48,7 +48,7 @@ describe("skill progression and campaign time", () => {
     const base = createSaikaSafehouseDemo();
     const expert = { ...base, character: { ...base.character, masteries: base.character.masteries.map((mastery, index) => index === 0 ? { ...mastery, rank: 4, level: 4, xp: 0, totalXp: 15 } : mastery) } };
     const normalRecord = recordFor(expert, "success_with_cost");
-    expect(normalRecord.difficulty).toBe(10);
+    expect(normalRecord.difficulty).toBe(12);
     const next = applyRoll(expert, normalRecord);
     expect(next.progression?.lastPractice).toMatchObject({ gained: 1, rankBefore: 4, rankAfter: 4, xp: 1, xpNeeded: 5 });
     expect(masteryLevelDetails(4)).toMatchObject({ bonus: 4, th: "อาจารย์" });
@@ -66,5 +66,19 @@ describe("skill progression and campaign time", () => {
     }
     expect(state.progression).toMatchObject({ leaf: 2, daysSinceLeaf: 0 });
     expect(state.progression?.lastTimeMark).toMatchObject({ leafAdvanced: true, advancedDays: 1 });
+  });
+
+  it("uses the published Trait thresholds and stops Trait Progress at Level 10", () => {
+    expect(traitProgressNeededForLevel(1)).toBe(3);
+    expect(traitProgressNeededForLevel(4)).toBe(4);
+    expect(traitProgressNeededForLevel(7)).toBe(5);
+    expect(traitProgressNeededForLevel(9)).toBe(6);
+    expect(traitProgressNeededForLevel(10)).toBe(0);
+
+    const base = createSaikaSafehouseDemo();
+    const capped = { ...base, character: { ...base.character, attributes: { ...base.character.attributes, hand: 10 }, statXp: { ...base.character.statXp, hand: { xp: 0, totalXp: 41 } } } };
+    const next = applyRoll(capped, recordFor(capped, "decisive_success"));
+    expect(next.character.attributes.hand).toBe(10);
+    expect(next.progression?.lastStatPractice).toMatchObject({ stat: "hand", gained: 0, valueBefore: 10, valueAfter: 10, xpNeeded: 0 });
   });
 });

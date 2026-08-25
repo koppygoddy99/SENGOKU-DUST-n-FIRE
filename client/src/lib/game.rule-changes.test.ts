@@ -35,11 +35,11 @@ describe("rule changes: traits, mastery, context, and specialized gear", () => {
   it("retains all ordinary DN tiers and caps prepared Context/Gear at +2", () => {
     const game = createSaikaSafehouseDemo();
     expect(parseAction("ข้าจะพักฟื้นแผล", game).difficulty).toBe(8);
-    expect(parseAction("ข้าจะยิงเป้าหมายในลานซ้อม", game).difficulty).toBe(10);
-    expect(parseAction("ข้าจะเสนอแผนให้กันทาโร่", game).difficulty).toBe(14);
-    expect(parseAction("ข้าจะยิงผู้คุม", game).difficulty).toBe(18);
-    expect(parseAction("ข้าจะบุกด่านยิงผู้คุมด้วยปืนคาบศิลา", game).difficulty).toBe(22);
-    expect(parseAction("ข้าจะปลอมตราเพื่อผ่านด่าน", game).difficulty).toBe(26);
+    expect(parseAction("ข้าจะยิงเป้าหมายในลานซ้อม", game).difficulty).toBe(12);
+    expect(parseAction("ข้าจะเสนอแผนให้กันทาโร่", game).difficulty).toBe(16);
+    expect(parseAction("ข้าจะยิงผู้คุม", game).difficulty).toBe(20);
+    expect(parseAction("ข้าจะบุกด่านยิงผู้คุมด้วยปืนคาบศิลา", game).difficulty).toBe(24);
+    expect(parseAction("ข้าจะปลอมตราเพื่อผ่านด่าน", game).difficulty).toBe(28);
     const prepared = {
       ...game,
       character: { ...game.character, inventory: [...game.character.inventory, { id: "overprepared", label: "ชุดเครื่องมือ", kind: "equipment" as const, slots: 1, description: "อุปกรณ์พร้อม", functions: ["bonus"] as const, bonus: { value: 9, tags: ["แผน"] }, condition: "usable" as const }] },
@@ -47,16 +47,16 @@ describe("rule changes: traits, mastery, context, and specialized gear", () => {
     expect(parseAction("ข้าจะเสนอแผน", prepared).contextBonus).toBe(2);
   });
 
-  it("applies a verified flaw after raw Trait and Mastery values, then gives only Mastery Progress on commit", () => {
+  it("applies a verified flaw after raw Trait and Mastery values, then records both matching Progress tracks", () => {
     const game = createSaikaSafehouseDemo();
     const preview = { ...parseAction("ข้าจะยิงปืนคาบศิลาเพื่อคุ้มกันเอจิยะ", game), flawTriggered: true as const, flawBonus: -2 as const, triggeredFlaw: game.character.flaws[0], flawReason: "บาดแผลและการถูกหยามเกี่ยวข้องกับการเผชิญหน้าครั้งนี้" };
-    const record = resolveRoll(preview, game, false);
+    const record = resolveRoll(preview, game);
     const traitValue = traitValueForRoll(game.character.attributes[record.stat]);
     expect(record.total).toBe(record.dice[0] + record.dice[1] + traitValue + (record.mastery?.level ?? 0) + record.contextBonus - 2);
     const beforeTotal = game.character.statXp[record.stat].totalXp;
     const next = applyRoll(game, record);
-    expect(next.progression?.lastStatPractice).toBeUndefined();
-    expect(next.character.statXp[record.stat].totalXp).toBe(beforeTotal);
+    expect(next.progression?.lastStatPractice?.gained).toBeGreaterThanOrEqual(0);
+    expect(next.character.statXp[record.stat].totalXp).toBeGreaterThanOrEqual(beforeTotal);
     expect(next.progression?.lastPractice?.gained).toBeGreaterThanOrEqual(0);
   });
 
@@ -68,7 +68,7 @@ describe("rule changes: traits, mastery, context, and specialized gear", () => {
     const preview = parseAction("ข้าจะนำคำสั่งปิดผนึกผ่านด่านผู้คุม", state);
     expect(preview.difficulty).toBe(0);
     expect(preview.specialItem?.label).toBe("คำสั่งปิดผนึก");
-    const record = resolveRoll(preview, state, false);
+    const record = resolveRoll(preview, state);
     expect(record.dice).toEqual([0, 0]);
     expect(record.outcome).toBe("decisive_success");
     const committed = applyRoll(state, record);

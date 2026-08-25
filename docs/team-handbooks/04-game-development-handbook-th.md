@@ -68,17 +68,17 @@ type GameState = {
 
 ```text
 preview = parseAction(intent, game)
-roll = resolveRoll(preview, game, useMomentum)
+roll = resolveRoll(preview, game)
 next = applyRoll(game, roll)
 persist(next)
 render(next)
 ```
 
-สูตรที่ทุก implementation ต้องใช้คือ `d12 + d12 + traitValue + masteryLevel + context + flaw + momentum` โดย Trait เป็นค่าจริง 1–10, `context` ถูก clamp 0..2, `flaw` เป็น 0/−2 และ `momentum` ใช้ได้เฉพาะเมื่อมีมากกว่า 0. client canonicalizes DN ปกติเป็น 8/10/14/18/22/26; DN 0 เกิดได้เฉพาะจาก item `special` ที่ usable, action มี document/pass cue และ tags ตรงกัน. ทุก RollRecord final ต้องเก็บ dice, total, difficulty, margin, outcome, axis, mastery, reason และ timestamps/trace ที่จำเป็นต่อ Chronicle
+สูตรที่ทุก implementation ต้องใช้คือ `d12 + d12 + traitValue + masteryLevel + context + flaw` โดย Trait เป็น Level 1–10 และบวกค่าจริง, `context` ถูก clamp 0..2, `flaw` เป็น 0/−2. `applyRoll()` ให้ Trait Progress เมื่อ DN ตั้งแต่ 12 และ action ใช้ Trait ตรง โดย decisive success ได้ +2; client canonicalizes DN ปกติเป็น 8/12/16/20/24/28/32. DN 0 เกิดได้เฉพาะจาก item `special` ที่ usable, action มี document/pass cue และ tags ตรงกัน. ทุก RollRecord final ต้องเก็บ dice, total, difficulty, margin, outcome, stat, mastery, reason และ timestamps/trace ที่จำเป็นต่อ Chronicle
 
 ### 4.2 applyRoll atomic sequence
 
-ลำดับต่อไปนี้ห้ามสลับตามสะดวกของหน้าจอ: เพิ่ม roll/tick; ปรับ social/vitals/scene; คำนวณ Mastery Progress (เฉพาะ DN ตั้งแต่ 10 ที่ไม่ใช่ special pass); เพิ่ม Level เมื่อ Progress ครบ 5; สร้าง lastPractice; เดิน time/age; ตรวจ mission; ให้ reward และ agreement เฉพาะครั้งแรก; เพิ่ม memory; normalize; คืน state ใหม่ หากขั้นใด error ระหว่างพัฒนา ต้องไม่ persist state ครึ่งเดียว โดยเฉพาะ reward duplication และ mission resolve ซ้ำเป็น risk ระดับสูง
+ลำดับต่อไปนี้ห้ามสลับตามสะดวกของหน้าจอ: เพิ่ม roll/tick; ปรับ social/vitals/scene; คำนวณ Trait และ Mastery Progress (เฉพาะ DN ตั้งแต่ 12 ที่ไม่ใช่ special pass); เพิ่ม Trait Level ตาม threshold 3/4/5/6 และ Mastery Level เมื่อ Progress ครบ 5; สร้าง lastStatPractice/lastPractice; เดิน time/age; ตรวจ mission; ให้ reward และ agreement เฉพาะครั้งแรก; เพิ่ม memory; normalize; คืน state ใหม่ หากขั้นใด error ระหว่างพัฒนา ต้องไม่ persist state ครึ่งเดียว โดยเฉพาะ reward duplication และ mission resolve ซ้ำเป็น risk ระดับสูง
 
 | Invariant | เหตุผล | Regression ที่ต้องมี |
 |---|---|---|
@@ -86,7 +86,8 @@ render(next)
 | Level 5 รับ Progress 0 | ป้องกัน farm ตอนเพดาน | practice test |
 | Progress ต่อ roll ไม่เกิน 2 | รักษาจังหวะ progression | positive/negative outcome test |
 | DN 8 และ special pass ไม่ได้ Progress | กัน routine/item bypass farm | low-DN and special-item test |
-| Momentum ไม่ติดลบ | ป้องกัน exploit | use/non-use test |
+| Trait อยู่ 1–10 | ป้องกันโบนัสเกิน design | threshold/cap/migration test |
+| ไม่มี Momentum ใน RollRecord | ป้องกันผลหลังทอยถูกแก้ | formula/state-shape test |
 | Leaf ไม่เพิ่มทุก roll | รักษาจังหวะเรื่อง | multi-day test |
 | age ไม่เพิ่มจาก roll | calendar semantics | birth-season crossing test |
 | reward ได้ครั้งเดียว | ป้องกัน economy corruption | resolved-mission repeat test |

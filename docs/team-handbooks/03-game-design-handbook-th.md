@@ -15,9 +15,8 @@ Game Design เป็นเจ้าของกติกาที่ทำใ�
 | Declare | พิมพ์หรือเลือกเจตนา | ไม่ต้องระบุ axis/mastery | intent parser รับ action หลากหลาย |
 | Assess | เห็นความเสี่ยงและสิ่งที่ต้องยอมรับ | assess mode ไม่เฉลยทุก modifier | ผู้เล่นยังมีทางเลือกหลายแบบ |
 | Roll | เห็น 2d12 และ total ที่เปลี่ยนไม่ได้ | canonical outcome only | total/roll record deterministic |
-| Momentum | เลือกฝืนหนึ่งครั้งหลังเห็นผล | +2, ใช้ได้เมื่อ > 0 | ไม่ต่ำกว่า 0, ไม่ stack |
 | Consequence | อ่านผลในฉากเดิม | ไม่มี dead end, มี state change | memory/scene/social update |
-| Progress | เห็น XP, Step, time, mission trace | ไม่ farm XP, ไม่ตัด Leaf ถี่เกิน | practice/time/mission tests |
+| Progress | เห็น Trait/Mastery Progress, Level, time, mission trace | ไม่ farm Progress, ไม่ตัด Leaf ถี่เกิน | practice/time/mission tests |
 
 ## 3. Resolution System: 2d12 and Five Axes
 
@@ -31,7 +30,7 @@ Game Design เป็นเจ้าของกติกาที่ทำใ�
 | Judgment | ปัญญา | เอกสาร แผน หลักฐาน เหตุผล | จับพิรุธในบัญชีข้าว | ไม่ใช่คำตอบอัตโนมัติสำหรับคนมีการศึกษา |
 | Resolve | พลังใจ | สาบาน รับผิดชอบ ชักจูง ยืนหยัด | รับหน้าแทนคนในบ้าน | ห้ามทำให้เป็น mind control |
 
-DN canonical คือ 10, 14, 18 และ 22 แม้ AI อาจเสนอเลขระหว่างทาง แต่ client ต้อง canonicalize เหตุผลของ DN สำคัญกว่าเลข: DN 18 ไม่ใช่ “ยาก” เฉย ๆ แต่ควรบอกว่ามีผู้คุม พยาน เอกสารตรวจ หรือความขัดแย้งของผลประโยชน์ DN 22 ต้องมีสิ่งที่ทำให้ความพลาดเปลี่ยนโครงเรื่อง เช่น การปลอมเอกสาร, ลอบขโมยในคลัง, ข้อหาหนัก หรือการบุกพื้นที่มีอำนาจ
+DN canonical คือ 8, 12, 16, 20, 24, 28 และ 32 แม้ AI อาจเสนอเลขระหว่างทาง แต่ client ต้อง canonicalize เหตุผลของ DN สำคัญกว่าเลข: DN 20 ไม่ใช่ “ยาก” เฉย ๆ แต่ควรบอกว่ามีผู้คุม พยาน เอกสารตรวจ หรือความขัดแย้งของผลประโยชน์ DN 24 ต้องมีสิ่งที่ทำให้ความพลาดเปลี่ยนโครงเรื่อง เช่น การปลอมเอกสาร, ลอบขโมยในคลัง, ข้อหาหนัก หรือการบุกพื้นที่มีอำนาจ; DN 32 สงวนไว้สำหรับจุดตัดสินชะตาที่ควรเปิดทางเลือกอื่น ไม่ใช่แค่เพิ่มตัวเลขเพื่อบังคับแพ้
 
 ## 4. Mastery Level และ Progress
 
@@ -84,12 +83,12 @@ Mission เป็น thread ที่ระบบเห็นจาก action �
 
 ## 8. Difficulty and Content Tuning
 
-ทีมต้องจัด balance review จากข้อมูลจริงอย่างน้อยสามมิติ: outcome distribution, XP velocity และ mission completion latency ไม่ควรพิจารณาเพียงอัตราชนะ ผู้เล่นอาจชนะบ่อยแต่รู้สึกไม่มีราคา หรือพลาดบ่อยแต่ยังสนุกได้หาก partial/failure เปิดทางใหม่
+ทีมต้องจัด balance review จากข้อมูลจริงอย่างน้อยสามมิติ: outcome distribution, Trait/Mastery Progress velocity และ mission completion latency ไม่ควรพิจารณาเพียงอัตราชนะ ผู้เล่นอาจชนะบ่อยแต่รู้สึกไม่มีราคา หรือพลาดบ่อยแต่ยังสนุกได้หาก partial/failure เปิดทางใหม่
 
 | Metric | คำถาม | สัญญาณเสี่ยง |
 |---|---|---|
-| Outcome distribution | ผู้เล่นเห็น decisive/success/partial/failure หลากหลายหรือไม่ | ทุกงานกลายเป็น DN 10 หรือ DN 22 |
-| XP velocity | Step ต้นโตได้, Step สูงไม่ farm ใช่หรือไม่ | rank สูงขึ้นจาก routine หรือ rank ต้นไม่โตเลย |
+| Outcome distribution | ผู้เล่นเห็น decisive/success/partial/failure หลากหลายหรือไม่ | ทุกงานกลายเป็น DN 12 หรือ DN 24 |
+| Progress velocity | Trait/Mastery ต้นโตได้, Trait สูงไม่ farm ใช่หรือไม่ | Level สูงขึ้นจาก routine หรือ Level ต้นไม่โตเลย |
 | Mission latency | งานสำเร็จเร็วพอให้มี payoff แต่ไม่สั้นจนไร้น้ำหนักหรือไม่ | resolve ใน roll เดียวโดยไม่มีการเลือก |
 | Time cadence | Leaf เปิดเมื่อช่วงเรื่องเปลี่ยนหรือไม่ | Leaf ทุก roll หรือไม่มี Leaf หลาย session |
 | Agreement density | รางวัล/สัญญามีที่มาหรือไม่ | inventory เปลี่ยนโดยไม่มี counterpart |

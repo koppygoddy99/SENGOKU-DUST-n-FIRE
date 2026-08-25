@@ -149,7 +149,7 @@ describe("UI Preview click flow", () => {
     vi.useRealTimers();
   });
 
-  it("offers Momentum only after the local 2d12 result is visible and persists the spent token", () => {
+  it("records the local 2d12 result immediately without Momentum and persists Trait Progress", () => {
     vi.useFakeTimers();
     render(<Home />);
     fireEvent.click(screen.getByRole("button", { name: /Return to/i }));
@@ -157,12 +157,12 @@ describe("UI Preview click flow", () => {
     fireEvent.click(screen.getByRole("button", { name: /set this intention/i }));
     fireEvent.click(screen.getByRole("button", { name: /roll 2d12/i }));
     settleDiceStage();
-    expect(screen.getByRole("button", { name: /spend momentum/i })).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: /spend momentum/i }));
+    expect(screen.queryByRole("button", { name: /spend momentum/i })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: /record this result/i }));
     const saved = JSON.parse(window.localStorage.getItem("dust-fire-local-game-v3-saika") ?? "{}");
-    expect(saved.game.rolls[0].momentumSpent).toBe(2);
-    expect(saved.game.character.vitals.momentum).toBe(0);
+    expect(saved.game.rolls[0].momentumSpent).toBeUndefined();
+    expect(saved.game.character.vitals.momentum).toBeUndefined();
+    expect(saved.game.progression.lastStatPractice).toBeTruthy();
     vi.useRealTimers();
   });
 

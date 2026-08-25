@@ -136,7 +136,7 @@ export function StoryMap({ game, language, onOpen }: { game: GameState; language
         <dl className="story-map__condition-strip" aria-label={copy(language, "Current condition", "สภาพปัจจุบัน")}>
           <div><dt>{copy(language, "Wounds", "บาดแผล")}</dt><dd>{game.character.vitals.wounds}/6</dd></div>
           <div><dt>{copy(language, "Focus", "ค่าสติ")}</dt><dd>{game.character.vitals.focus}/6</dd></div>
-          <div><dt>{copy(language, "Momentum", "แรงฮึด")}</dt><dd>{game.character.vitals.momentum}/2</dd></div>
+          <div><dt>{copy(language, "Trait cap", "เพดาน Trait")}</dt><dd>10</dd></div>
         </dl>
         <Button className="df-button df-button--primary story-map__continue" aria-label={copy(language, `Return to ${game.currentScene.location}`, `กลับสู่ฉากที่${game.currentScene.location}`)} onClick={() => onOpen("play")}><SengokuIcon name="sword" tone="ink" size={17} /> {copy(language, "Continue scene", "กลับสู่ฉาก")} <ArrowRight size={18} /></Button>
       </article>

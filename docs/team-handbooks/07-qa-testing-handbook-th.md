@@ -53,9 +53,9 @@ QA ต้องอ่านเอกสารหลักสองฉบับ�
 
 ส่วนนี้เป็น checklist ที่ห้าม regression ไม่ว่าทีมใดจะแก้ UI, prose หรือระบบภายใน QA ต้องเพิ่ม test อัตโนมัติเมื่อ invariant ยังไม่มี coverage และต้องเพิ่ม manual scenario สำหรับการเดินทางผ่าน UI สำคัญ
 
-### 4.1 ผลทอยและ Momentum
+### 4.1 ผลทอย, DN และ Trait Progress
 
-สูตร canonical คือ `d12 + d12 + axis + mastery bonus + context bonus + momentum bonus` ผล roll ต้องถูกกำหนดโดย deterministic engine และ AI GM ไม่มีสิทธิ์แก้ total, margin หรือ outcome band Momentum ใช้ได้หลังเห็นผลเมื่อ state อนุญาต; ใช้สำเร็จแล้วต้องหักครั้งเดียว, resolve ใหม่ด้วยข้อมูลที่ตรวจได้, และไม่ถูกใช้ซ้ำจาก rerender, retry หรือการเปิดหน้าใหม่
+สูตร canonical คือ `d12 + d12 + Trait Level + Mastery Level + Context/Gear + Flaw` ผล roll ต้องถูกกำหนดโดย deterministic engine และ AI GM ไม่มีสิทธิ์แก้ total, margin หรือ outcome band. DN ปกติต้อง canonicalize เป็น 8/12/16/20/24/28/32; Trait ให้ Progress ที่ DN ตั้งแต่ 12 เท่านั้น, decisive success ได้สูงสุด +2 และ Level 10 เป็นเพดาน
 
 | Invariant | วิธีตรวจ | ตัวอย่าง regression |
 |---|---|---|
@@ -63,7 +63,8 @@ QA ต้องอ่านเอกสารหลักสองฉบับ�
 | total เท่ากับองค์ประกอบที่แสดง | unit + UI assertion | UI แสดง bonus แล้ว engine ไม่รวม |
 | margin band ถูกต้องทุกขอบเขต | boundary table test | `-5` ถูกจัดเป็น partial แทน failure |
 | AI ไม่แก้ deterministic outcome | contract/integration test | AI response ส่ง total ใหม่แล้ว state ถูกเขียนทับ |
-| Momentum หักไม่เกินครั้งเดียว | integration/retry test | double click ใช้ Momentum สองแต้ม |
+| ไม่มี Momentum ใน roll/state | state-shape + UI regression | UI ยังมีปุ่ม +2 หรือ RollRecord เก็บ `momentumSpent` |
+| Trait Progress ใช้ threshold ถูกต้อง | unit/migration test | Level ข้ามเพดานหรือ DN 8 ให้ Progress |
 | outcome มีทางไปต่อ | narrative/UI review | failure แสดงข้อความจบเกมโดยไม่มี option หรือ consequence |
 
 ### 4.2 Mastery Level, Progress และ Special Item

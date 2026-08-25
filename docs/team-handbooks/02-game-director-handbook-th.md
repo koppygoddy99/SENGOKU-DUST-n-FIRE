@@ -73,7 +73,7 @@ Game Director เป็นผู้บังคับใช้ Historical Fence 
 
 | ประเภทการเปลี่ยน | อนุมัติโดย | เอกสารที่ต้องแก้ | ตัวอย่าง |
 |---|---|---|---|
-| เปลี่ยน core loop หรือ outcome | Game Director + Game Design | Shared Master, Game Design, Core source of truth | เพิ่มการใช้ Momentum รอบใหม่ |
+| เปลี่ยน core loop หรือ outcome | Game Director + Game Design | Shared Master, Game Design, Core source of truth | เปลี่ยน threshold Trait Progress หรือ DN tier |
 | เปลี่ยน state/schema/save | Game Director + Game Development | Shared Master, Development, QA, Release | เพิ่ม resource ใหม่ใน Local Save |
 | เปลี่ยน narrative policy/language | Game Director | Shared Master, Game Director, Art/Audio | เพิ่มระดับภาษา NPC ใหม่ |
 | เปลี่ยน UI disclosure/CTA | UI/UX lead + Game Director | UI/UX, QA | ซ่อน/แสดงผลทอยในหน้าฉาก |

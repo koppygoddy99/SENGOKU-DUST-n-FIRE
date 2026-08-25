@@ -38,7 +38,7 @@ Team 8 รับผิดชอบความเชื่อมโยงระ�
 
 ### B8-2 — Game State & Persistence Engineer
 
-ดูแลความจริงหนึ่งเดียวของแคมเปญ ได้แก่ `GameState`, `RollPreview`, `RollRecord`, inventory, Vitals, Momentum, agreements, memories, missions และ progression งานสำคัญคือทำให้การใช้แรงฮึดเพิ่มจากผลเดิมโดยไม่ทอยซ้ำ, item ถูกหักเฉพาะตอน commit, และเซฟเก่ายังโหลดได้หลังเปลี่ยนคำหรือชื่อ field เช่น `axis → stat`.
+ดูแลความจริงหนึ่งเดียวของแคมเปญ ได้แก่ `GameState`, `RollPreview`, `RollRecord`, inventory, Vitals, Trait/Mastery Progress, agreements, memories, missions และ progression งานสำคัญคือทำให้ `applyRoll()` ให้ Progress ตาม Trait/Mastery/DN ที่ตรวจได้, item ถูกหักเฉพาะตอน commit, และเซฟเก่ายังโหลดได้หลังเปลี่ยนคำหรือชื่อ field เช่น `axis → stat` หรือ schema v4 → v5 ที่ลบ Momentum.
 
 | งานประจำ | เกณฑ์ผ่าน | ข้อห้าม |
 |---|---|---|

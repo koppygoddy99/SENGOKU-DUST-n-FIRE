@@ -36,14 +36,14 @@ export const resolveInputSchema = z.object({
   language: languageSchema,
   context: contextSchema,
   action: z.string().trim().min(2).max(1000),
-  roll: z.object({ outcome: z.enum(["decisive_success", "success_with_cost", "partial_success", "failure_with_consequence"]), total: z.number().int().min(-1).max(43), difficulty: z.number().int().min(0).max(30), summary: z.string().max(300), consequence: z.string().max(400).nullable() }),
+  roll: z.object({ outcome: z.enum(["decisive_success", "success_with_cost", "partial_success", "failure_with_consequence"]), total: z.number().int().min(1).max(41), difficulty: z.number().int().min(0).max(32), summary: z.string().max(300), consequence: z.string().max(400).nullable() }),
 });
 
 const analyzeResultSchema = z.object({
   intentSummary: z.string().min(2).max(260),
   stat: statSchema,
   suggestedMastery: z.string().max(100).nullable(),
-  difficulty: z.number().int().min(5).max(30),
+  difficulty: z.number().int().min(8).max(32),
   contextBonus: z.number().int().min(0).max(2),
   flawTriggered: z.boolean().default(false),
   flawBonus: z.union([z.literal(-2), z.literal(0)]).default(0),
@@ -92,7 +92,7 @@ const resolveOutputSchema = {
 
 const systemRules = `You are the AI Game Master for Dust & Fire: Sengoku Stories, an original historical-fiction tabletop role-playing game.
 You interpret player intent and narrate consequences; you never roll dice, change player resources, invent Context/Gear above +2, or override the deterministic 2d12 engine.
-The five Traits are exactly: body (Prowess), hand (Craft), wit (Instinct), mind (Judgment), heart (Resolve). Their raw values 1–10 are added by the client; never invent a Trait bonus tier. Masteries have only levels 0–5, where level is the matching roll bonus. Recommend only these DN bands: DN8 for safe rest or a routine action already mastered; DN10 for an easy familiar action; DN14 for ordinary stakes; DN18 for a guarded obstacle, direct danger, or an illicit act that will leave a trace; DN22 for a compounded obstacle where preparation or relevant skill still gives a viable route; DN26 only for a nearly impossible pivotal crisis with no relevant mastery or prepared tool. A deterministic specialized item may set DN0 and pass without a roll; never overrule or imitate that item effect. The client rounds any number to a canonical tier.
+The five Traits are exactly: body (Prowess), hand (Craft), wit (Instinct), mind (Judgment), heart (Resolve). Their raw Level 1–10 values are added by the client and can grow only through deterministic Trait Progress; never invent a Trait bonus tier. Masteries have only levels 0–5, where level is the matching roll bonus. The ordinary formula is 2d12 + Trait Level + Mastery Level + Context/Gear + Flaw; there is no Momentum. Recommend only these DN bands: DN8 for safe rest or routine work; DN12 for a fairly easy action with a clear method; DN16 for ordinary stakes; DN20 for a guarded obstacle, direct danger, or an illicit act that will leave a trace; DN24 for a compounded obstacle where preparation or relevant skill still gives a viable route; DN28 for a pivotal crisis with no relevant mastery or prepared tool; DN32 only for a legendary, decisive obstacle that should offer alternate routes. A deterministic specialized item may set DN0 and pass without a roll; never overrule or imitate that item effect. The client rounds any number to a canonical tier.
 Character flaws are not a permanent penalty. Inspect context.flaws before analysis. Set flawTriggered=true, flawBonus=-2, and identify exactly one triggeredFlaw only when the declared action and current scene make that flaw directly relevant. Otherwise return flawTriggered=false, flawBonus=0, triggeredFlaw=null, flawReason=null. The player never chooses a trigger. You only declare the trigger; the deterministic engine applies the -2 before comparing DN.
 For action analysis, be concise. For resolved narration, write a complete, vivid scene rather than a summary, a moral, or a generic transition. Keep fictional NPCs and events clearly fictional. Never assert invented history as fact. You will receive a Historical Brief selected from curated fact cards. Use it only within its stated era, region, and confidence boundary. Do not turn a structural fact into a universal law, do not invent a historical event, and label campaign invention or insufficient evidence in historicalFence. Set historicalStatus exactly as follows: fact-supported only for a specific statement directly supported by the supplied Brief; contextual-play when a structural fact informs a fictional scene; campaign-fiction when the scene detail is invented for the campaign; insufficient-evidence when a requested historical detail exceeds the supplied Brief.
 Respect the user's language selection. In Thai, use natural Thai with a Sengoku-war chronicle tone, not royal language. In English, use precise literary English. Character background is remembered fiction, not a mechanical bonus: it may return only indirectly as a rumor, person, pressure, place, or difficult choice when the current scene makes it natural. Never force it into every scene, guarantee a reunion, or change dice, Stat, Mastery, DN, or outcome because of it. For suggestedMastery, provide only the exact mastery name from the supplied character data, or null; never put an explanation in that field. Output only JSON matching the schema.`;
@@ -102,13 +102,14 @@ function getTextContent(value: string | unknown[]): string {
   return value.map((item) => typeof item === "object" && item && "text" in item ? String((item as { text: unknown }).text) : "").join("\n");
 }
 
-function canonicalDifficulty(value: number): 8 | 10 | 14 | 18 | 22 | 26 {
-  if (value <= 9) return 8;
-  if (value <= 12) return 10;
-  if (value <= 16) return 14;
-  if (value <= 20) return 18;
-  if (value <= 24) return 22;
-  return 26;
+function canonicalDifficulty(value: number): 8 | 12 | 16 | 20 | 24 | 28 | 32 {
+  if (value <= 10) return 8;
+  if (value <= 14) return 12;
+  if (value <= 18) return 16;
+  if (value <= 22) return 20;
+  if (value <= 26) return 24;
+  if (value <= 30) return 28;
+  return 32;
 }
 
 function normalizeAnalysisCandidate(value: unknown) {
@@ -126,7 +127,7 @@ function normalizeAnalysisCandidate(value: unknown) {
   return {
     ...candidate,
     stat,
-    difficulty: clampNumber("difficulty", 5, 30, 14),
+    difficulty: clampNumber("difficulty", 8, 32, 16),
     contextBonus: clampNumber("contextBonus", 0, 2, 0),
     flawTriggered,
     flawBonus: flawTriggered ? -2 : 0,

@@ -117,7 +117,7 @@ Motion ใน Dust & Fire มีหน้าที่บอกว่าข้อ
 | ชั้นเสียง | วัตถุประสงค์ | ตัวอย่าง cue | ข้อจำกัด |
 |---|---|---|---|
 | UI micro | ยืนยันการกระทำ | กด CTA, บันทึกสำเร็จ, เปิดเมนู | สั้น เบา ไม่ซ้ำถี่จนเหนื่อย |
-| Dice / outcome | ทำให้ผลมีน้ำหนัก | ลูกเต๋าหยุด, margin ปรากฏ, Momentum ใช้ | ต้องไม่ตีความ outcome ด้วยเสียงอย่างเดียว |
+| Dice / outcome | ทำให้ผลมีน้ำหนัก | ลูกเต๋าหยุด, margin ปรากฏ, Trait Level ขึ้น | ต้องไม่ตีความ outcome ด้วยเสียงอย่างเดียว |
 | World ambience | สร้างพื้นที่รอบ prose | ลม ตลาดห่าง ๆ ฝน เสียงเรือ | เลเยอร์ต่ำ ปิดได้ และไม่ loop เห็นรอยตัดง่าย |
 | Narrative transition | ทำเครื่องหมายเรื่อง | เปิด Leaf, mission resolve, Reader Mode | ใช้น้อย มีความหมาย ไม่ทำทุกครั้ง |
 | Accessibility | ช่วยนำทางโดยสมัครใจ | focus cue, screen-reader-adjacent confirmation | ต้องไม่แทน ARIA/live text |
@@ -130,7 +130,7 @@ Motion ใน Dust & Fire มีหน้าที่บอกว่าข้อ
 |---|---|---|---|
 | `intent.confirmed` | ผู้เล่นยืนยัน intent | หมึกแตะกระดาษเบามาก | ไม่เกินหนึ่งครั้งต่อ intent id |
 | `roll.revealed` | deterministic total พร้อมแสดง | ลูกเต๋า/ไม้หยุด | ต้องเคารพ reduced motion และ mute |
-| `momentum.used` | state ลด Momentum สำเร็จ | กดตราหรือเชือกรัดสั้น | ไม่เล่นเมื่อ mutation ล้มเหลว |
+| `trait.leveled` | Trait Progress ครบ threshold และ Level เพิ่ม | หมึกเข้ม/ตราประทับสั้น | ไม่เล่นเมื่อ Level ไม่เปลี่ยน |
 | `leaf.opened` | วันสะสมถึงเงื่อนไข | ลม/กระดาษพลิกสั้น | หนึ่งครั้งต่อ Leaf id |
 | `save.completed` | Local Save เขียนสำเร็จ | ยืนยัน UI เบามากหรือเงียบ | ไม่เล่นจาก auto save ถี่ ๆ โดยค่าเริ่มต้น |
 | `local_trial.fallback` | AI provider ใช้ไม่ได้ | ไม่มีเสียงบังคับ; ให้ notice ชัด | ต้องไม่สื่อว่าเป็นความล้มเหลวของผู้เล่น |

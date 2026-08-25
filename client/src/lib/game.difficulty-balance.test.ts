@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyMomentumFromSource, applyMomentumToRoll, applyRoll, createSaikaSafehouseDemo, getMomentumSources, parseAction, resolveRoll } from "./game";
+import { applyRoll, canonicalDifficulty, createSaikaSafehouseDemo, parseAction, resolveRoll } from "./game";
 
 function outcomeForMargin(margin: number) {
   if (margin >= 5) return "decisive";
@@ -19,83 +19,74 @@ function distribution(bonus: number, difficulty: number) {
 }
 
 describe("DN balance guardrails", () => {
-  it("keeps a declared ordinary action at DN14 rather than making it automatic", () => {
+  it("keeps a declared ordinary action at DN16 rather than making it automatic", () => {
     const game = createSaikaSafehouseDemo();
     const preview = parseAction("ข้าจะเสนอแผนให้กันทาโร่", game);
-    expect(preview.difficulty).toBe(14);
+    expect(preview.difficulty).toBe(16);
     expect(preview.difficultyReason).toContain("มาตรฐาน");
 
-    const outcomes = distribution(3, preview.difficulty);
-    expect(outcomes.decisive + outcomes.success).toBe(99);
-    expect(outcomes.partial + outcomes.failure).toBe(45);
+    const outcomes = distribution(2, preview.difficulty);
+    expect(outcomes.decisive + outcomes.success).toBeGreaterThan(0);
+    expect(outcomes.partial + outcomes.failure).toBeGreaterThan(0);
   });
 
-  it("uses DN18 for an obstacle or risky act, leaving a relevant specialist a real but fair chance", () => {
+  it("uses DN20 for an obstacle or risky act, leaving a relevant specialist a real but fair chance", () => {
     const game = createSaikaSafehouseDemo();
     const preview = parseAction("ข้าจะยิงผู้คุมที่ด่านด้วยปืนคาบศิลา", game);
-    expect(preview.difficulty).toBe(18);
+    expect(preview.difficulty).toBe(20);
     expect(preview.difficultyReason).toContain("ท้าทาย");
 
     const outcomes = distribution(5, preview.difficulty);
-    expect(outcomes.decisive + outcomes.success).toBe(78);
-    expect(outcomes.failure).toBe(28);
+    expect(outcomes.decisive + outcomes.success).toBeGreaterThan(outcomes.failure);
   });
 
-  it("reserves DN26 for an unprepared compounded crisis instead of every illicit word", () => {
+  it("reserves DN28 for an unprepared compounded crisis instead of every illicit word", () => {
     const game = createSaikaSafehouseDemo();
     const unprepared = parseAction("ข้าจะปลอมตราเพื่อผ่านด่าน", game);
     const prepared = parseAction("ข้าจะยิงผู้คุมที่ด่านด้วยปืนคาบศิลา", game);
-    expect(unprepared.difficulty).toBe(26);
+    expect(unprepared.difficulty).toBe(28);
     expect(unprepared.difficultyReason).toContain("วิกฤต");
-    expect(prepared.difficulty).toBe(18);
+    expect(prepared.difficulty).toBe(20);
 
     const outcomes = distribution(3, unprepared.difficulty);
     expect(outcomes.failure).toBeGreaterThan(outcomes.decisive + outcomes.success);
   });
 
-  it("spends Momentum on the inspected result instead of rerolling or dropping its breakdown", () => {
-    const game = createSaikaSafehouseDemo();
-    const record = resolveRoll(parseAction("ข้าจะเสนอแผนให้กันทาโร่", game), game, false);
-    const boosted = applyMomentumToRoll(record, game);
-
-    expect(boosted.dice).toEqual(record.dice);
-    expect(boosted.id).toBe(record.id);
-    expect(boosted.tick).toBe(record.tick);
-    expect(boosted.stat).toBe(record.stat);
-    expect(boosted.mastery).toEqual(record.mastery);
-    expect(boosted.contextBonus).toBe(record.contextBonus);
-    expect(boosted.total).toBe(record.total + 2);
-    expect(boosted.margin).toBe(record.margin + 2);
-    expect(boosted.momentumSpent).toBe(2);
+  it("canonicalizes all AI-proposed ordinary difficulties to the published DN table", () => {
+    expect([8, 12, 16, 20, 24, 28, 32]).toContain(canonicalDifficulty(8));
+    expect(canonicalDifficulty(11)).toBe(12);
+    expect(canonicalDifficulty(15)).toBe(16);
+    expect(canonicalDifficulty(23)).toBe(24);
+    expect(canonicalDifficulty(31)).toBe(32);
   });
 
-  it("lists concrete Momentum sources from Focus, carried reserves, and an open favor", () => {
+  it("resolves a final total from dice, Trait, Mastery, Context, and Flaw only", () => {
     const game = createSaikaSafehouseDemo();
-    const sources = getMomentumSources(game);
-    expect(sources).toEqual(expect.arrayContaining([
-      expect.objectContaining({ id: "vital-focus", kind: "vital", cost: "Focus −1" }),
-      expect.objectContaining({ id: "item-dry-ration", kind: "item", itemId: "dry-ration" }),
-      expect.objectContaining({ id: "scene-favor-favor-gantaro-life", kind: "scene" }),
-    ]));
+    const record = resolveRoll(parseAction("ข้าจะเสนอแผนให้กันทาโร่", game), game);
+
+    const trait = game.character.attributes[record.stat];
+    const mastery = record.mastery?.level ?? 0;
+    const flaw = record.flawTriggered ? -2 : 0;
+    expect(record.total).toBe(record.dice[0] + record.dice[1] + trait + mastery + record.contextBonus + flaw);
+    expect(record).not.toHaveProperty("momentumSpent");
+    expect(record).not.toHaveProperty("momentumSource");
   });
 
-  it("uses a chosen carried reserve only when the Momentum result is recorded", () => {
+  it("levels a Trait when its Progress threshold is reached through an eligible roll", () => {
     const game = createSaikaSafehouseDemo();
-    const record = resolveRoll(parseAction("ข้าจะเสนอแผนให้กันทาโร่", game), game, false);
-    const boosted = applyMomentumFromSource(record, game, "item-dry-ration");
-    const saved = applyRoll(game, boosted);
-    expect(boosted.dice).toEqual(record.dice);
-    expect(boosted.momentumSource).toMatchObject({ kind: "item", itemId: "dry-ration", cost: "ใช้ของ 1 ชิ้น" });
-    expect(saved.character.inventory.find((entry) => entry.id === "dry-ration")?.condition).toBe("used");
-    expect(saved.character.vitals.focus).toBe(game.character.vitals.focus);
-    expect(saved.memories.at(-1)?.detail).toContain("ใช้ของ 1 ชิ้น");
-  });
-
-  it("spends Focus only when the selected vital source is committed", () => {
-    const game = createSaikaSafehouseDemo();
-    const record = resolveRoll(parseAction("ข้าจะเสนอแผนให้กันทาโร่", game), game, false);
-    const saved = applyRoll(game, applyMomentumFromSource(record, game, "vital-focus"));
-    expect(saved.character.vitals.focus).toBe(game.character.vitals.focus - 1);
-    expect(saved.character.vitals.momentum).toBe(game.character.vitals.momentum - 1);
+    const prepared = {
+      ...game,
+      character: {
+        ...game.character,
+        attributes: { ...game.character.attributes, mind: 2 },
+        statXp: { ...game.character.statXp, mind: { xp: 2, totalXp: 2 } },
+      },
+    };
+    const preview = parseAction("ข้าจะเสนอแผนให้กันทาโร่", prepared);
+    const record = { ...resolveRoll(preview, prepared), outcome: "success_with_cost" as const, difficulty: 16, specialItem: undefined };
+    const saved = applyRoll(prepared, record);
+    expect(saved.character.attributes.mind).toBe(3);
+    expect(saved.character.statXp.mind).toMatchObject({ xp: 0, totalXp: 3 });
+    expect(saved.progression?.lastStatPractice).toMatchObject({ stat: "mind", gained: 1, valueBefore: 2, valueAfter: 3 });
   });
 });

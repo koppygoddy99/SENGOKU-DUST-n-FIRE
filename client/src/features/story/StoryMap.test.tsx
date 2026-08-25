@@ -12,7 +12,7 @@ describe("StoryMap", () => {
   it("projects campaign location, active mission, memories, and roll state from the real game state", () => {
     const base = createSaikaSafehouseDemo();
     const preview = parseAction("I will ask the guard for one night to speak with the prisoner.", base);
-    const resolved = applyRoll(base, resolveRoll(preview, base, false));
+    const resolved = applyRoll(base, resolveRoll(preview, base));
     const game = { ...resolved, missions: base.missions };
     const onOpen = vi.fn();
 

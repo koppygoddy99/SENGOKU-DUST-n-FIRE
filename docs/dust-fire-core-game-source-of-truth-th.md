@@ -37,7 +37,6 @@ AI GM และหลังบ้านต้องไม่ทอยแทน�
 Declare Intent
   → Assess or Analyze
   → Deterministic 2d12 Roll or Specialized-Item Pass
-  → Optional Momentum
   → Resolve Consequences
   → Apply Practice / Time / Mission / Reward
   → Record Memory / Agreement / Chronicle
@@ -50,10 +49,9 @@ Declare Intent
 | 1. Declare Intent | ประโยค action ของผู้เล่น | มีเป้าหมายหรือวิธีพอให้ parse ได้ | บังคับให้กรอก stat, skill หรือ DN |
 | 2. Assess / Analyze | action + `GameState` | ความเสี่ยง; วิเคราะห์เต็มจึงเปิดแกน/วิชาที่ระบบเลือก | เฉลย skill ในโหมด assess risk |
 | 3. Roll / Pass | `RollPreview` ที่ canonical | 2d12, total, DN, margin, outcome หรือผ่านด้วยไอเทมเฉพาะทางที่ตรงเงื่อนไข | AI สุ่มเต๋า แก้ outcome หรืออนุมัติไอเทมเอง |
-| 4. Momentum | การเลือกผู้เล่นหลังเห็น roll | ลด Momentum 1 และเพิ่ม total `+2` ถ้าใช้ได้ | ใช้เมื่อ Momentum = 0 |
-| 5. Consequence | `RollRecord` ที่ finalize | ฉาก/ความทรงจำ/สถานะทางสังคมหรือทรัพยากรเปลี่ยน | จบเพียงคำว่า success/fail |
-| 6. Progression | mastery, outcome, difficulty, mission state | Mastery Progress, Level, time mark, อายุ, mission/reward ตามกฎ | แจก Progress จากการวนทอยไร้ผลหรือการผ่านด้วยไอเทม |
-| 7. Persist | `GameState` ใหม่ | Auto Save และ Campaign snapshot อัปเดต | ทำให้ manual save เดิมหาย |
+| 4. Consequence | `RollRecord` ที่ finalize | ฉาก/ความทรงจำ/สถานะทางสังคมหรือทรัพยากรเปลี่ยน | จบเพียงคำว่า success/fail |
+| 5. Progression | trait/mastery, outcome, difficulty, mission state | Trait Progress, Mastery Progress, Level, time mark, อายุ, mission/reward ตามกฎ | แจก Progress จากการวนทอยไร้ผลหรือการผ่านด้วยไอเทม |
+| 6. Persist | `GameState` ใหม่ | Auto Save และ Campaign snapshot อัปเดต | ทำให้ manual save เดิมหาย |
 
 ### 2.1 ภาษาของผู้เล่น
 
@@ -71,7 +69,7 @@ Declare Intent
 
 ```text
 baseDice = d12 + d12
-total = baseDice + traitValue + masteryLevel + contextBonus + flawBonus + momentumBonus
+total = baseDice + traitValue + masteryLevel + contextBonus + flawBonus
 margin = total - difficulty
 ```
 
@@ -82,7 +80,6 @@ margin = total - difficulty
 | `masteryLevel` | ระดับความชำนาญเฉพาะทาง | 0 ถึง +5 |
 | `contextBonus` | ของ, เอกสาร, สถานที่, คนกลาง หรือบริบทที่ตรงแท็ก | 0 ถึง +2 |
 | `flawBonus` | AI GM trigger จุดอ่อนที่เกี่ยวข้องโดยตรง | 0 หรือ −2 |
-| `momentumBonus` | เลือกใช้หลังเห็นผล | 0 หรือ +2 |
 
 ### 3.2 ห้าแกน
 
@@ -94,21 +91,22 @@ margin = total - difficulty
 | `mind` | Judgment | ปัญญา | อ่านบัญชี แผน เอกสาร หลักฐาน หรือวางเหตุผล |
 | `heart` | Resolve | พลังใจ | ยืนหยัด สาบาน ขอร้อง ชักจูง หรือรับผิดชอบต่อหน้าใคร |
 
-ระบบเลือก **วิธีหลัก** ไม่ใช่คำกริยาที่ดังที่สุด ตัวอย่าง การยื่นตราเพื่อให้ผ่านด่านคือ `mind` เมื่ออำนาจของเอกสารเป็นแกน; หากผู้เล่นแบกคนเจ็บปีนกำแพงจึงเป็น `body`. Trait มีค่า 1–10 และ engine บวก **ค่าจริง** เข้าผลทอยโดยตรง เช่น `mind = 3` จึงให้ `+3`; ไม่มี bonus tier และ Traits ไม่รับ XP แยก การเติบโตเชิงตัวเลขอยู่ที่ Mastery เท่านั้น
+ระบบเลือก **วิธีหลัก** ไม่ใช่คำกริยาที่ดังที่สุด ตัวอย่าง การยื่นตราเพื่อให้ผ่านด่านคือ `mind` เมื่ออำนาจของเอกสารเป็นแกน; หากผู้เล่นแบกคนเจ็บปีนกำแพงจึงเป็น `body`. Trait มีค่า Level 1–10 และ engine บวก **ค่าจริง** เข้าผลทอยโดยตรง เช่น `mind = 3` จึงให้ `+3`; ไม่มี bonus tier. งานปกติที่ใช้ Trait ตรงและ DN ตั้งแต่ 12 ให้ Trait Progress 1 หน่วย หรือ 2 หน่วยเมื่อ decisive success; DN 8 และการผ่านด้วยไอเทมเฉพาะทางไม่ให้ Progress. Threshold ต่อระดับคือ 3 (Level 1–3), 4 (Level 4–6), 5 (Level 7–8), 6 (Level 9) และ Level 10 คือเพดาน
 
 ### 3.3 ระดับความยาก
 
-AI อาจประเมินความยากเป็นตัวเลข แต่ client ต้อง canonicalize เป็น tier ที่มี guardrail. DN ต่ำใช้กับงานคุ้นมือหรือปลอดภัยจริง ไม่ใช่เพียงเพราะประโยคสั้น และคำเสี่ยงคำเดียวต้องไม่กระโดดเป็น DN22 หรือ 26 โดยไม่ดูวิชา/การเตรียมตัว.
+AI อาจประเมินความยากเป็นตัวเลข แต่ client ต้อง canonicalize เป็น tier ที่มี guardrail. DN ต่ำใช้กับงานคุ้นมือหรือปลอดภัยจริง ไม่ใช่เพียงเพราะประโยคสั้น และคำเสี่ยงคำเดียวต้องไม่กระโดดเป็น DN24 หรือ 28 โดยไม่ดูวิชา/การเตรียมตัว.
 
 | DN | ระดับ | ใช้กับ |
 |---:|---|---|
 | 0 | Specialized pass / ผ่านเฉพาะทาง | item ที่มีสิทธิ์ตรงตามเอกสาร/สถานการณ์เปิดทางให้ผ่านโดยไม่ทอย |
 | 8 | Very easy / ง่ายมาก | พักฟื้น งานคุ้นมือที่ปลอดภัย หรือคุยกับคนที่ไว้ใจ |
-| 10 | Easy / ง่าย | งานคุ้นเคยหรือการลาดตระเวนปลอดภัยที่มี mastery ตรง |
-| 14 | Standard / มาตรฐาน | งานกลาง ๆ ที่ยังมีเดิมพันและต้องระวัง |
-| 18 | Challenging / ท้าทาย | ด่าน ผู้คุม การตรวจ การปะทะ หรืองานเสี่ยงที่มีพยาน/ข้อครหา |
-| 22 | Obstacle / อุปสรรค | แรงกดดันซ้อนที่ยังมีแผน เครื่องมือ หรือ mastery เป็นทางออก |
-| 26 | Critical / วิกฤต | ฉากชี้ชะตาเกือบเป็นไปไม่ได้: การเสี่ยงผิดกฎหมายปะทะด่าน/ผู้คุม โดยไม่มี mastery หรือเครื่องมือช่วย |
+| 12 | Easy / ค่อนข้างง่าย | งานคุ้นเคยที่มีวิธีหรือ mastery ตรง และมีความเสี่ยงเพียงเล็กน้อย |
+| 16 | Standard / มาตรฐาน | งานกลาง ๆ ที่ยังมีเดิมพันและต้องระวัง |
+| 20 | Challenging / ท้าทาย | ด่าน ผู้คุม การตรวจ การปะทะ หรืองานเสี่ยงที่มีพยาน/ข้อครหา |
+| 24 | Obstacle / อุปสรรค | แรงกดดันซ้อนที่ยังมีแผน เครื่องมือ หรือ mastery เป็นทางออก |
+| 28 | Critical / วิกฤต | ฉากชี้ชะตาที่เสี่ยงผิดกฎหมายปะทะด่าน/ผู้คุม โดยไม่มี mastery หรือเครื่องมือช่วย |
+| 32 | Legendary / ระดับตำนาน | จุดตัดสินชะตาที่ไม่ควรเป็นงานปกติ ต้องมีตัวละครระดับสูง การเตรียมพร้อมมาก หรือหาเส้นทางอื่น |
 
 ความชำนาญและ context ให้โบนัสที่ตรวจได้ในสูตร แต่ไม่ลบ DN เพื่อทำให้เดิมพันหายไป ยกเว้น **ไอเทมเฉพาะทาง** ที่ state ระบุ mode และ tags ชัดเจน เช่นหนังสือผ่านทางของแท้: deterministic engine ตรวจว่า item usable และ tags ตรงกับ action ก่อนตั้ง DN เป็น 0/ผ่านโดยไม่ทอย; AI GM ไม่มีสิทธิ์ให้สิทธินี้เอง
 
@@ -121,19 +119,19 @@ AI อาจประเมินความยากเป็นตัวเ�
 | `-4..-1` | `partial_success` | ได้บางส่วน | ให้เวลา/ข้อมูล/ทางเลือก แต่แรงกดดันยังอยู่ |
 | `≤ -5` | `failure_with_consequence` | ทางเดิมพัง | เพิ่ม stain, suspicion, cost หรือเปลี่ยนเส้นเรื่อง; ห้าม dead end |
 
-### 3.5 Momentum
+### 3.5 Trait Progress
 
-`Momentum` คือแรงฮึด ใช้ได้หนึ่งหน่วยหลังเห็นผลทอย เพิ่ม `+2` จาก **ผลเต๋าเดิมและ breakdown เดิม** แล้วลดค่า Momentum 1. มันไม่ทอยใหม่ ไม่ลบพยาน ไม่ทำให้บาดแผลหาย และไม่ลบผลตามมาทั้งก้อน. การผ่านด้วยไอเทมเฉพาะทางไม่มีผลเต๋า จึงใช้ Momentum ไม่ได้
+Trait เติบโตจากการเผชิญงานที่มีเดิมพัน ไม่ใช่จากการทำงานง่ายซ้ำ ๆ. เมื่อ action ใช้ Trait ตรงกับ `RollPreview`, เป็นการทอยปกติ (ไม่ใช่ special-item pass) และ DN ตั้งแต่ 12 ระบบให้ `+1 Trait Progress`; หาก outcome เป็น `decisive_success` ให้ `+2`. ผลลัพธ์สำเร็จหรือพลาดยังนับเป็นการฝึกได้ เพราะความกดดันของงานคือสิ่งที่สร้างการเรียนรู้
 
-ก่อนกดใช้ ผู้เล่นต้องเลือกแหล่งแรงฮึดที่ระบบตรวจได้จาก `GameState` และค่าใช้จ่ายจะถูกบันทึกพร้อม `RollRecord` และ `WorldMemory` เมื่อบันทึกผลแล้ว
+| Level ปัจจุบัน | Progress เพื่อขึ้นระดับถัดไป | สถานะการเติบโต |
+|---:|---:|---|
+| 1–3 | 3 | เริ่มเห็นรูปแบบและใช้จุดแข็งได้เป็นนิสัย |
+| 4–6 | 4 | ผ่านงานที่ต้องรับผิดชอบและแรงกดดันจริง |
+| 7–8 | 5 | ฝีมือหรืออุปนิสัยเริ่มเปลี่ยนทางเลือกของฉาก |
+| 9 | 6 | ขั้นสุดท้ายก่อนเป็น Level 10 |
+| 10 | 0 | ถึงเพดาน; ไม่สะสม Progress เพิ่ม |
 
-| แหล่ง | เงื่อนไขใช้งาน | ค่าใช้จ่ายเมื่อบันทึกผล | ร่องรอยที่เก็บ |
-|---|---|---|---|
-| ใจมั่นที่ยังเหลือ | Momentum > 0, Focus > 0 และ Wounds < 6 | Focus −1 | ระบุว่าใช้ใจมั่นฝืนแรงกดดัน |
-| เสบียงพกพา | มี `reserve` ที่ condition เป็น `usable` | item เปลี่ยนเป็น `used` | ระบุชื่อเสบียงและการใช้ของ 1 ชิ้น |
-| คำค้ำ/บุญคุณเปิดอยู่ | มี obligation ชนิด `favor` สถานะ `open` | ผูกบุญคุณเพิ่มในบันทึกเรื่อง | ระบุผู้ค้ำและเงื่อนไขของเขา |
-
-แหล่งเหล่านี้ให้โบนัส **เท่ากันคือ +2** เพื่อให้ระบบไม่กลายเป็นการกองโบนัส ความต่างอยู่ที่ราคาทางกาย สัมภาระ หรือความสัมพันธ์ที่เรื่องจะจำต่อไป
+Progress ของ Trait ต้องแสดงใน Character Dossier และ Narrative Outcome พร้อมชื่อ Trait, จำนวนที่ได้, Level ก่อน/หลัง และเหตุผล. ไม่มีการตัดสินใจหลังเห็นเต๋าเพื่อเพิ่ม total; ผลทอยที่เปิดแล้วเป็น final deterministic record
 
 ---
 
@@ -145,8 +143,8 @@ AI อาจประเมินความยากเป็นตัวเ�
 |---|---|---|
 | Identity | name, identity, occupation, origin | ภาษาและสถานะของฉาก |
 | Personal stakes | strength, weakness, flaws, pulls | จุดอ่อน 1–2 ข้อและแรงดึงที่ AI GM/Mission นำกลับมาตามบริบท |
-| Resolution | attributes, masteries | Traits ใช้บวกผลทอยตรง; Mastery เป็น Progress/Level เดียวของการเติบโต |
-| Vitals | wounds, focus, momentum | ความเปราะบางและการฝืนผล |
+| Resolution | attributes, statXp, masteries | Traits ใช้บวกผลทอยตรงและมี Trait Progress; Mastery มี Progress/Level แยกของตน |
+| Vitals | wounds, focus | ความเปราะบางและการทรงตัวในฉาก |
 | Social | rank, honor, influence, information, stain | สิทธิ์เข้าถึงและแรงกดดันทางสังคม |
 | Resources | property, supplies, credit, inventory | การเตรียมตัว การแลกเปลี่ยน และรางวัล |
 
@@ -156,7 +154,6 @@ AI อาจประเมินความยากเป็นตัวเ�
 |---|---|---|
 | Wounds / บาดแผล | 0–6 | บันทึกภาวะกายและต้นทุนเรื่อง; penalty/recovery เต็มรูปแบบเป็นงานอนาคต |
 | Focus / ค่าสติ | 0–6 | ความมั่นคงท่ามกลางแรงกดดัน; stress loop เต็มรูปแบบเป็นงานอนาคต |
-| Momentum / แรงฮึด | 0–2 | ใช้พลิก total หลัง roll ได้จริง |
 
 ### 4.3 สถานะทางสังคม
 
@@ -472,10 +469,11 @@ type GameState = {
 | Progress ของ Level 5 เป็น 0 | ห้ามรับ Progress ซ้ำ |
 | Progress ใช้เกณฑ์เดียว | ทุก Level 0–4 ต้องใช้ 5 Progress เพื่อขึ้นระดับ |
 | Progress ต่อ roll ไม่เกิน 2 | decisive success เป็นเพดาน +2 |
-| DN 8 และ item pass ไม่เพิ่ม Progress | ไม่มีการทดสอบ Mastery ที่มีน้ำหนัก |
+| DN 8 และ item pass ไม่เพิ่ม Progress | ไม่มีการฝึก Trait/Mastery จากงานง่ายหรือ item bypass |
+| Trait อยู่ 1–10 | Trait Progress ใช้ threshold 3/4/5/6 และ Level 10 เป็นเพดาน |
 | Context/Gear ไม่เกิน +2 | item/context ทั้งหมดถูก clamp ก่อน resolve |
 | Special item ต้องตรงเงื่อนไข | action ไม่ตรง tags ต้องกลับสู่ DN ปกติ |
-| Momentum ไม่ติดลบ | ใช้ได้เฉพาะ > 0 |
+| ไม่มี Momentum ใน state/roll | total ประกอบด้วย 2d12 + Trait + Mastery + Context + Flaw เท่านั้น |
 | Leaf ไม่เพิ่มทุก roll | ต้องสะสมหลายวันจึงเปิด Leaf |
 | อายุไม่เพิ่มตามจำนวน roll | เพิ่มเมื่อข้ามฤดูเกิดในปีหลังเริ่ม |
 | Mission reward ให้ครั้งเดียว | `rewardGranted` ป้องกัน duplication |
@@ -490,8 +488,8 @@ type GameState = {
 
 | ระบบ | สถานะ | หมายเหตุ |
 |---|---|---|
-| 2d12, canonical DN, Momentum | ใช้งานจริง | deterministic client rules |
-| Mastery Level 0–5, Progress 5 หน่วย, migration | ใช้งานจริง | Traits ไม่รับ XP แยก; regression ครอบคลุมกติกาหลัก |
+| 2d12, canonical DN 8–32, ไม่มี Momentum | ใช้งานจริง | deterministic client rules |
+| Trait Level 1–10 + Trait Progress, Mastery Level 0–5 | ใช้งานจริง | Trait threshold 3/4/5/6, Mastery ใช้ 5 Progress; migration และ regression ครอบคลุมกติกาหลัก |
 | เวลา/อายุ/Leaf หลายวัน | ใช้งานจริง | Leaf เปลี่ยนหลังหลายวันสะสม |
 | Mission dossier, auto progression, contextual reward | ใช้งานจริงใน vertical slice | ยังไม่ใช่ mission graph หลายเส้นเต็มรูปแบบ |
 | Agreements & Consequences | ใช้งานจริง | บันทึกการแลกเปลี่ยน/รางวัล/ผลตามมา |
