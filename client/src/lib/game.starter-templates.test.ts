@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { STARTER_TEMPLATES, attributesForDraft, createGameState, masteryTierForRank, selectedAttributePullIds, type CharacterDraft } from "./game";
+import { RELATIONSHIP_QUESTIONS, STARTER_TEMPLATES, createGameState, masteryTierForRank, type CharacterDraft } from "./game";
 
 function draftFor(templateId: string, overrides: Partial<CharacterDraft> = {}): CharacterDraft {
   return {
@@ -11,7 +11,6 @@ function draftFor(templateId: string, overrides: Partial<CharacterDraft> = {}): 
     strength: "ไม่ยอมทิ้งคนของตน",
     weakness: "ติดหนี้คนรู้จัก",
     answers: {},
-    attributePullIds: [],
     ...overrides,
   };
 }
@@ -41,14 +40,15 @@ describe("starter occupation templates", () => {
     expect(ids).not.toEqual(expect.arrayContaining(["sakai_merchant", "shinobi_network_runner", "temple_protector", "rear_castle_keeper"]));
   });
 
-  it("adds no more than two answered relationship pulls to the selected occupation base stats", () => {
+  it("keeps two answered character-background records without changing occupation base stats", () => {
     const template = STARTER_TEMPLATES.find((entry) => entry.id === "village_scribe")!;
     const draft = draftFor("village_scribe", {
-      answers: { hidden_knowledge: "รู้ว่าบัญชีใครถูกแก้", never_surrender: "จะไม่มอบสมุดบัญชี", sacrifice: "ยอมเสียแรงกาย" },
-      attributePullIds: ["hidden_knowledge", "never_surrender", "sacrifice"],
+      answers: { life_before: "เคยคัดบัญชีข้าวให้บ้านเกิด", stance: "ไม่ยืนข้างคนที่ใช้บัญชีทำร้ายผู้หิวโหย" },
     });
-    expect(selectedAttributePullIds(draft)).toEqual(["hidden_knowledge", "never_surrender"]);
-    expect(attributesForDraft(template, draft)).toEqual({ body: 1, hand: 1, wit: 2, mind: 5, heart: 3 });
+    const state = createGameState({ id: "background-test", title: "บัญชีเก่า", year: 1578, season: "Summer", region: "Mikawa", location: "หมู่บ้าน", warShadow: 3, day: 1 }, draft);
+    expect(RELATIONSHIP_QUESTIONS).toHaveLength(2);
+    expect(state.character.attributes).toEqual(template.attributes);
+    expect(state.character.pulls.map((entry) => entry.answer)).toEqual(["เคยคัดบัญชีข้าวให้บ้านเกิด", "ไม่ยืนข้างคนที่ใช้บัญชีทำร้ายผู้หิวโหย"]);
   });
 
   it("persists the selected template age, social record, resources, gear, and opening mission in a local campaign", () => {

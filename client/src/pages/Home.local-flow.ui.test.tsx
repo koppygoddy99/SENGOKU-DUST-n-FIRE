@@ -82,6 +82,33 @@ describe("UI Preview click flow", () => {
     expect(screen.getAllByText("คืนที่เมืองซาไกตื่น").length).toBeGreaterThan(0);
   });
 
+  it("requires a second explicit confirmation before deleting a manual local save", () => {
+    const game = createSaikaSafehouseDemo();
+    const manual = createSaikaSafehouseDemo();
+    manual.campaign = { ...manual.campaign, id: "camp-delete", title: "Delete this local leaf" };
+    window.localStorage.setItem("dust-fire-local-game-v3-saika", JSON.stringify({ game, saves: { manual, leaf2: null, leaf3: null }, language: "en", readerMode: true, darkMode: false, fontSize: "normal", accent: "vermilion" }));
+    render(<Home />);
+    openMore("Load Game");
+    fireEvent.click(screen.getAllByRole("button", { name: "DELETE" })[0]);
+    expect(screen.getByRole("button", { name: "CONFIRM DELETE" })).toBeTruthy();
+    expect(screen.getByText("Delete this local leaf")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "CONFIRM DELETE" }));
+    expect(screen.queryByText("Delete this local leaf")).toBeNull();
+  });
+
+  it("shows the full character confirmation dossier before a Local Save begins", () => {
+    window.history.replaceState({}, "", "/?review=start");
+    render(<Home />);
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.getByText("WHO YOU ARE")).toBeTruthy();
+    expect(screen.getByText("FIRST MISSION")).toBeTruthy();
+    expect(screen.getByText("ALL STARTING MASTERIES")).toBeTruthy();
+    expect(screen.getByText("CARRIED GEAR")).toBeTruthy();
+    expect(screen.getByText("CHARACTER BACKGROUND")).toBeTruthy();
+  });
+
   it("lists campaign records from Chronicle and restores the selected campaign into the Story group", () => {
     const saika = createSaikaSafehouseDemo();
     const earlier = createSaikaSafehouseDemo();

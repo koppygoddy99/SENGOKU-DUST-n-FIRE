@@ -297,7 +297,6 @@ export type CharacterDraft = {
   strength: string;
   weakness: string;
   answers: Record<string, string>;
-  attributePullIds?: string[];
 };
 
 export type StarterTemplate = {
@@ -365,12 +364,8 @@ function defaultProgression(context: CampaignContext, ageAtCampaignStart = 20, b
 const mastery = (id: string, label: string, level: number, origin: string, tags: string[]): Mastery => normalizeMasteryProgress({ id, label, level, origin, tags });
 
 export const RELATIONSHIP_QUESTIONS = [
-  ["first_survivor", "เมื่อกลองสงครามดังขึ้น เจ้าอยากให้ใครรอดก่อนเป็นคนแรก", ["family", "protection"]],
-  ["stance", "หากต้องยืนข้างใครสักฝ่าย เจ้าจะยืนข้างใคร หรือจะไม่ยืนข้างใครเลย", ["allegiance", "politics"]],
-  ["never_surrender", "มีใครหรือสิ่งใดที่เจ้าจะไม่ยอมมอบให้ผู้มีอำนาจ", ["oath", "resistance"]],
-  ["debts", "ใครติดหนี้เจ้า และเจ้าติดหนี้ใคร", ["debt", "obligation"]],
-  ["hidden_knowledge", "เจ้ารู้สิ่งใดที่คนอื่นต้องการ แต่ยังไม่รู้ว่าเจ้ามี", ["secret", "leverage"]],
-  ["sacrifice", "หากต้องเสียบางอย่างเพื่อให้บ้านรอด เจ้าจะยอมเสียอะไร", ["sacrifice", "home"]],
+  ["life_before", "ก่อนหน้านี้เจ้ามีชีวิตอย่างไร", ["past", "home", "work"]],
+  ["stance", "เจ้ายืนหยัดเพื่ออะไร หรือไม่ยืนหยัดเพื่ออะไรเลย", ["conviction", "refusal", "allegiance"]],
 ] as const;
 
 export const STARTER_TEMPLATES: StarterTemplate[] = [
@@ -420,32 +415,6 @@ export function templateById(id: string) {
   return STARTER_TEMPLATES.find((template) => template.id === id) ?? STARTER_TEMPLATES[2];
 }
 
-const PULL_STAT_BY_ID: Record<string, StatId> = {
-  first_survivor: "heart",
-  stance: "mind",
-  never_surrender: "heart",
-  debts: "wit",
-  hidden_knowledge: "mind",
-  sacrifice: "body",
-};
-
-export function selectedAttributePullIds(draft: CharacterDraft): string[] {
-  const answered = RELATIONSHIP_QUESTIONS
-    .map(([id]) => id)
-    .filter((id) => Boolean(draft.answers[id]?.trim())) as string[];
-  const requested = (draft.attributePullIds ?? []).filter((id) => answered.includes(id));
-  return Array.from(new Set(requested.length ? requested : answered)).slice(0, 2);
-}
-
-export function attributesForDraft(template: StarterTemplate, draft: CharacterDraft): Attributes {
-  const attributes = { ...template.attributes };
-  selectedAttributePullIds(draft).forEach((pullId) => {
-    const stat = PULL_STAT_BY_ID[pullId];
-    if (stat) attributes[stat] = Math.min(6, attributes[stat] + 1);
-  });
-  return attributes;
-}
-
 export function createCharacter(draft: CharacterDraft): Character {
   const template = templateById(draft.templateId);
   const occupation = draft.templateId === "freeform" ? (draft.freeformOccupation.trim() || "ผู้เดินทางไร้สังกัด") : template.label;
@@ -458,13 +427,13 @@ export function createCharacter(draft: CharacterDraft): Character {
     origin: draft.origin.trim() || template.start,
     strength: draft.strength.trim() || "ทำงานภายใต้แรงกดดันได้",
     weakness: draft.weakness.trim() || "มีหนี้ที่ยังไม่กล้าพูดถึง",
-    attributes: attributesForDraft(template, draft),
+    attributes: { ...template.attributes },
     masteries: template.masteries.map((entry) => ({ ...entry })),
     vitals: { wounds: 0, focus: 5, momentum: 2 },
     social: { ...template.social },
     resources: { ...template.resources },
     inventory: template.inventory.map((entry) => ({ ...entry })),
-    pulls: RELATIONSHIP_QUESTIONS.map(([id, question, tags]) => ({ id, question, answer: draft.answers[id] || "ยังไม่ตอบ", tags: [...tags], weight: draft.answers[id] ? 2 : 1 })),
+    pulls: RELATIONSHIP_QUESTIONS.map(([id, question, tags]) => ({ id, question, answer: draft.answers[id] || "ยังไม่บอก", tags: [...tags], weight: draft.answers[id] ? 2 : 1 })),
   };
 }
 
@@ -512,7 +481,7 @@ export function createGameState(context: CampaignContext, draft: CharacterDraft)
 export function createSaikaSafehouseDemo(): GameState {
   const campaign: CampaignContext = { id: "camp-saika-1569", title: "Smoke Beneath Sakai", year: 1569, season: "Spring", region: "Sakai / Izumi", location: "เซฟเฮาส์ลับของไซกะ — นอกชายเขตเมืองซาไก", warShadow: 5, day: 1 };
   const character: Character = {
-    id: "char-sanefuyu", name: "ซาเนฟุยุ", identity: "เด็กชายวัยสิบสามปี", occupationId: "freeform", occupation: "ทหารรับจ้างถือปืนของไซกะ", origin: "กิอิ", strength: "อ่านผลประโยชน์และพูดในจังหวะที่คนกำลังลังเล", weakness: "บาดเจ็บสาหัสและถูกความหยามเกียรติผลักให้พลั้งมือ", attributes: { body: 1, hand: 3, wit: 3, mind: 2, heart: 3 }, masteries: [mastery("saika-firearm", "ปืนคาบศิลาและคนไซกะ", 2, "งานคุ้มกันและการรบ", ["fight", "weapon", "gunpowder"]), mastery("hard-bargain", "ต่อรองผลประโยชน์", 1, "เอาตัวรอด", ["negotiation", "social"]), mastery("water-escape", "หนีทางน้ำ", 1, "รอดจากการจมน้ำ", ["water", "escape"])], vitals: { wounds: 5, focus: 3, momentum: 1 }, social: { rank: 0, honor: 0, influence: 1, information: 2, stain: 2 }, resources: { property: 1, supplies: 1, credit: 0 }, inventory: [item("bandaged-arm", "ผ้าพันแผลชุ่มยา", "status", "ไหล่ซ้ายและแขนขวาบาดเจ็บ ใช้งานได้จำกัด", 0, []), item("saika-matchlock", "ปืนคาบศิลาเปียกชื้น", "equipment", "ปืนที่ต้องซ่อมและทำให้แห้งก่อนใช้", 2, ["bonus"], { stat: "hand", value: 1, tags: ["fight", "weapon"] }), item("dry-ration", "ข้าวปั้นตากแห้งกับเต้าเจี้ยว", "reserve", "ของกินที่กันทาโร่โยนให้", 1, ["bonus"])], pulls: RELATIONSHIP_QUESTIONS.map(([id, question, tags]) => ({ id, question, answer: id === "stance" ? "ยืนข้างไซกะตราบใดที่ผลประโยชน์ยังตรงกัน" : id === "debts" ? "ติดหนี้ชีวิตกันทาโร่" : "ยังไม่ตอบ", tags: [...tags], weight: id === "stance" || id === "debts" ? 2 : 1 })),
+    id: "char-sanefuyu", name: "ซาเนฟุยุ", identity: "เด็กชายวัยสิบสามปี", occupationId: "freeform", occupation: "ทหารรับจ้างถือปืนของไซกะ", origin: "กิอิ", strength: "อ่านผลประโยชน์และพูดในจังหวะที่คนกำลังลังเล", weakness: "บาดเจ็บสาหัสและถูกความหยามเกียรติผลักให้พลั้งมือ", attributes: { body: 1, hand: 3, wit: 3, mind: 2, heart: 3 }, masteries: [mastery("saika-firearm", "ปืนคาบศิลาและคนไซกะ", 2, "งานคุ้มกันและการรบ", ["fight", "weapon", "gunpowder"]), mastery("hard-bargain", "ต่อรองผลประโยชน์", 1, "เอาตัวรอด", ["negotiation", "social"]), mastery("water-escape", "หนีทางน้ำ", 1, "รอดจากการจมน้ำ", ["water", "escape"])], vitals: { wounds: 5, focus: 3, momentum: 1 }, social: { rank: 0, honor: 0, influence: 1, information: 2, stain: 2 }, resources: { property: 1, supplies: 1, credit: 0 }, inventory: [item("bandaged-arm", "ผ้าพันแผลชุ่มยา", "status", "ไหล่ซ้ายและแขนขวาบาดเจ็บ ใช้งานได้จำกัด", 0, []), item("saika-matchlock", "ปืนคาบศิลาเปียกชื้น", "equipment", "ปืนที่ต้องซ่อมและทำให้แห้งก่อนใช้", 2, ["bonus"], { stat: "hand", value: 1, tags: ["fight", "weapon"] }), item("dry-ration", "ข้าวปั้นตากแห้งกับเต้าเจี้ยว", "reserve", "ของกินที่กันทาโร่โยนให้", 1, ["bonus"])], pulls: RELATIONSHIP_QUESTIONS.map(([id, question, tags]) => ({ id, question, answer: id === "life_before" ? "เติบโตท่ามกลางเส้นทางค้าของคิอิ ก่อนกลายเป็นทหารรับจ้างของไซกะ" : "ยืนข้างไซกะตราบใดที่ผลประโยชน์ยังตรงกัน", tags: [...tags], weight: 2 })),
   };
   const mission: Mission = { id: "mission-echiya", issuer: "กันทาโร่", issuerType: "samurai", title: "คำตอบใต้ห้องขัง", request: "เสนอทางจัดการเอจิยะและตั๋วสัญญาปืนสามสิบกระบอก โดยไม่ให้สิทธิ์การค้าของไซกะในซาไกพังลง", pressure: "เอโกะชูเพิ่มเวรยาม ปิดประตูเมือง และตรวจเรือเข้าออกตามหาพ่อค้าเอจิยะ", deadline: "ก่อนเมืองซาไกยืนยันข่าวการหายตัว", reward: "การคุ้มครองของกันทาโร่และส่วนแบ่งค่าปืน", risk: "หัวของซาเนฟุยุและเอจิยะอาจถูกส่งไปแลกสิทธิ์การค้า", options: ["เสนอแผนปิดปาก", "สอบเอจิยะ", "หาตั๋วสัญญาปืน"], state: "offered", progress: { current: 0, required: 2, triggerPhrases: ["เอจิยะ", "ตั๋ว", "ปืน", "แผน"], rewardItem: { label: "จดหมายรับรองของกันทาโร่", kind: "document", description: "หลักฐานคุ้มครองชั่วคราวที่ช่วยให้คนของไซกะยอมฟังคำอธิบาย", slots: 0, functions: ["unlock"], bonus: { stat: "heart", value: 1, tags: ["saika", "protection"] }, condition: "usable", location: "carried", ownership: "owned" } } };
   const opening: Scene = {
