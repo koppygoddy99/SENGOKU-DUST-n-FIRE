@@ -300,4 +300,4 @@
 - [x] ปรับ deterministic engine, migration และ AI contract สำหรับ Trait Progression/DN ใหม่ พร้อมนำ Momentum ออก
 - [x] ปรับหน้าจอและข้อความสองภาษาให้แสดง Trait Progression และตัด Momentum ออกทั้งหมด
 - [x] อัปเดตเอกสารและ regression tests สำหรับ Trait, DN และ Momentum ใหม่
-- [ ] ตรวจ TypeScript, tests, build และ push กติกาใหม่ขึ้น main
+- [x] ตรวจ TypeScript, tests, build และ push กติกาใหม่ขึ้น main
