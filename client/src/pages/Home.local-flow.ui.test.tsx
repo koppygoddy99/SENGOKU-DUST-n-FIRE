@@ -174,6 +174,22 @@ describe("UI Preview click flow", () => {
     expect(ROLL_ANIMATION_MS).toBe(4000);
   });
 
+  it("locks the player shell when the browser reports no network connection", () => {
+    const originalOnline = Object.getOwnPropertyDescriptor(window.navigator, "onLine");
+    Object.defineProperty(window.navigator, "onLine", { configurable: true, value: false });
+
+    try {
+      render(<Home />);
+      expect(screen.getByTestId("offline-play-lock")).toBeTruthy();
+      expect(screen.getByRole("heading", { name: "Connection required to play" })).toBeTruthy();
+      expect(screen.queryByText("Campaign Command")).toBeNull();
+      expect(mocks.creditsQuery).toHaveBeenCalledWith(undefined, expect.objectContaining({ enabled: false }));
+    } finally {
+      if (originalOnline) Object.defineProperty(window.navigator, "onLine", originalOnline);
+      else delete (window.navigator as unknown as { onLine?: boolean }).onLine;
+    }
+  });
+
   it("keeps two dice in the decision window and lets a saved narrative outcome accept the next intent immediately", () => {
     vi.useFakeTimers();
     render(<Home />);

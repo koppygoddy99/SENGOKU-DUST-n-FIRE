@@ -15,6 +15,7 @@ import { MarketHub } from "@/pages/MarketHub";
 import { StoryMap } from "@/features/story/StoryMap";
 import { PlayScene } from "@/features/play/PlayScene";
 import { ChronicleView } from "@/features/chronicle/ChronicleView";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { gmUnavailableLocalTrialNotice, historicalStatusLabel, openLocalPreview, saveLocalTrialResult, shouldFetchProfileCredits, shouldUseLocalRules, splitStoryParagraphs, withHistoricalBoundary } from "@/features/shared/gameplayHelpers";
 import { reviewPageFromSearch, reviewScreenFor, type PlayerPageId } from "@/lib/playerRoutes";
 import { buildReviewSeed } from "@/lib/reviewSeeds";
@@ -225,9 +226,10 @@ export default function Home({ forceUiPreviewMode }: { forceUiPreviewMode?: bool
   // handler: onClick={() => startLogin()} (imported from "@/const"). Never call
   // startLogin() during render (no href={startLogin()}) — it mints a one-time
   // nonce cookie and must run only at the moment of navigation.
-  const { user, loading, isAuthenticated } = useAuth();
+  const isOnline = useNetworkStatus();
+  const { user, loading, isAuthenticated } = useAuth({ enabled: isOnline });
   const uiPreviewMode = forceUiPreviewMode ?? true;
-  const accountCredits = trpc.profile.credits.useQuery(undefined, { enabled: shouldFetchProfileCredits(uiPreviewMode, isAuthenticated), retry: false });
+  const accountCredits = trpc.profile.credits.useQuery(undefined, { enabled: isOnline && shouldFetchProfileCredits(uiPreviewMode, isAuthenticated), retry: false });
 
   const [reviewRoute] = useState(isReviewRoute);
   const [reviewScreen] = useState(() => reviewRoute ? reviewScreenFor(reviewPageFromUrl()) : undefined);
@@ -294,9 +296,9 @@ export default function Home({ forceUiPreviewMode }: { forceUiPreviewMode?: bool
   }, [managementOpen]);
   useEffect(() => {
     const credits = accountCredits.data?.credits;
-    if (!shouldFetchProfileCredits(uiPreviewMode, isAuthenticated) || typeof credits !== "number") return;
+    if (!isOnline || !shouldFetchProfileCredits(uiPreviewMode, isAuthenticated) || typeof credits !== "number") return;
     setGame((current) => current.credits === credits ? current : { ...current, credits });
-  }, [accountCredits.data?.credits, isAuthenticated]);
+  }, [accountCredits.data?.credits, isAuthenticated, isOnline]);
 
   const appClass = ["app-shell", darkMode ? "theme-dark" : "", `font-${fontSize}`, `accent-${accent}`, sidebarCollapsed ? "sidebar-collapsed" : "", reviewRoute ? "app-shell--review" : ""].join(" ");
   const updateGame = (next: GameState, message: string) => { setGame(next); setCampaignLibrary((current) => ({ ...current, [next.campaign.id]: copyState(next) })); setNotice(message); };
@@ -311,6 +313,8 @@ export default function Home({ forceUiPreviewMode }: { forceUiPreviewMode?: bool
   };
   const deleteSave = (slot: keyof SaveLeaves) => { setSaves((current) => ({ ...current, [slot]: null })); setNotice(`${slot === "manual" ? "Manual Save" : slot === "leaf2" ? "Saved Page II" : "Saved Page III"} deleted from this browser`); };
   const resetLocal = () => { const demo = seedGame(); window.localStorage.removeItem(STORAGE_KEY); setGame(demo); setSaves({ manual: copyState(demo), leaf2: null, leaf3: null }); setCampaignLibrary({ [demo.campaign.id]: copyState(demo) }); setNotice("Local records cleared · Saika safehouse example is ready"); };
+
+  if (!isOnline) return <OfflinePlayLock />;
 
   return <div className={appClass}>
     <header className="topbar">
@@ -356,6 +360,22 @@ export default function Home({ forceUiPreviewMode }: { forceUiPreviewMode?: bool
       {page === "settings" && <SettingsView language={language} setLanguage={setLanguage} darkMode={darkMode} setDarkMode={setDarkMode} fontSize={fontSize} setFontSize={setFontSize} accent={accent} setAccent={setAccent} readerMode={readerMode} setReaderMode={setReaderMode} onReset={resetLocal} />}
     </main>
   </div>;
+}
+
+function OfflinePlayLock() {
+  return <main className="app-shell connection-lock" data-testid="offline-play-lock" role="alert" aria-live="assertive">
+    <section className="connection-lock__paper">
+      <div className="connection-lock__seal" aria-hidden="true">火</div>
+      <div>
+        <p className="section-kicker">CONNECTION REQUIRED</p>
+        <h1>Connection required to play</h1>
+        <p>Dust &amp; Fire cannot start or continue a campaign while this browser is offline. Reconnect to the internet; this page will unlock automatically.</p>
+        <hr />
+        <h2>ต้องเชื่อมต่อเครือข่ายก่อนเล่น</h2>
+        <p>ไม่สามารถเริ่มหรือเล่นแคมเปญได้เมื่อเบราว์เซอร์ไม่มีเครือข่าย โปรดเชื่อมต่ออินเทอร์เน็ตอีกครั้ง หน้านี้จะปลดล็อกเองเมื่อกลับมาออนไลน์</p>
+      </div>
+    </section>
+  </main>;
 }
 
 function ManagementMenu({ language, isAdmin, onClose }: { language: Language; isAdmin: boolean; onClose: () => void }) {

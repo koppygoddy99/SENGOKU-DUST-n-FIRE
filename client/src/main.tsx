@@ -13,6 +13,7 @@ const queryClient = new QueryClient();
 const redirectToLoginIfUnauthorized = (error: unknown) => {
   if (!(error instanceof TRPCClientError)) return;
   if (typeof window === "undefined") return;
+  if (navigator.onLine === false) return;
 
   const isUnauthorized = error.message === UNAUTHED_ERR_MSG;
 
@@ -63,6 +64,9 @@ const trpcClient = trpc.createClient({
         return {};
       },
       fetch(input, init) {
+        if (typeof navigator !== "undefined" && navigator.onLine === false) {
+          return Promise.reject(new TypeError("Offline mode: network connection required"));
+        }
         return globalThis.fetch(input, {
           ...(init ?? {}),
           credentials: "include",

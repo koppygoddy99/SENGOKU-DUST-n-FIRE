@@ -14,6 +14,7 @@
     "test:mobile-keyboard": "playwright test tests/mobile-keyboard-audit.spec.mjs --workers=1",
     "test:play-dice-flow": "playwright test tests/play-dice-outcome-flow.spec.mjs --workers=1",
     "test:market-mobile-layout": "playwright test tests/market-hub-mobile-layout.spec.mjs --workers=1",
+    "test:offline-lock": "playwright test tests/offline-lock.spec.mjs --workers=1",
     "db:push": "drizzle-kit generate && drizzle-kit migrate"
   },
   "dependencies": {
