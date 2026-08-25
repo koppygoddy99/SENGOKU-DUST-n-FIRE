@@ -107,7 +107,7 @@ Context และ Mastery ไม่ลด DN แบบลบล้างเด�
 
 Manual Save, Auto Save, Load Game และ Chronicle ต้องอ้างอิงแคมเปญที่เลือกอยู่ ไม่ปนประวัติของแคมเปญอื่น การเล่น Local Trial จึงดำเนินต่อได้แม้บริการ AI หรือเซิร์ฟเวอร์ไม่ตอบ
 
-ชุดอาชีพเริ่มต้น 10 แบบ, ภารกิจเปิดเรื่อง, Mastery, สัมภาระ, สถานะเริ่มต้น และกติกาแรงดึงที่ผู้เล่นเลือกได้สองข้อ อ่านได้ที่ [`docs/game-design/starter-occupations-th.md`](docs/game-design/starter-occupations-th.md).
+ชุดอาชีพเริ่มต้น 10 แบบ, ภารกิจแรก, Mastery, สัมภาระ, สถานะเริ่มต้น และภูมิหลังตัวละครสองข้อที่ไม่เพิ่มแต้ม อ่านได้ที่ [`docs/game-design/starter-occupations-th.md`](docs/game-design/starter-occupations-th.md). ผังเทคนิคตั้งแต่กดทอยจน Local Save บันทึกผล อ่านได้ที่ [`docs/technical/one-turn-backend-flow-th.md`](docs/technical/one-turn-backend-flow-th.md).
 
 ## AI GM และ historical guardrails
 
