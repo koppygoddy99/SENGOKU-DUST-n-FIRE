@@ -277,3 +277,4 @@
 - [x] นำ asset แผนที่ที่ได้รับอนุญาตเข้า repository และปรับ Story Map ให้ VS Code/localhost แสดงรูปได้
 - [x] เพิ่ม Team 8: Backend Systems ในเอกสาร workflow พร้อมขอบเขต server contracts persistence AI GM asset delivery และ observability
 - [x] ตรวจ asset ทุก path ที่โปรเจกต์อ้างอิงและนำเฉพาะไฟล์ที่สิทธิ์ชัดเจนเข้า repository เพื่อไม่พึ่ง Manus storage
+- [x] ขยาย Team 8 Backend Systems ให้มีสมาชิก บทบาท หน้าที่ จุดรับส่งงาน และเกณฑ์ตรวจรับแบบละเอียด
