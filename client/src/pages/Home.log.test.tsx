@@ -10,7 +10,7 @@ const draft = { name: "ซาโตะ", identity: "", templateId: "freeform", f
 describe("Campaign Log prose", () => {
   it("renders every paragraph in normal Log mode", () => {
     const game = createGameState(campaign, draft);
-    game.memories = [{ id: "multi-paragraph", kind: "news", title: "ค่ำที่ตลาด", detail: "ย่อหน้าเรื่องแรกมีควันและกลิ่นข้าว\n\nย่อหน้าที่สองมีคนหยุดฟัง\n\nย่อหน้าที่สามทิ้งหนี้ไว้", tick: 1, tone: "ochre" }];
+    game.storyRecords = [{ id: "multi-paragraph", tick: 1, inGameDay: 1, title: "ค่ำที่ตลาด", prose: "ย่อหน้าเรื่องแรกมีควันและกลิ่นข้าว\n\nย่อหน้าที่สองมีคนหยุดฟัง\n\nย่อหน้าที่สามทิ้งหนี้ไว้", location: campaign.location }];
     const html = renderToStaticMarkup(<LogView game={game} language="th" readerMode={false} setReaderMode={() => undefined} />);
     expect(html).toContain("ย่อหน้าเรื่องแรกมีควันและกลิ่นข้าว");
     expect(html).toContain("ย่อหน้าที่สองมีคนหยุดฟัง");

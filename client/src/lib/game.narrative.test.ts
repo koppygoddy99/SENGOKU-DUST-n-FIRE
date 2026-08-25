@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { createGameState, parseAction, resolveRoll } from "./game";
+import { applyRoll, createGameState, parseAction, resolveRoll } from "./game";
 import { splitStoryParagraphs } from "../pages/Home";
 import { narrativeQualityFlags } from "../../../shared/narrativeStyle";
 
@@ -15,6 +15,7 @@ describe("narrative baseline", () => {
     expect(game.currentScene.body[1]).toContain("“");
     expect(game.currentScene.body[2]).toContain("เส้นตาย");
     expect(game.memories[0].detail).toBe(game.currentScene.body.join("\n\n"));
+    expect(game.storyRecords).toMatchObject([{ tick: 1, title: game.currentScene.title, prose: game.currentScene.body.join("\n\n"), location: game.currentScene.location }]);
   });
 
   it("writes a three-paragraph local fallback instead of a one-line resolution", () => {
@@ -33,5 +34,17 @@ describe("narrative baseline", () => {
 
   it("keeps Reader Mode paragraphs separate", () => {
     expect(splitStoryParagraphs("ย่อหน้าเรื่องแรก\n\nย่อหน้าที่สอง\n\nย่อหน้าที่สาม")).toEqual(["ย่อหน้าเรื่องแรก", "ย่อหน้าที่สอง", "ย่อหน้าที่สาม"]);
+  });
+
+  it("adds one narrative-only Story Record for each resolved Play Scene", () => {
+    const game = createGameState(campaign, draft);
+    vi.spyOn(Math, "random").mockReturnValue(0.7);
+    const roll = resolveRoll(parseAction("ข้าจะยื่นบัญชีข้าวต่อเสมียนหน้าด่าน", game), game, false);
+    vi.restoreAllMocks();
+    const next = applyRoll(game, roll);
+    expect(next.storyRecords).toHaveLength(2);
+    const record = next.storyRecords?.at(-1);
+    expect(record).toMatchObject({ tick: roll.tick, title: next.currentScene.title, prose: next.currentScene.body.join("\n\n"), location: next.currentScene.location });
+    expect(Object.keys(record ?? {}).sort()).toEqual(["id", "inGameDay", "location", "prose", "tick", "title"]);
   });
 });

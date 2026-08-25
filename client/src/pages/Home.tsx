@@ -16,6 +16,8 @@ import { StoryMap } from "@/features/story/StoryMap";
 import { PlayScene } from "@/features/play/PlayScene";
 import { ChronicleView } from "@/features/chronicle/ChronicleView";
 import { RelationshipsView } from "@/features/relationships/RelationshipsView";
+import { ApplicationManagementView } from "@/features/management/ApplicationManagementView";
+import { managementMenuFor, type ManagementItemId, type ManagementMenuItem } from "@/features/management/managementData";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { gmUnavailableLocalTrialNotice, historicalStatusLabel, openLocalPreview, saveLocalTrialResult, shouldFetchProfileCredits, shouldUseLocalRules, splitStoryParagraphs, withHistoricalBoundary } from "@/features/shared/gameplayHelpers";
 import { reviewPageFromSearch, reviewScreenFor, type PlayerPageId } from "@/lib/playerRoutes";
@@ -50,27 +52,7 @@ type Language = "en" | "th";
 type FontSize = "small" | "normal" | "large";
 type Accent = "vermilion" | "ochre" | "teal";
 type SaveLeaves = { manual: GameState | null; leaf2: GameState | null; leaf3: GameState | null };
-export type ManagementMenuItem = { id: string; en: string; th: string; state: "ready" | "planned"; href?: string };
-
-export function managementMenuFor(isAdmin: boolean): { id: string; en: string; th: string; items: ManagementMenuItem[] }[] {
-  return [
-    { id: "account", en: "Account", th: "บัญชี", items: [
-      { id: "profile", en: "Profile", th: "โปรไฟล์", state: "planned" },
-      { id: "usage", en: "Plan & usage", th: "แพ็กเกจและการใช้งาน", state: "planned" },
-      { id: "billing", en: "Billing & invoices", th: "การเรียกเก็บเงินและใบเสร็จ", state: "planned" },
-    ] },
-    { id: "workspace", en: "Workspace", th: "พื้นที่จัดการ", items: [
-      { id: "app-settings", en: "Application settings", th: "การตั้งค่าแอป", state: "planned" },
-      { id: "access", en: "Access & roles", th: "สิทธิ์และบทบาท", state: "planned" },
-      { id: "analytics", en: "Analytics & visits", th: "สถิติและผู้เข้าชม", state: isAdmin ? "ready" : "planned", href: isAdmin ? "/admin/operations" : undefined },
-      { id: "admin", en: "Admin Console", th: "คอนโซลผู้ดูแล", state: isAdmin ? "ready" : "planned", href: isAdmin ? "/admin" : undefined },
-    ] },
-    { id: "resources", en: "Resources", th: "ทรัพยากร", items: [
-      { id: "guides", en: "Guides & support", th: "คู่มือและความช่วยเหลือ", state: "planned" },
-      { id: "privacy", en: "Privacy & terms", th: "ความเป็นส่วนตัวและข้อกำหนด", state: "planned" },
-    ] },
-  ];
-}
+export { managementMenuFor, type ManagementMenuItem } from "@/features/management/managementData";
 
 const STORAGE_KEY = "dust-fire-local-game-v3-saika";
 const LEGACY_STORAGE_KEYS = ["dust-fire-local-game-v1", "dust-fire-local-game-v2"];
@@ -155,7 +137,7 @@ const campaignNavGroups: CampaignNavGroup[] = [
     { id: "exchanges", en: "Bonds", th: "ข้อผูกมัด", icon: "log" },
   ] },
   { id: "chronicle", en: "Chronicle", th: "จดหมายเหตุ", icon: "log", items: [
-    { id: "log", en: "Chronicle", th: "บันทึกเรื่องราว", icon: "log" },
+    { id: "log", en: "Story Records", th: "บันทึกเรื่องราว", icon: "log" },
     { id: "relationships", en: "Relationships", th: "ความสัมพันธ์", icon: "relation" },
     { id: "archive", en: "World Archive", th: "หอจดหมายเหตุโลก", icon: "archive" },
   ] },
@@ -251,6 +233,8 @@ export default function Home({ forceUiPreviewMode }: { forceUiPreviewMode?: bool
   const [accent, setAccent] = useState<Accent>("vermilion");
   const [menuOpen, setMenuOpen] = useState(false);
   const [managementOpen, setManagementOpen] = useState(false);
+  const [managementItemId, setManagementItemId] = useState<ManagementItemId | null>(null);
+  const [managementOrigin, setManagementOrigin] = useState<PageId>("home");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(reviewRailCollapsedFromUrl);
   const [campaignMenuOpen, setCampaignMenuOpen] = useState(true);
   const [notice, setNotice] = useState("บันทึกในเครื่องกำลังทำงาน · แคมเปญนี้อยู่ในเบราว์เซอร์นี้เท่านั้น");
@@ -309,6 +293,8 @@ export default function Home({ forceUiPreviewMode }: { forceUiPreviewMode?: bool
   const appClass = ["app-shell", darkMode ? "theme-dark" : "", `font-${fontSize}`, `accent-${accent}`, sidebarCollapsed ? "sidebar-collapsed" : "", reviewRoute ? "app-shell--review" : ""].join(" ");
   const updateGame = (next: GameState, message: string) => { setGame(next); setCampaignLibrary((current) => ({ ...current, [next.campaign.id]: copyState(next) })); setNotice(message); };
   const open = (nextPage: PageId) => { setCampaignMenuOpen(true); setPage(nextPage); setMenuOpen(false); };
+  const openManagementItem = (item: ManagementMenuItem) => { setManagementOrigin(page); setManagementItemId(item.id); setManagementOpen(false); open("management"); };
+  const returnToManagementIndex = () => { setPage(managementOrigin); setManagementOpen(true); };
   const beginNew = (nextGame: GameState) => { setGame(nextGame); setCampaignLibrary((current) => ({ ...current, [nextGame.campaign.id]: copyState(nextGame) })); setSaves({ manual: null, leaf2: null, leaf3: null }); setNotice("A new campaign has begun · 50 trial credits are ready"); open("play"); };
   const selectCampaign = (selected: GameState) => { const copy = copyState(selected); setGame(copy); setSaves((current) => ({ ...current, manual: copyState(copy) })); setNotice(`${copy.campaign.title} selected · Local Save restored at Page ${copy.tick}`); open("play"); };
   const writeSave = (slot: keyof SaveLeaves) => { setSaves((current) => ({ ...current, [slot]: copyState(game) })); setNotice(`${slot === "manual" ? "Manual Save" : slot === "leaf2" ? "Saved Page II" : "Saved Page III"} written at Page ${game.tick}`); };
@@ -319,6 +305,8 @@ export default function Home({ forceUiPreviewMode }: { forceUiPreviewMode?: bool
   };
   const deleteSave = (slot: keyof SaveLeaves) => { setSaves((current) => ({ ...current, [slot]: null })); setNotice(`${slot === "manual" ? "Manual Save" : slot === "leaf2" ? "Saved Page II" : "Saved Page III"} deleted from this browser`); };
   const resetLocal = () => { const demo = seedGame(); window.localStorage.removeItem(STORAGE_KEY); setGame(demo); setSaves({ manual: copyState(demo), leaf2: null, leaf3: null }); setCampaignLibrary({ [demo.campaign.id]: copyState(demo) }); setNotice("Local records cleared · Saika safehouse example is ready"); };
+
+  const isAdmin = !uiPreviewMode && user?.role === "admin";
 
   if (!isOnline) return <OfflinePlayLock />;
 
@@ -332,7 +320,7 @@ export default function Home({ forceUiPreviewMode }: { forceUiPreviewMode?: bool
       <div className="topbar-language" aria-label="Language selection"><button className={language === "en" ? "active" : ""} onClick={() => setLanguage("en")}>EN</button><button className={language === "th" ? "active" : ""} onClick={() => setLanguage("th")}>TH</button></div>
       <button className="mobile-menu" onClick={() => setMenuOpen((value) => !value)} aria-label="Open menu">{menuOpen ? <X size={21} /> : <Menu size={21} />}</button>
     </header>
-    {managementOpen && <><button className="management-menu__backdrop" aria-label={label(language, "Close management menu", "ปิดเมนูจัดการ")} onClick={() => setManagementOpen(false)} /><ManagementMenu language={language} isAdmin={!uiPreviewMode && user?.role === "admin"} onClose={() => setManagementOpen(false)} /></>}
+    {managementOpen && <><button className="management-menu__backdrop" aria-label={label(language, "Close management menu", "ปิดเมนูจัดการ")} onClick={() => setManagementOpen(false)} /><ManagementMenu language={language} isAdmin={isAdmin} onClose={() => setManagementOpen(false)} onOpenItem={openManagementItem} /></>}
     <aside className={`sidebar ${menuOpen ? "sidebar--open" : ""} ${sidebarCollapsed ? "sidebar--collapsed" : ""}`}>
       <button className="sidebar-toggle" onClick={() => setSidebarCollapsed((value) => !value)} aria-label="Toggle sidebar">{sidebarCollapsed ? <PanelLeftOpen size={17} /> : <PanelLeftClose size={17} />}</button>
       <div className="sidebar__identity"><div className="mon-avatar">火</div><div className="sidebar__identity-copy"><strong>{game.character.name}</strong><span>{game.character.occupation}</span></div></div>
@@ -360,6 +348,7 @@ export default function Home({ forceUiPreviewMode }: { forceUiPreviewMode?: bool
       {page === "character" && <CharacterView game={game} language={language} open={open} />}
       {page === "log" && <ChronicleView game={game} language={language} readerMode={readerMode} setReaderMode={setReaderMode} />}
       {page === "relationships" && <RelationshipsView game={game} language={language} isAuthenticated={isAuthenticated} uiPreviewMode={uiPreviewMode} onUpdate={updateGame} />}
+      {page === "management" && <ApplicationManagementView itemId={managementItemId} language={language} isAdmin={isAdmin} onBack={returnToManagementIndex} />}
       {page === "archive" && <ArchiveView game={game} language={language} />}
       {page === "save" && <SaveView game={game} saves={saves} language={language} onSave={writeSave} onDelete={deleteSave} open={open} />}
       {page === "load" && <LoadView game={game} saves={saves} language={language} onLoad={loadSave} onDelete={deleteSave} />}
@@ -384,8 +373,8 @@ function OfflinePlayLock() {
   </main>;
 }
 
-function ManagementMenu({ language, isAdmin, onClose }: { language: Language; isAdmin: boolean; onClose: () => void }) {
-  return <aside id="management-menu" className="management-menu" role="dialog" aria-modal="true" aria-label={label(language, "Application management", "การจัดการแอปพลิเคชัน")}><div className="management-menu__heading"><div><SectionKicker>APPLICATION MANAGEMENT</SectionKicker><h2>{label(language, "Outside the campaign", "นอกเหนือจากแคมเปญ")}</h2><p>{label(language, "Account and studio controls stay here so the game table remains quiet.", "บัญชีและเครื่องมือดูแลอยู่ที่นี่ เพื่อให้โต๊ะเล่นเกมยังสงบ")}</p></div><button className="management-menu__close" onClick={onClose} aria-label={label(language, "Close management menu", "ปิดเมนูจัดการ")}><X size={18} /></button></div>{managementMenuFor(isAdmin).map((section) => <section className="management-menu__section" key={section.id}><h3>{label(language, section.en, section.th)}</h3>{section.items.map((item) => item.href ? <a className="management-menu__item management-menu__item--ready" href={item.href} key={item.id} onClick={onClose}><span>{label(language, item.en, item.th)}</span><ChevronRight size={15} /></a> : <div className="management-menu__item management-menu__item--planned" key={item.id}><span>{label(language, item.en, item.th)}</span><small>{label(language, "Planned", "กำลังเตรียม")}</small></div>)}</section>)}<div className="management-menu__footer"><SengokuIcon name="memory" size={15} tone="teal" /><span>{label(language, "Player records remain local to this browser.", "บันทึกผู้เล่นยังอยู่ในเบราว์เซอร์นี้เป็นหลัก")}</span></div></aside>;
+function ManagementMenu({ language, isAdmin, onClose, onOpenItem }: { language: Language; isAdmin: boolean; onClose: () => void; onOpenItem: (item: ManagementMenuItem) => void }) {
+  return <aside id="management-menu" className="management-menu" role="dialog" aria-modal="true" aria-label={label(language, "Application management", "การจัดการแอปพลิเคชัน")}><div className="management-menu__heading"><div><SectionKicker>APPLICATION MANAGEMENT</SectionKicker><h2>{label(language, "Outside the campaign", "นอกเหนือจากแคมเปญ")}</h2><p>{label(language, "Account and studio controls stay here so the game table remains quiet.", "บัญชีและเครื่องมือดูแลอยู่ที่นี่ เพื่อให้โต๊ะเล่นเกมยังสงบ")}</p></div><button className="management-menu__close" onClick={onClose} aria-label={label(language, "Close management menu", "ปิดเมนูจัดการ")}><X size={18} /></button></div>{managementMenuFor(isAdmin).map((section) => <section className="management-menu__section" key={section.id}><h3>{label(language, section.en, section.th)}</h3>{section.items.map((item) => <button className="management-menu__item management-menu__item--ready" key={item.id} onClick={() => onOpenItem(item)}><span>{label(language, item.en, item.th)}</span><small>{label(language, "Preparing", "กำลังเตรียม")}</small><ChevronRight size={15} /></button>)}</section>)}<div className="management-menu__footer"><SengokuIcon name="memory" size={15} tone="teal" /><span>{label(language, "Player records remain local to this browser.", "บันทึกผู้เล่นยังอยู่ในเบราว์เซอร์นี้เป็นหลัก")}</span></div></aside>;
 }
 
 function Vital({ label, value, percent, tone }: { label: string; value: string; percent: number; tone: "red" | "ochre" | "teal" }) {

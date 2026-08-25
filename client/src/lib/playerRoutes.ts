@@ -16,7 +16,8 @@ export type PlayerPageId =
   | "archive"
   | "save"
   | "load"
-  | "settings";
+  | "settings"
+  | "management";
 
 export type ReviewSeedId =
   | "saika-library"

@@ -312,6 +312,16 @@ export type RollRecord = RollPreview & {
   missionUpdate?: { missionId: string; current: number; required: number; state: MissionState; reward?: string };
 };
 
+/** Narrative-only chapter retained for reading and later canon analysis. */
+export type StoryRecord = {
+  id: string;
+  tick: number;
+  inGameDay: number;
+  title: string;
+  prose: string;
+  location: string;
+};
+
 export type Scene = {
   id: string;
   chapter: string;
@@ -337,6 +347,7 @@ export type GameState = {
   economy: EconomyState;
   memories: WorldMemory[];
   rolls: RollRecord[];
+  storyRecords?: StoryRecord[];
   relationships: PublicRelationshipContact[];
   historicalBoundary?: HistoricalBoundary & { tick: number };
   progression?: ProgressionState;
@@ -696,7 +707,7 @@ export function createGameState(context: CampaignContext, draft: CharacterDraft)
   const mission: Mission = { ...template.mission, id: `mission-${Date.now()}`, state: "offered" as MissionState, progress: { current: 0, required: 2, triggerPhrases: template.mission.options } };
   const opening = openingScene(character, context, mission);
   return {
-    schemaVersion: 6,
+    schemaVersion: 7,
     credits: 50,
     campaign: context,
     character,
@@ -707,6 +718,7 @@ export function createGameState(context: CampaignContext, draft: CharacterDraft)
     economy: buildCampaignEconomy(context),
     memories: [{ id: `memory-${Date.now()}`, kind: "news", title: opening.title, detail: opening.body.join("\n\n"), tick: 1, tone: "teal" }],
     rolls: [],
+    storyRecords: [{ id: `story-opening-${context.id}`, tick: 1, inGameDay: context.day, title: opening.title, prose: opening.body.join("\n\n"), location: opening.location }],
     relationships: [],
     progression: defaultProgression(context, template.age, context.season),
     tick: 1,
@@ -729,7 +741,7 @@ export function createSaikaSafehouseDemo(): GameState {
     ],
     speaker: "กันทาโร่", prompt: "ซาเนฟุยุจะตอบกันทาโร่ว่าอย่างไร?", pressure: mission.pressure, suggestedActions: mission.options,
   };
-  return { schemaVersion: 6, credits: 50, campaign, character, community: { food: 2, labor: 2, voice: 1, safety: 1, cohesion: 2, lastChange: "เมืองซาไกเพิ่มเวรยามและตรวจเรือ" }, currentScene: opening, missions: [mission], market: buildSaikaMarket(), economy: buildSaikaEconomy(), memories: [{ id: "memory-saika-opening", kind: "stain", title: "คืนที่เมืองซาไกตื่น", detail: opening.body.join("\n\n"), tick: 1, tone: "vermilion" }, ...saikaRelationshipFoundationMemories()], rolls: [], relationships: saikaPublicRelationships(), progression: defaultProgression(campaign, 13, "Spring"), tick: 1 };
+  return { schemaVersion: 7, credits: 50, campaign, character, community: { food: 2, labor: 2, voice: 1, safety: 1, cohesion: 2, lastChange: "เมืองซาไกเพิ่มเวรยามและตรวจเรือ" }, currentScene: opening, missions: [mission], market: buildSaikaMarket(), economy: buildSaikaEconomy(), memories: [{ id: "memory-saika-opening", kind: "stain", title: "คืนที่เมืองซาไกตื่น", detail: opening.body.join("\n\n"), tick: 1, tone: "vermilion" }, ...saikaRelationshipFoundationMemories()], rolls: [], storyRecords: [{ id: "story-saika-opening", tick: 1, inGameDay: 1, title: opening.title, prose: opening.body.join("\n\n"), location: opening.location }], relationships: saikaPublicRelationships(), progression: defaultProgression(campaign, 13, "Spring"), tick: 1 };
 }
 
 export function normalizeGameState(state: GameState): GameState {
@@ -757,13 +769,20 @@ export function normalizeGameState(state: GameState): GameState {
   const relationships = Array.isArray(storedRelationships) ? sanitizePublicRelationships(storedRelationships) : campaign.id === "camp-saika-1569" ? saikaPublicRelationships() : [];
   const foundationMemories = campaign.id === "camp-saika-1569" ? saikaRelationshipFoundationMemories() : [];
   const memories = [...state.memories, ...foundationMemories.filter((memory) => !state.memories.some((existing) => existing.id === memory.id))];
+  const rawStoryRecords = (state as Partial<GameState>).storyRecords;
+  const storyRecords = Array.isArray(rawStoryRecords)
+    ? rawStoryRecords.filter((entry): entry is StoryRecord => Boolean(entry && typeof entry.id === "string" && typeof entry.title === "string" && typeof entry.prose === "string" && typeof entry.location === "string" && typeof entry.tick === "number" && typeof entry.inGameDay === "number")).map((entry) => ({ ...entry, prose: entry.prose.trim() })).filter((entry) => entry.prose.length > 0)
+    : rolls.length
+      ? rolls.filter((roll) => Boolean(roll.narrative?.trim())).map((roll) => ({ id: `story-${roll.id}`, tick: roll.tick, inGameDay: campaign.day, title: `Page ${String(roll.tick).padStart(2, "0")}`, prose: roll.narrative.trim(), location: state.currentScene.location }))
+      : [{ id: `story-opening-${campaign.id}`, tick: 1, inGameDay: campaign.day, title: state.currentScene.title, prose: state.currentScene.body.join("\n\n"), location: state.currentScene.location }];
   return {
     ...state,
-    schemaVersion: 6,
+    schemaVersion: 7,
     character: { ...state.character, weakness: flaws[0] ?? "มีหนี้ที่ยังไม่กล้าพูดถึง", flaws: flaws.length ? flaws : ["มีหนี้ที่ยังไม่กล้าพูดถึง"], attributes, statXp, inventory, masteries: state.character.masteries.map((entry) => normalizeMasteryProgress(entry, legacyState)), vitals: { wounds: vitals.wounds, focus: vitals.focus } },
     missions,
     rolls,
     memories,
+    storyRecords,
     relationships,
     progression: { ...progression, currentAge: Math.max(progression.currentAge, progression.ageAtCampaignStart) },
     economy: state.economy ?? (campaign.id === "camp-saika-1569" ? buildSaikaEconomy() : buildCampaignEconomy(campaign)),
@@ -1098,7 +1117,9 @@ export function applyRoll(state: GameState, record: RollRecord): GameState {
     suggestedActions: success ? ["รับรางวัลแล้วถามเงื่อนไข", "ตามหาคนที่เป็นพยาน", "กลับไปดูภารกิจอื่น"] : ["แก้ความเข้าใจกับผู้คุม", "หาหลักฐานเพิ่ม", "ยอมรับผลแล้วเปลี่ยนแผน"],
   };
   const storedRecord: RollRecord = { ...record, practice: awarded.practice, statPractice: traitAwarded.practice, timeMark: clock.timeMark, missionUpdate: missionResult.update };
-  return { ...state, campaign: calendar.campaign, progression: { ...calendar.progression, lastPractice: awarded.practice, lastStatPractice: traitAwarded.practice }, character: updatedCharacter, currentScene: nextScene, missions, economy: missionResult.transaction ? { ...state.economy, transactions: [...state.economy.transactions, missionResult.transaction] } : state.economy, memories: [...state.memories, memory], rolls: [...state.rolls, storedRecord], relationships, tick: record.tick };
+  const storyRecord: StoryRecord = { id: `story-${record.id}`, tick: record.tick, inGameDay: state.campaign.day, title: nextScene.title, prose: nextScene.body.join("\n\n"), location: nextScene.location };
+  const previousStoryRecords = state.storyRecords ?? [];
+  return { ...state, campaign: calendar.campaign, progression: { ...calendar.progression, lastPractice: awarded.practice, lastStatPractice: traitAwarded.practice }, character: updatedCharacter, currentScene: nextScene, missions, economy: missionResult.transaction ? { ...state.economy, transactions: [...state.economy.transactions, missionResult.transaction] } : state.economy, memories: [...state.memories, memory], rolls: [...state.rolls, storedRecord], storyRecords: [...previousStoryRecords.filter((entry) => entry.id !== storyRecord.id), storyRecord], relationships, tick: record.tick };
 }
 
 export function buyMarketOffer(state: GameState, offerId: string): { state: GameState; message: string } {

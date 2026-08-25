@@ -312,11 +312,13 @@
 - [x] เพิ่ม regression สำหรับ spoiler boundary, daily relationship log, navigation, scroll และ responsive behavior
 - [x] ตรวจ TypeScript, tests, build, visual flow และ push ชุด Character Sheet/Relationships ขึ้น main
 - [x] Commit และ push ทุกชิ้นของชุดงานเก่าที่ผ่านการตรวจรับขึ้น GitHub repository ที่เชื่อมไว้
-- [ ] ตรวจและจัดทำ audit จากข้อมูลเดิมของระบบเดินเรือ แผนที่ ไทม์ไลน์ปี และ content reset โดยไม่เริ่มงานวิจัยใหม่
-- [ ] สร้างสไลด์ละเอียดจากข้อมูลเดิมของโปรเจกต์: content reset, แผนที่/ไทม์ไลน์/เดินเรือ และขอบเขตความรู้ AI GM
-- [ ] ตรวจว่ามีไทม์ไลน์ประวัติศาสตร์รายปีเรียงละเอียดในรีโปเพียงใด และวางรายการรีเซ็ต/เติมต่อจากข้อมูลเดิม
-- [ ] พัฒนา Application Management แบบผู้เล่นและผู้ดูแล พร้อม detail panel สองภาษาและสถานะกำลังเตรียม
-- [ ] เพิ่ม regression ของ Application Management สำหรับ visibility ตาม role, navigation, ภาษา และการไม่เรียก service ภายนอก
-- [ ] ตรวจ TypeScript, tests, build, visual flow และ push ชุด Application Management ขึ้น main
-- [ ] ทำงาน Play Scene และ Character Sheet/Relationships ที่อนุมัติให้เสร็จก่อนเริ่ม Application Management
-- [ ] เปลี่ยน Application Management ที่พักไว้ให้เมนูย่อยเปิดหน้าแยก พร้อมรายละเอียดทั่วไปเท่าที่มีข้อมูลจริง
+- [x] ตรวจและจัดทำ audit จากข้อมูลเดิมของระบบเดินเรือ แผนที่ ไทม์ไลน์ปี และ content reset โดยไม่เริ่มงานวิจัยใหม่
+- [x] สร้างสไลด์ละเอียดจากข้อมูลเดิมของโปรเจกต์: content reset, แผนที่/ไทม์ไลน์/เดินเรือ และขอบเขตความรู้ AI GM
+- [x] ตรวจว่ามีไทม์ไลน์ประวัติศาสตร์รายปีเรียงละเอียดในรีโปเพียงใด และวางรายการรีเซิท/เติมต่อจากข้อมูลเดิม
+- [x] พัฒนา Application Management แบบผู้เล่นและผู้ดูแล พร้อมหน้าแยกสองภาษาและสถานะกำลังเตรียม
+- [x] เพิ่ม regression ของ Application Management สำหรับ visibility ตาม role, navigation, ภาษา และการไม่เรียก service ภายนอก
+- [x] ตรวจ TypeScript, tests, build และ visual flow ของ Application Management ก่อนเตรียม push ขึ้น main
+- [x] ทำงาน Play Scene และ Character Sheet/Relationships ที่อนุมัติให้เสร็จก่อนเริ่ม Application Management
+- [x] เปลี่ยน Application Management ที่พักไว้ให้เมนูย่อยเปิดหน้าแยก พร้อมรายละเอียดทั่วไปเท่าที่มีข้อมูลจริง
+- [x] ย่อ Roll Details, ยุบ flow หลังทอยเหลือหน้าเรื่องกับหน้าผลสรุป และเปลี่ยนปุ่มเป็น เล่นต่อ / Continue Playing
+- [x] เปลี่ยนเมนูย่อย Chronicle เป็น Story Records / บันทึกเรื่องราว พร้อมเก็บร้อยแก้วเต็มหนึ่ง record ต่อฉากโดยไม่ปนผลทอยหรือค่าสกิล

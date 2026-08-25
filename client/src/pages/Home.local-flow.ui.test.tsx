@@ -28,7 +28,7 @@ import Home from "./Home";
 import { createSaikaSafehouseDemo } from "../lib/game";
 import { OUTCOME_WORD_CADENCE_MS, ROLL_ANIMATION_MS } from "../features/play/PlayScene";
 
-function openChronicle(child: "Chronicle" | "Relationships") {
+function openChronicle(child: "Story Records" | "Relationships") {
   const group = screen.getAllByRole("button", { name: "Chronicle" }).find((button) => button.hasAttribute("aria-expanded"));
   if (group?.getAttribute("aria-expanded") !== "true") fireEvent.click(group!);
   const childButton = screen.getAllByRole("button", { name: child }).find((button) => !button.hasAttribute("aria-expanded"));
@@ -79,8 +79,9 @@ describe("UI Preview click flow", () => {
     expect(screen.getByText("ซาเนฟุยุ")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /Return to/i }));
     expect(screen.getAllByText("คำตอบใต้ห้องขัง").length).toBeGreaterThan(0);
-    openChronicle("Chronicle");
-    expect(screen.getAllByText("คืนที่เมืองซาไกตื่น").length).toBeGreaterThan(0);
+    openChronicle("Story Records");
+    expect(screen.getByTestId("story-records-view")).toBeTruthy();
+    expect(screen.getAllByText("คำตอบใต้ห้องขัง").length).toBeGreaterThan(0);
     expect(screen.getAllByText(/กันทาโร่/).length).toBeGreaterThan(0);
   });
 
@@ -99,6 +100,18 @@ describe("UI Preview click flow", () => {
     expect(mocks.relationshipAnalyzeMutate).not.toHaveBeenCalled();
   });
 
+  it("opens Application Management items as separate preparing pages without service actions", () => {
+    render(<Home />);
+    fireEvent.click(screen.getByRole("button", { name: "Manage" }));
+    fireEvent.click(screen.getByRole("button", { name: /Profile\s*Preparing/i }));
+    expect(screen.getByTestId("management-detail-page")).toBeTruthy();
+    expect(screen.getByText("Preparing — no service is connected")).toBeTruthy();
+    expect(screen.getByText("Account identity and personal preferences will appear here when account records are connected.")).toBeTruthy();
+    expect(mocks.gmAnalyzeMutate).not.toHaveBeenCalled();
+    expect(mocks.gmResolveMutate).not.toHaveBeenCalled();
+    expect(mocks.relationshipAnalyzeMutate).not.toHaveBeenCalled();
+  });
+
   it("restores a manual leaf through More without weakening the Play or Chronicle path", () => {
     const restored = createSaikaSafehouseDemo();
     restored.tick = 4;
@@ -107,8 +120,9 @@ describe("UI Preview click flow", () => {
     openMore("Load Game");
     fireEvent.click(screen.getAllByRole("button", { name: "LOAD" })[1]);
     expect(screen.getAllByText(/PLAY SCENE · PAGE 1/i).length).toBeGreaterThan(0);
-    openChronicle("Chronicle");
-    expect(screen.getAllByText("คืนที่เมืองซาไกตื่น").length).toBeGreaterThan(0);
+    openChronicle("Story Records");
+    expect(screen.getByTestId("story-records-view")).toBeTruthy();
+    expect(screen.getAllByText("คำตอบใต้ห้องขัง").length).toBeGreaterThan(0);
   });
 
   it("requires a second explicit confirmation before deleting a manual local save", () => {
@@ -144,13 +158,14 @@ describe("UI Preview click flow", () => {
     earlier.campaign = { ...earlier.campaign, id: "camp-earlier", title: "Ashes at the river gate", year: 1568, location: "ท่าเรือคิอิ" };
     earlier.currentScene = { ...earlier.currentScene, title: "ข่าวจากท่าเรือ" };
     earlier.memories = [{ ...earlier.memories[0], id: "memory-earlier", title: "เงาที่ท่าเรือคิอิ", detail: "คนเรือปิดปากเงียบเมื่อข่าวจากท่าเรือคิอิมาถึง" }];
+    earlier.storyRecords = [{ id: "story-earlier", tick: 1, inGameDay: 1, title: "เงาที่ท่าเรือคิอิ", prose: "คนเรือปิดปากเงียบเมื่อข่าวจากท่าเรือคิอิมาถึง", location: "ท่าเรือคิอิ" }];
     window.localStorage.setItem("dust-fire-local-game-v3-saika", JSON.stringify({ game: saika, saves: { manual: saika, leaf2: null, leaf3: null }, campaignLibrary: { [saika.campaign.id]: saika, [earlier.campaign.id]: earlier }, language: "en", readerMode: false, darkMode: false, fontSize: "normal", accent: "vermilion" }));
     render(<Home />);
     openMore("Campaign Library");
     expect(screen.getAllByText("Smoke Beneath Sakai").length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole("button", { name: /Ashes at the river gate/i }));
     expect(screen.getAllByText("ข่าวจากท่าเรือ").length).toBeGreaterThan(0);
-    openChronicle("Chronicle");
+    openChronicle("Story Records");
     expect(screen.getAllByText("เงาที่ท่าเรือคิอิ").length).toBeGreaterThan(0);
     expect(screen.getByTestId("chronicle-campaign-scope").textContent).toContain("Ashes at the river gate");
   });
@@ -219,40 +234,39 @@ describe("UI Preview click flow", () => {
     }
   });
 
-  it("keeps two dice in the decision window and lets a saved narrative outcome accept the next intent immediately", () => {
+  it("keeps two dice in the decision window and returns from the saved narrative to a new Play Scene with one Continue action", () => {
     vi.useFakeTimers();
-    render(<Home />);
-    fireEvent.click(screen.getByRole("button", { name: /Return to/i }));
-    fireEvent.change(screen.getByRole("textbox"), { target: { value: "I will offer the clerk a favor." } });
-    fireEvent.click(screen.getByRole("button", { name: /set this intention/i }));
-    fireEvent.click(screen.getByRole("button", { name: /roll 2d12/i }));
-    expect(screen.getByTestId("dice-decision-window")).toBeTruthy();
-    expect(screen.getByTestId("dice-one").textContent).toMatch(/^\d+$/);
-    expect(screen.getByTestId("dice-two").textContent).toMatch(/^\d+$/);
-    settleDiceStage();
-    expect(screen.getByTestId("roll-formula")).toBeTruthy();
-    expect(screen.getByText("HOW THIS RESULT WAS BUILT")).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: /record this result/i }));
-    expect(screen.getByTestId("narrative-outcome-draft")).toBeTruthy();
-    expect(screen.getByTestId("play-outcome-scroll")).toBeTruthy();
-    expect(screen.queryByTestId("narrative-outcome")).toBeNull();
-    finishNarrativeDraft();
-    fireEvent.click(screen.getByRole("button", { name: /view full outcome/i }));
-    expect(screen.getByTestId("narrative-outcome")).toBeTruthy();
-    expect(screen.getByTestId("play-outcome-scroll")).toBeTruthy();
-    expect(screen.getByTestId("outcome-roll-breakdown")).toBeTruthy();
-    expect(screen.getByText("POSSIBLE NEXT APPROACHES")).toBeTruthy();
-    expect(screen.queryByText("SKILL LEDGER")).toBeNull();
-    expect(screen.queryByText("POSSIBLE APPROACHES")).toBeNull();
-    expect(screen.queryByText("ฉากแคมเปญสมมติในบริบทเมืองท่าซาไก ค.ศ. 1569 ใช้แรงกดดันของการค้า อาวุธ และเครือข่ายไซกะเป็นฉากหลัง ไม่ได้ยืนยันว่า NPC ในฉากมีตัวตนจริง.")).toBeNull();
-    expect(screen.queryByText("คำตอบใต้ห้องขัง")).toBeNull();
-    expect(screen.getByRole("button", { name: /write next intent/i })).toBeTruthy();
-    expect(screen.getByRole("button", { name: /return to map/i })).toBeTruthy();
-    expect(screen.getByRole("button", { name: /open chronicle/i })).toBeTruthy();
-    const nextIntent = screen.getByRole("textbox");
-    fireEvent.change(nextIntent, { target: { value: "I will carry the answer to the gate." } });
-    expect(screen.getByRole("button", { name: /set this intention/i })).toBeTruthy();
-    vi.useRealTimers();
+    try {
+      render(<Home />);
+      fireEvent.click(screen.getByRole("button", { name: /Return to/i }));
+      fireEvent.change(screen.getByRole("textbox"), { target: { value: "I will offer the clerk a favor." } });
+      fireEvent.click(screen.getByRole("button", { name: /set this intention/i }));
+      fireEvent.click(screen.getByRole("button", { name: /roll 2d12/i }));
+      expect(screen.getByTestId("dice-decision-window")).toBeTruthy();
+      expect(screen.getByTestId("dice-one").textContent).toMatch(/^\d+$/);
+      expect(screen.getByTestId("dice-two").textContent).toMatch(/^\d+$/);
+      settleDiceStage();
+      expect(screen.getByTestId("roll-formula")).toBeTruthy();
+      expect(screen.getByText("HOW THIS RESULT WAS BUILT")).toBeTruthy();
+      fireEvent.click(screen.getByRole("button", { name: /record this result/i }));
+      expect(screen.getByTestId("narrative-outcome-draft")).toBeTruthy();
+      expect(screen.getByTestId("play-outcome-scroll")).toBeTruthy();
+      expect(screen.queryByTestId("narrative-outcome")).toBeNull();
+      finishNarrativeDraft();
+      expect(screen.getByRole("button", { name: /continue playing/i })).toBeTruthy();
+      expect(screen.queryByText("SKILL LEDGER")).toBeNull();
+      expect(screen.queryByText("POSSIBLE APPROACHES")).toBeNull();
+      expect(screen.queryByText("ฉากแคมเปญสมมติในบริบทเมืองท่าซาไก ค.ศ. 1569 ใช้แรงกดดันของการค้า อาวุธ และเครือข่ายไซกะเป็นฉากหลัง ไม่ได้ยืนยันว่า NPC ในฉากมีตัวตนจริง.")).toBeNull();
+      expect(screen.queryByText("คำตอบใต้ห้องขัง")).toBeNull();
+      fireEvent.click(screen.getByRole("button", { name: /continue playing/i }));
+      expect(screen.queryByTestId("narrative-outcome-draft")).toBeNull();
+      expect(document.getElementById("play-intent-composer")).toBeTruthy();
+      const nextIntent = screen.getByRole("textbox");
+      fireEvent.change(nextIntent, { target: { value: "I will carry the answer to the gate." } });
+      expect(screen.getByRole("button", { name: /set this intention/i })).toBeTruthy();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("presents World Archive cards as readonly records rather than navigation controls", () => {
