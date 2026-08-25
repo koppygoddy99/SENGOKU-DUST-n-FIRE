@@ -58,6 +58,15 @@ describe("UI Preview click flow", () => {
     window.history.replaceState({}, "", "/");
   });
 
+  it("renders Play Scene as a reading pane with a decision sidebar", () => {
+    render(<Home />);
+    fireEvent.click(screen.getByRole("button", { name: "Play Scene" }));
+    expect(document.querySelector(".play-scene__story-layout")).toBeTruthy();
+    expect(document.querySelector(".play-scene__reading-scroll")).toBeTruthy();
+    expect(document.querySelector(".play-scene__decision-pane")).toBeTruthy();
+    expect(document.querySelector(".play-scene__decision-pane #play-intent-composer")).toBeTruthy();
+  });
+
   it("loads the 1569 Saika safehouse from Campaign Command into Play and Chronicle", () => {
     render(<Home />);
     expect(screen.getByText("1569")).toBeTruthy();
@@ -251,7 +260,7 @@ describe("UI Preview click flow", () => {
 
   it("renders the shared ledger with Mastery Progress, agreements, and honest reward context across preparation and local save views", () => {
     render(<Home />);
-    fireEvent.click(screen.getByRole("button", { name: "Prepare" }));
+    fireEvent.click(screen.getByRole("button", { name: "Story" }));
     fireEvent.click(screen.getByRole("button", { name: "Character Dossier" }));
     expect(screen.getByText("Open this campaign's Chronicle")).toBeTruthy();
     expect(screen.getByText("NEXT PROGRESS")).toBeTruthy();
@@ -259,6 +268,7 @@ describe("UI Preview click flow", () => {
     expect(screen.getByText("OPEN AGREEMENTS")).toBeTruthy();
     expect(screen.getByTestId("campaign-reward-context")).toBeTruthy();
 
+    fireEvent.click(screen.getByRole("button", { name: "Prepare" }));
     fireEvent.click(screen.getByRole("button", { name: "This Market" }));
     expect(screen.getByText("NEXT PROGRESS")).toBeTruthy();
     expect(screen.getByText(/: \d+\/\d+ Progress$/)).toBeTruthy();

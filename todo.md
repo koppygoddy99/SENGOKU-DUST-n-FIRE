@@ -301,3 +301,7 @@
 - [x] ปรับหน้าจอและข้อความสองภาษาให้แสดง Trait Progression และตัด Momentum ออกทั้งหมด
 - [x] อัปเดตเอกสารและ regression tests สำหรับ Trait, DN และ Momentum ใหม่
 - [x] ตรวจ TypeScript, tests, build และ push กติกาใหม่ขึ้น main
+- [x] สร้างสไลด์ mockup UI 2–3 แนวทางสำหรับ Overview และ Play Scene โดยคงเมนูและเนื้อหาเดิม
+- [x] ย้ายแฟ้มตัวละครจากเมนูจัดเตรียมไปอยู่ในเมนูเรื่องราว โดยคง route และข้อมูลเดิม
+- [x] ปรับ Play Scene เป็นสองคอลัมน์: prose ที่เลื่อนอ่านได้ด้านซ้าย และ decision/ledger เดิมด้านขวาตามภาพอ้างอิง
+- [ ] อัปเดต regression ตรวจ navigation และ Play Scene layout พร้อมตรวจ TypeScript/tests/build และ push main
