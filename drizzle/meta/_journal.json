@@ -8,6 +8,13 @@
       "when": 1787081562936,
       "tag": "0000_steady_legion",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1787081562937,
+      "tag": "0001_relationship_daily_summaries",
+      "breakpoints": true
     }
   ]
 }

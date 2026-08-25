@@ -15,6 +15,7 @@ import { MarketHub } from "@/pages/MarketHub";
 import { StoryMap } from "@/features/story/StoryMap";
 import { PlayScene } from "@/features/play/PlayScene";
 import { ChronicleView } from "@/features/chronicle/ChronicleView";
+import { RelationshipsView } from "@/features/relationships/RelationshipsView";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { gmUnavailableLocalTrialNotice, historicalStatusLabel, openLocalPreview, saveLocalTrialResult, shouldFetchProfileCredits, shouldUseLocalRules, splitStoryParagraphs, withHistoricalBoundary } from "@/features/shared/gameplayHelpers";
 import { reviewPageFromSearch, reviewScreenFor, type PlayerPageId } from "@/lib/playerRoutes";
@@ -155,6 +156,7 @@ const campaignNavGroups: CampaignNavGroup[] = [
   ] },
   { id: "chronicle", en: "Chronicle", th: "จดหมายเหตุ", icon: "log", items: [
     { id: "log", en: "Chronicle", th: "บันทึกเรื่องราว", icon: "log" },
+    { id: "relationships", en: "Relationships", th: "ความสัมพันธ์", icon: "relation" },
     { id: "archive", en: "World Archive", th: "หอจดหมายเหตุโลก", icon: "archive" },
   ] },
   { id: "more", en: "More", th: "อื่น ๆ", icon: "settings", items: [
@@ -357,6 +359,7 @@ export default function Home({ forceUiPreviewMode }: { forceUiPreviewMode?: bool
       {page === "exchanges" && <MarketHub game={game} language={language} onUpdate={updateGame} initialTab="history" />}
       {page === "character" && <CharacterView game={game} language={language} open={open} />}
       {page === "log" && <ChronicleView game={game} language={language} readerMode={readerMode} setReaderMode={setReaderMode} />}
+      {page === "relationships" && <RelationshipsView game={game} language={language} isAuthenticated={isAuthenticated} uiPreviewMode={uiPreviewMode} onUpdate={updateGame} />}
       {page === "archive" && <ArchiveView game={game} language={language} />}
       {page === "save" && <SaveView game={game} saves={saves} language={language} onSave={writeSave} onDelete={deleteSave} open={open} />}
       {page === "load" && <LoadView game={game} saves={saves} language={language} onLoad={loadSave} onDelete={deleteSave} />}
@@ -444,7 +447,7 @@ function CharacterView({ game, language, open }: { game: GameState; language: La
     return { ...stat, level, progress, details: traitLevelDetails(level), needed: traitProgressNeededForLevel(level) };
   });
   return <div className="page character-view">
-    <div className="page-heading"><div><SectionKicker>CHARACTER DOSSIER</SectionKicker><h1>{game.character.name}</h1><p>{game.character.occupation} · {game.character.origin}</p></div><GhostLink onClick={() => open("log")}>{label(language, "Open this campaign's Chronicle", "เปิดจดหมายเหตุของแคมเปญนี้")}</GhostLink></div>
+    <div className="page-heading"><div><SectionKicker>CHARACTER DOSSIER</SectionKicker><h1>{game.character.name}</h1><p>{game.character.occupation} · {game.character.origin}</p></div><div className="character-view__links"><GhostLink onClick={() => open("relationships")}>{label(language, "People you know", "ผู้คนที่เจ้ารู้จัก")}</GhostLink><GhostLink onClick={() => open("log")}>{label(language, "Open this campaign's Chronicle", "เปิดจดหมายเหตุของแคมเปญนี้")}</GhostLink></div></div>
     <section className="dossier-header"><div className="dossier-name"><span className="mon-avatar mon-avatar--large">火</span><div><h2>{game.character.name}</h2><p>{game.character.strength}</p></div></div><div className="dossier-resources"><span>{label(language, "Wounds", "บาดแผล")}<strong>{game.character.vitals.wounds}/6</strong></span><span>{label(language, "Focus", "ค่าสติ")}<strong>{game.character.vitals.focus}/6</strong></span><span>{label(language, "Trait cap", "เพดาน Trait")}<strong>10</strong></span><span>{label(language, "Rank", "ยศ")}<strong>{game.character.social.rank}</strong></span></div></section>
     <CampaignLedgerStrip game={game} language={language} />
     <div className="character-columns"><section><div className="tab-strip">{(["traits", "masteries", "inventory", "ties"] as const).map((entry) => <button key={entry} className={tab === entry ? "active" : ""} onClick={() => setTab(entry)}>{label(language, entry === "traits" ? "Traits" : entry === "masteries" ? "Masteries" : entry === "inventory" ? "Gear" : "Background", entry === "traits" ? "คุณลักษณะ" : entry === "masteries" ? "ความชำนาญ" : entry === "inventory" ? "สัมภาระ" : "ภูมิหลังตัวละคร")}</button>)}</div>

@@ -29,4 +29,12 @@ describe("Campaign 1 navigation", () => {
     expect(html).toContain(">Prepare<");
     expect(html).not.toContain(">Carried Gear<");
   });
+
+  it("opens Relationships under Chronicle while keeping Character Dossier in Story", () => {
+    const html = renderToStaticMarkup(<CampaignNavigation campaignTitle="Ash over Kinokawa" language="en" page="relationships" expanded onToggle={() => undefined} onOpen={() => undefined} />);
+    ["Chronicle", "Relationships", "World Archive"].forEach((item) => expect(html).toContain(`>${item}<`));
+    expect(html).toContain("nav-item--child nav-item--active");
+    expect(html).toContain(">Story<");
+    expect(html).not.toContain(">Character Dossier<");
+  });
 });

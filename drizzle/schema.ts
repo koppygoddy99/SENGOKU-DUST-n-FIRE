@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, uniqueIndex, varchar } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -26,4 +26,22 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+/** Server-only daily relationship analysis. Its payload is never placed in GameState. */
+export const relationshipDailySummaries = mysqlTable("relationshipDailySummaries", {
+  id: int("id").autoincrement().primaryKey(),
+  ownerId: int("ownerId").notNull(),
+  campaignId: varchar("campaignId", { length: 120 }).notNull(),
+  contactId: varchar("contactId", { length: 32 }).notNull(),
+  inGameDay: int("inGameDay").notNull(),
+  sourceHash: varchar("sourceHash", { length: 64 }).notNull(),
+  analysisVersion: varchar("analysisVersion", { length: 40 }).notNull(),
+  evidenceJson: text("evidenceJson").notNull(),
+  publicSummaryJson: text("publicSummaryJson").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => ({
+  sourceUnique: uniqueIndex("relationship_summary_source_unique").on(table.ownerId, table.campaignId, table.contactId, table.inGameDay, table.sourceHash),
+}));
+
+export type RelationshipDailySummary = typeof relationshipDailySummaries.$inferSelect;
+export type InsertRelationshipDailySummary = typeof relationshipDailySummaries.$inferInsert;

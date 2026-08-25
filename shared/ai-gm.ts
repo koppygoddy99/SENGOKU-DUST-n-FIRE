@@ -48,3 +48,31 @@ export type GMResolveResponse = {
   missionNote: string;
   historicalFence: string;
 };
+
+export type RelationshipEvidence = {
+  id: string;
+  sourceType: "roll" | "memory" | "mission" | "exchange";
+  inGameDay: number;
+  tick: number;
+  title: string;
+  detail: string;
+};
+
+export type RelationshipAnalyzeRequest = {
+  campaign: { id: string; year: number; season: string; region: string; inGameDay: number };
+  language: "en" | "th";
+  contact: { contactId: "gantaro" | "tokichi" | "masakichi" | "genshiro"; name: string; publicStatus: string; relationshipRole: string; familiarity: number; affinity: number };
+  evidence: RelationshipEvidence[];
+};
+
+export type RelationshipAnalyzeResponse = {
+  analysisVersion: "relationship-v1";
+  sourceHash: string;
+  summary: string;
+  eventTags: string[];
+  contactEffects: { familiarityDelta: -1 | 0 | 1; affinityDelta: -1 | 0 | 1 };
+  playerVisibleKnowledge: string[];
+  blankSpaceUpdate: string | null;
+  confidence: "low" | "medium" | "high";
+  evidenceIds: string[];
+};

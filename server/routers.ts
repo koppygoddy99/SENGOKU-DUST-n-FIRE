@@ -8,6 +8,7 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { buildHistoricalTimeline, buildTimelineOperationsFacts } from "./timeline";
+import { analyzeRelationshipDay, relationshipAnalyzeInputSchema } from "./relationshipAnalyzer";
 
 async function requireGMTrialCredit(userId: number) {
   const credits = await getUserTrialCredits(userId);
@@ -35,6 +36,12 @@ export const appRouter = router({
     resolve: protectedProcedure.input(resolveInputSchema).mutation(async ({ ctx, input }) => {
       await requireGMTrialCredit(ctx.user.id);
       return { mode: "ai" as const, ...(await resolveWithGM(input)) };
+    }),
+  }),
+  relationships: router({
+    analyzeDay: protectedProcedure.input(relationshipAnalyzeInputSchema).mutation(async ({ ctx, input }) => {
+      await requireGMTrialCredit(ctx.user.id);
+      return analyzeRelationshipDay(ctx.user.id, input);
     }),
   }),
   profile: router({

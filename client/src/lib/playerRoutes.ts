@@ -12,6 +12,7 @@ export type PlayerPageId =
   | "exchanges"
   | "character"
   | "log"
+  | "relationships"
   | "archive"
   | "save"
   | "load"
@@ -30,6 +31,7 @@ export type ReviewSeedId =
   | "saika-exchanges"
   | "saika-character"
   | "saika-chronicle"
+  | "saika-relationships"
   | "saika-archive"
   | "saika-safekeeping"
   | "saika-load"
@@ -61,6 +63,7 @@ export const REVIEW_SCREEN_MANIFEST: readonly ReviewScreen[] = [
   { page: "exchanges", reviewQuery: "exchanges", screenshotFile: "10-agreements-consequences.png", pageTitle: "Agreements & Consequences", seed: "saika-exchanges" },
   { page: "character", reviewQuery: "character", screenshotFile: "11-character.png", pageTitle: "Character Dossier", seed: "saika-character" },
   { page: "log", reviewQuery: "log", screenshotFile: "12-chronicle.png", pageTitle: "Chronicle", seed: "saika-chronicle", reader: "library" },
+  { page: "relationships", reviewQuery: "relationships", screenshotFile: "17-relationships.png", pageTitle: "Relationships", seed: "saika-relationships" },
   { page: "archive", reviewQuery: "archive", screenshotFile: "13-world-archive.png", pageTitle: "World Archive", seed: "saika-archive" },
   { page: "save", reviewQuery: "save", screenshotFile: "14-save-game.png", pageTitle: "Save Game", seed: "saika-safekeeping" },
   { page: "load", reviewQuery: "load", screenshotFile: "15-load-game.png", pageTitle: "Load Game", seed: "saika-load" },

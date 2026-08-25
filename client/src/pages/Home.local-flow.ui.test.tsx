@@ -11,21 +11,24 @@ const mocks = vi.hoisted(() => ({
   gmAnalyze: vi.fn(),
   gmResolve: vi.fn(),
   spendCredit: vi.fn(),
+  relationshipAnalyze: vi.fn(),
+  relationshipAnalyzeMutate: vi.fn(),
 }));
 
 mocks.gmAnalyze.mockReturnValue({ mutate: mocks.gmAnalyzeMutate, isPending: false });
 mocks.gmResolve.mockReturnValue({ mutate: mocks.gmResolveMutate, isPending: false });
 mocks.spendCredit.mockReturnValue({ mutate: mocks.spendCreditMutate, isPending: false });
+mocks.relationshipAnalyze.mockReturnValue({ mutateAsync: mocks.relationshipAnalyzeMutate, isPending: false });
 
 vi.mock("@/_core/hooks/useAuth", () => ({ useAuth: () => ({ user: { name: "UI Tester" }, loading: false, isAuthenticated: true }) }));
 vi.mock("@/const", () => ({ startLogin: vi.fn() }));
-vi.mock("@/lib/trpc", () => ({ trpc: { profile: { credits: { useQuery: mocks.creditsQuery }, spendCredit: { useMutation: mocks.spendCredit } }, gm: { analyze: { useMutation: mocks.gmAnalyze }, resolve: { useMutation: mocks.gmResolve } } } }));
+vi.mock("@/lib/trpc", () => ({ trpc: { profile: { credits: { useQuery: mocks.creditsQuery }, spendCredit: { useMutation: mocks.spendCredit } }, gm: { analyze: { useMutation: mocks.gmAnalyze }, resolve: { useMutation: mocks.gmResolve } }, relationships: { analyzeDay: { useMutation: mocks.relationshipAnalyze } } } }));
 
 import Home from "./Home";
 import { createSaikaSafehouseDemo } from "../lib/game";
 import { OUTCOME_WORD_CADENCE_MS, ROLL_ANIMATION_MS } from "../features/play/PlayScene";
 
-function openChronicle(child: "Chronicle") {
+function openChronicle(child: "Chronicle" | "Relationships") {
   const group = screen.getAllByRole("button", { name: "Chronicle" }).find((button) => button.hasAttribute("aria-expanded"));
   if (group?.getAttribute("aria-expanded") !== "true") fireEvent.click(group!);
   const childButton = screen.getAllByRole("button", { name: child }).find((button) => !button.hasAttribute("aria-expanded"));
@@ -64,6 +67,8 @@ describe("UI Preview click flow", () => {
     expect(document.querySelector(".play-scene__story-layout")).toBeTruthy();
     expect(document.querySelector(".play-scene__reading-scroll")).toBeTruthy();
     expect(document.querySelector(".play-scene__decision-pane")).toBeTruthy();
+    expect(document.querySelector(".play-scene__decision-scroll")).toBeTruthy();
+    expect(document.querySelector(".play-scene__skill-ledger")).toBeTruthy();
     expect(document.querySelector(".play-scene__decision-pane #play-intent-composer")).toBeTruthy();
   });
 
@@ -77,6 +82,21 @@ describe("UI Preview click flow", () => {
     openChronicle("Chronicle");
     expect(screen.getAllByText("คืนที่เมืองซาไกตื่น").length).toBeGreaterThan(0);
     expect(screen.getAllByText(/กันทาโร่/).length).toBeGreaterThan(0);
+  });
+
+  it("opens player-safe Relationships cards and a public-only person detail", () => {
+    render(<Home />);
+    openChronicle("Relationships");
+    expect(screen.getByTestId("relationships-index")).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Gantaro/i })).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: /Gantaro/i }));
+    expect(screen.getByTestId("relationship-detail")).toBeTruthy();
+    expect(screen.getByText("Public persona")).toBeTruthy();
+    expect(screen.getByText("What you know")).toBeTruthy();
+    expect(screen.getByText("The blank space")).toBeTruthy();
+    expect(document.body.textContent).not.toContain("internalCore");
+    expect(document.body.textContent).not.toContain("gmGuidance");
+    expect(mocks.relationshipAnalyzeMutate).not.toHaveBeenCalled();
   });
 
   it("restores a manual leaf through More without weakening the Play or Chronicle path", () => {
@@ -214,10 +234,12 @@ describe("UI Preview click flow", () => {
     expect(screen.getByText("HOW THIS RESULT WAS BUILT")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /record this result/i }));
     expect(screen.getByTestId("narrative-outcome-draft")).toBeTruthy();
+    expect(screen.getByTestId("play-outcome-scroll")).toBeTruthy();
     expect(screen.queryByTestId("narrative-outcome")).toBeNull();
     finishNarrativeDraft();
     fireEvent.click(screen.getByRole("button", { name: /view full outcome/i }));
     expect(screen.getByTestId("narrative-outcome")).toBeTruthy();
+    expect(screen.getByTestId("play-outcome-scroll")).toBeTruthy();
     expect(screen.getByTestId("outcome-roll-breakdown")).toBeTruthy();
     expect(screen.getByText("POSSIBLE NEXT APPROACHES")).toBeTruthy();
     expect(screen.queryByText("SKILL LEDGER")).toBeNull();

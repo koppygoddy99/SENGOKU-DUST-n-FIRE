@@ -221,6 +221,52 @@ export type WorldMemory = {
   tone: "teal" | "ochre" | "vermilion" | "navy";
 };
 
+export type BilingualText = { en: string; th: string };
+export type RelationshipEventSource = "roll" | "memory" | "mission" | "exchange";
+export type RelationshipTone = "navy" | "vermilion" | "ochre" | "teal" | "charcoal";
+
+/**
+ * This is intentionally the only contact shape stored in GameState/local save.
+ * Internal motivation and GM direction belong to server-only dossiers.
+ */
+export type PublicRelationshipEvent = {
+  id: string;
+  sourceType: RelationshipEventSource;
+  sourceId: string;
+  inGameDay: number;
+  tick: number;
+  title: BilingualText;
+  detail: BilingualText;
+  tone: "teal" | "ochre" | "vermilion" | "navy";
+};
+
+export type PublicRelationshipDailyLog = {
+  id: string;
+  inGameDay: number;
+  status: "pending" | "ready";
+  summary: BilingualText;
+  eventIds: string[];
+  confidence?: "low" | "medium" | "high";
+};
+
+export type PublicRelationshipContact = {
+  contactId: "gantaro" | "tokichi" | "masakichi" | "genshiro";
+  nameTh: string;
+  nameEn: string;
+  iconKey: string;
+  colorTone: RelationshipTone;
+  publicStatus: BilingualText;
+  publicPersona: BilingualText[];
+  earnedKnowledge: BilingualText[];
+  blankSpace: BilingualText[];
+  relationshipRole: BilingualText;
+  familiarity: number;
+  affinity: number;
+  visibleSummary?: BilingualText;
+  latestDailyLog?: PublicRelationshipDailyLog;
+  events: PublicRelationshipEvent[];
+};
+
 export type HistoricalStatus = "fact-supported" | "contextual-play" | "campaign-fiction" | "insufficient-evidence";
 
 export type HistoricalBoundary = {
@@ -291,10 +337,109 @@ export type GameState = {
   economy: EconomyState;
   memories: WorldMemory[];
   rolls: RollRecord[];
+  relationships: PublicRelationshipContact[];
   historicalBoundary?: HistoricalBoundary & { tick: number };
   progression?: ProgressionState;
   tick: number;
 };
+
+const relationshipText = (en: string, th: string): BilingualText => ({ en, th });
+
+const relationshipFoundationEvent = (contactId: PublicRelationshipContact["contactId"], title: BilingualText, detail: BilingualText, tone: PublicRelationshipEvent["tone"]): PublicRelationshipEvent => ({
+  id: `relationship-foundation-${contactId}`,
+  sourceType: "memory",
+  sourceId: `relationship-foundation-${contactId}`,
+  inGameDay: 1,
+  tick: 1,
+  title,
+  detail,
+  tone,
+});
+
+export function saikaRelationshipFoundationMemories(): WorldMemory[] {
+  return [
+    { id: "relationship-foundation-gantaro", kind: "actor_relation", title: "กันทาโร่รับซาเนฟุยุเข้ากลุ่ม", detail: "กันทาโร่ยอมรับฝีมือของซาเนฟุยุจากการประลอง แต่เหตุการณ์ที่ร้านเอจิยะทำให้ความไว้ใจลดลงอย่างเห็นได้ชัด", tick: 1, tone: "vermilion" },
+    { id: "relationship-foundation-tokichi", kind: "actor_relation", title: "โทคิจิรู้สัญลักษณ์คูกิ", detail: "โทคิจิเป็นคู่หูเฉพาะกิจที่เคยร่วมรบและช่วยชีวิตซาเนฟุยุ เขารู้เรื่องสัญลักษณ์คูกิและชอบต่อรองค่าปิดปากเป็นเหล้า", tick: 1, tone: "ochre" },
+    { id: "relationship-foundation-masakichi", kind: "actor_relation", title: "มาซาคิจิยังระวังซาเนฟุยุ", detail: "มาซาคิจกับซาเนฟุยุเคยพากันรอดมาได้ แต่เขายังไม่ลืมเหตุที่ถูกหลอกและเกือบเสียชีวิต", tick: 1, tone: "navy" },
+    { id: "relationship-foundation-genshiro", kind: "actor_relation", title: "เก็นชิโร่ตามหาผู้หักดาบ", detail: "เก็นชิโร่ต้องการตามตัวซาเนฟุยุหลังเหตุหักดาบ แต่ยังไม่มีหลักฐานว่าเขามาถึงซาไกแล้ว", tick: 1, tone: "vermilion" },
+  ];
+}
+
+/** Public-only contact cards, based solely on the player-visible NPC source material. */
+export function saikaPublicRelationships(): PublicRelationshipContact[] {
+  const gantaroEvent = relationshipFoundationEvent("gantaro", relationshipText("Gantaro accepted Sanefuyu into the Saika group", "กันทาโร่รับซาเนฟุยุเข้ากลุ่ม"), relationshipText("He recognized your skill after the trial, yet the affair at Echiya has visibly thinned his trust.", "เขายอมรับฝีมือจากการประลอง แต่เหตุที่ร้านเอจิยะทำให้ความไว้ใจลดลงอย่างเห็นได้ชัด"), "vermilion");
+  const tokichiEvent = relationshipFoundationEvent("tokichi", relationshipText("Tokichi knows the Kuki mark", "โทคิจิรู้สัญลักษณ์คูกิ"), relationshipText("A companion in danger who knows your secret and turns silence into a bargain for drink.", "คู่หูยามคับขันที่รู้ความลับและมักต่อรองค่าปิดปากเป็นเหล้า"), "ochre");
+  const masakichiEvent = relationshipFoundationEvent("masakichi", relationshipText("Masakichi has not forgotten", "มาซาคิจิยังไม่ลืม"), relationshipText("You survived together, but he remembers the deceit that nearly cost him his life.", "พวกเจ้ารอดมาด้วยกัน แต่เขายังจำเหตุที่เคยถูกหลอกและเกือบเสียชีวิต"), "navy");
+  const genshiroEvent = relationshipFoundationEvent("genshiro", relationshipText("Genshiro seeks the one who broke his sword", "เก็นชิโร่ตามหาผู้หักดาบ"), relationshipText("He seeks to restore his honor after the broken sword, though you do not know whether he has reached Sakai.", "เขาต้องการกู้เกียรติหลังเหตุหักดาบ แต่ยังไม่รู้ว่าเขามาถึงซาไกหรือยัง"), "vermilion");
+  return [
+    {
+      contactId: "gantaro", nameTh: "กันทาโร่", nameEn: "Gantaro", iconKey: "gantaro", colorTone: "navy",
+      publicStatus: relationshipText("Saika checkpoint captain and small-unit leader", "หัวหน้าด่าน/หัวหน้ากลุ่มย่อยของไซกะ"),
+      publicPersona: [relationshipText("Large and hard-built, with gunpowder soot on a cotton-covered dō-maru, a chipped tooth, and a well-used jingasa.", "ร่างใหญ่แข็งแรง เกราะโดมารุทับผ้าฝ้ายมีคราบเขม่าปืน ฟันบิ่นหนึ่งซี่ และหมวกจินงาสะที่ผ่านการใช้งานจริง"), relationshipText("Blunt, loud, and quick to judge a person by their stance and the way they hold a weapon.", "โผงผาง พูดดัง และมักประเมินคนจากท่ายืนกับการจับอาวุธ")],
+      earnedKnowledge: [relationshipText("He accepted your ability after the trial, but his trust has declined since the Echiya affair.", "เขายอมรับฝีมือจากการประลอง แต่ความไว้ใจลดลงหลังเหตุที่ร้านเอจิยะ")],
+      blankSpace: [relationshipText("What does he truly value when he judges a person, and where is the edge of his patience for your mistakes?", "ลึก ๆ แล้วเขาให้คุณค่ากับคนจากอะไร และเส้นแบ่งความอดทนต่อความผิดพลาดของเจ้าอยู่ตรงไหน?")],
+      relationshipRole: relationshipText("Employer", "นายจ้าง"), familiarity: 3, affinity: -1,
+      visibleSummary: relationshipText("The safehouse still shelters you, but trust is no longer freely given.", "ที่ซ่อนยังคุ้มครองเจ้าอยู่ แต่ความไว้ใจไม่ถูกมอบให้ง่ายเหมือนเดิม"), events: [gantaroEvent],
+    },
+    {
+      contactId: "tokichi", nameTh: "โทคิจิ", nameEn: "Tokichi", iconKey: "tokichi", colorTone: "ochre",
+      publicStatus: relationshipText("Saika hired fighter assigned to the Sakai affair", "ทหารรับจ้างไซกะผู้ร่วมภารกิจซาไก"),
+      publicPersona: [relationshipText("Lean, yellow-toothed, and rarely far from his spear.", "ผอมแกร็น ฟันเหลือง และหอกมักติดมือเสมอ"), relationshipText("He waits by posts or in dark corners, jokes and bargains, and retreats when danger turns sharp.", "ชอบยืนพิงเสาหรือหลบตามมุมมืด เล่นมุก ต่อรองเก่ง และพร้อมถอยเมื่อสถานการณ์เริ่มเสี่ยง")],
+      earnedKnowledge: [relationshipText("A partner in danger who knows your Kuki mark and regularly asks for drink as the price of silence.", "สหายร่วมรบที่รู้ความลับเรื่องสัญลักษณ์คูกิ และมักรีดค่าปิดปากเป็นเหล้า")],
+      blankSpace: [relationshipText("Does his loyalty have a breaking point, and what would make him betray you or keep silent for good?", "ใต้ความขี้ขลาดและเห็นแก่เงิน เขามีเส้นตายความภักดีหรือไม่ อะไรจะทำให้เขาหักหลังหรือปิดปากเงียบอย่างแท้จริง?")],
+      relationshipRole: relationshipText("Companion of necessity", "คู่หูเฉพาะกิจ"), familiarity: 3, affinity: 0,
+      visibleSummary: relationshipText("He knows too much, but has not yet chosen to spend that knowledge against you.", "เขารู้มากเกินไป แต่ยังไม่เลือกใช้ความรู้นั้นเล่นงานเจ้า"), events: [tokichiEvent],
+    },
+    {
+      contactId: "masakichi", nameTh: "มาซาคิจิ", nameEn: "Masakichi", iconKey: "masakichi", colorTone: "teal",
+      publicStatus: relationshipText("Saika gun repairer; formerly a bell and metal worker from Mino", "ช่างซ่อมปืนในค่ายไซกะ อดีตช่างหล่อระฆังและช่างโลหะจากมิโนะ"),
+      publicPersona: [relationshipText("Slightly stooped, with scarred fingers hardened by burns and metal.", "ไหล่ค่อมเล็กน้อย นิ้วแข็งกระด้าง มีรอยไหม้และคราบโลหะฝังแน่นที่มือ"), relationshipText("He speaks slowly while his attention remains on tools and the fit of a gun's parts.", "มักพูดช้า ๆ ขณะสายตาจดจ่ออยู่กับเครื่องมือและความพอดีของชิ้นส่วนปืน")],
+      earnedKnowledge: [relationshipText("You survived together and trust has begun to grow, but he remembers that you once deceived him and nearly killed him.", "พวกเจ้าพากันเอาชีวิตรอดจนความไว้ใจเริ่มเพิ่มขึ้น แต่เขายังจำได้ว่าเจ้าเคยหลอกและเกือบฆ่าเขา")],
+      blankSpace: [relationshipText("What binds him to the Oda network, and what would earn the help of a person wary of being used?", "อดีตของเขากับเครือข่ายโอดะคืออะไร และต้องใช้อะไรจึงจะซื้อใจคนที่กลัวการถูกหลอกใช้ให้ยอมช่วยงานอันตราย?")],
+      relationshipRole: relationshipText("Wary ally", "พันธมิตรที่ระแวงกัน"), familiarity: 2, affinity: -1,
+      visibleSummary: relationshipText("You have shared survival, not yet easy faith.", "เจ้าร่วมรอดมาได้ด้วยกัน แต่ยังไม่ใช่ความไว้ใจที่ง่ายดาย"), events: [masakichiEvent],
+    },
+    {
+      contactId: "genshiro", nameTh: "เก็นชิโร่", nameEn: "Genshiro", iconKey: "genshiro", colorTone: "vermilion",
+      publicStatus: relationshipText("Samurai overseeing supplies at the port of Toba", "ซามูไรผู้ดูแลเสบียงท่าเรือโทบะ"),
+      publicPersona: [relationshipText("Immaculately kept clothing, weapons, and equipment.", "แต่งกายเป็นระเบียบเรียบร้อย อาวุธและอุปกรณ์ได้รับการดูแลอย่างดีเยี่ยม"), relationshipText("Controlled even in anger, he speaks in the decisive register of orders and duty.", "นิ่งและควบคุมอารมณ์ได้ดีแม้กำลังโกรธ พูดจาเด็ดขาดแบบออกคำสั่งและเน้นย้ำเรื่องยศกับหน้าที่")],
+      earnedKnowledge: [relationshipText("You broke his sword. He seeks to hunt you down and return you for punishment, but there is no certain sign that he has reached Sakai.", "เจ้าเคยหักดาบของเขา เขาต้องการล่าตัวเจ้ากลับไปรับโทษ แต่ยังไม่มีเบาะแสแน่ชัดว่าเขาตามมาถึงซาไกหรือยัง")],
+      blankSpace: [relationshipText("If his discipline is only the outer surface, what could finally make this controlled samurai lose command of himself?", "หากความเจ้าระเบียบคือเปลือกนอก อะไรจะทำให้ซามูไรผู้คุมสติตัวเองได้ดีคนนี้สติแตกในที่สุด?")],
+      relationshipRole: relationshipText("Personal adversary", "ศัตรูคู่อาฆาต"), familiarity: 1, affinity: -3,
+      visibleSummary: relationshipText("His pursuit is personal; his present distance from Sakai remains unknown.", "การตามล่าของเขาเป็นเรื่องส่วนตัว แต่ระยะห่างของเขาจากซาไกยังไม่แน่ชัด"), events: [genshiroEvent],
+    },
+  ];
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> { return typeof value === "object" && value !== null; }
+function readText(value: unknown, fallback: BilingualText): BilingualText { return isRecord(value) && typeof value.en === "string" && typeof value.th === "string" ? { en: value.en, th: value.th } : fallback; }
+function clampRelationship(value: unknown, minimum: number, maximum: number, fallback: number): number { return typeof value === "number" && Number.isFinite(value) ? Math.max(minimum, Math.min(maximum, Math.round(value))) : fallback; }
+
+/** Whitelists public fields so any legacy/private keys are never carried forward into the browser save. */
+export function sanitizePublicRelationships(value: unknown): PublicRelationshipContact[] {
+  if (!Array.isArray(value)) return [];
+  const seeded = new Map(saikaPublicRelationships().map((contact) => [contact.contactId, contact]));
+  return value.flatMap((entry) => {
+    if (!isRecord(entry) || typeof entry.contactId !== "string") return [];
+    const seed = seeded.get(entry.contactId as PublicRelationshipContact["contactId"]);
+    if (!seed) return [];
+    const publicPersona = Array.isArray(entry.publicPersona) ? entry.publicPersona.map((item, index) => readText(item, seed.publicPersona[index] ?? seed.publicPersona.at(-1)!)) : seed.publicPersona;
+    const earnedKnowledge = Array.isArray(entry.earnedKnowledge) ? entry.earnedKnowledge.map((item, index) => readText(item, seed.earnedKnowledge[index] ?? seed.earnedKnowledge.at(-1)!)) : seed.earnedKnowledge;
+    const blankSpace = Array.isArray(entry.blankSpace) ? entry.blankSpace.map((item, index) => readText(item, seed.blankSpace[index] ?? seed.blankSpace.at(-1)!)) : seed.blankSpace;
+    return [{
+      contactId: seed.contactId,
+      nameTh: typeof entry.nameTh === "string" ? entry.nameTh : seed.nameTh,
+      nameEn: typeof entry.nameEn === "string" ? entry.nameEn : seed.nameEn,
+      iconKey: typeof entry.iconKey === "string" ? entry.iconKey : seed.iconKey,
+      colorTone: ["navy", "vermilion", "ochre", "teal", "charcoal"].includes(String(entry.colorTone)) ? entry.colorTone as RelationshipTone : seed.colorTone,
+      publicStatus: readText(entry.publicStatus, seed.publicStatus), publicPersona, earnedKnowledge, blankSpace,
+      relationshipRole: readText(entry.relationshipRole, seed.relationshipRole),
+      familiarity: clampRelationship(entry.familiarity, 0, 5, seed.familiarity), affinity: clampRelationship(entry.affinity, -3, 3, seed.affinity),
+      ...(isRecord(entry.visibleSummary) ? { visibleSummary: readText(entry.visibleSummary, seed.visibleSummary ?? seed.relationshipRole) } : {}),
+      events: seed.events,
+    }];
+  });
+}
 
 export type CharacterDraft = {
   name: string;
@@ -551,7 +696,7 @@ export function createGameState(context: CampaignContext, draft: CharacterDraft)
   const mission: Mission = { ...template.mission, id: `mission-${Date.now()}`, state: "offered" as MissionState, progress: { current: 0, required: 2, triggerPhrases: template.mission.options } };
   const opening = openingScene(character, context, mission);
   return {
-    schemaVersion: 4,
+    schemaVersion: 6,
     credits: 50,
     campaign: context,
     character,
@@ -562,6 +707,7 @@ export function createGameState(context: CampaignContext, draft: CharacterDraft)
     economy: buildCampaignEconomy(context),
     memories: [{ id: `memory-${Date.now()}`, kind: "news", title: opening.title, detail: opening.body.join("\n\n"), tick: 1, tone: "teal" }],
     rolls: [],
+    relationships: [],
     progression: defaultProgression(context, template.age, context.season),
     tick: 1,
   };
@@ -583,7 +729,7 @@ export function createSaikaSafehouseDemo(): GameState {
     ],
     speaker: "กันทาโร่", prompt: "ซาเนฟุยุจะตอบกันทาโร่ว่าอย่างไร?", pressure: mission.pressure, suggestedActions: mission.options,
   };
-  return { schemaVersion: 5, credits: 50, campaign, character, community: { food: 2, labor: 2, voice: 1, safety: 1, cohesion: 2, lastChange: "เมืองซาไกเพิ่มเวรยามและตรวจเรือ" }, currentScene: opening, missions: [mission], market: buildSaikaMarket(), economy: buildSaikaEconomy(), memories: [{ id: "memory-saika-opening", kind: "stain", title: "คืนที่เมืองซาไกตื่น", detail: opening.body.join("\n\n"), tick: 1, tone: "vermilion" }], rolls: [], progression: defaultProgression(campaign, 13, "Spring"), tick: 1 };
+  return { schemaVersion: 6, credits: 50, campaign, character, community: { food: 2, labor: 2, voice: 1, safety: 1, cohesion: 2, lastChange: "เมืองซาไกเพิ่มเวรยามและตรวจเรือ" }, currentScene: opening, missions: [mission], market: buildSaikaMarket(), economy: buildSaikaEconomy(), memories: [{ id: "memory-saika-opening", kind: "stain", title: "คืนที่เมืองซาไกตื่น", detail: opening.body.join("\n\n"), tick: 1, tone: "vermilion" }, ...saikaRelationshipFoundationMemories()], rolls: [], relationships: saikaPublicRelationships(), progression: defaultProgression(campaign, 13, "Spring"), tick: 1 };
 }
 
 export function normalizeGameState(state: GameState): GameState {
@@ -607,12 +753,18 @@ export function normalizeGameState(state: GameState): GameState {
   })) as StatXp;
   const vitals = state.character.vitals as Character["vitals"] & { momentum?: number };
   const flaws = Array.from(new Set((state.character.flaws?.length ? state.character.flaws : [state.character.weakness]).map((entry) => entry.trim()).filter(Boolean))).slice(0, 2);
+  const storedRelationships = (state as Partial<GameState>).relationships;
+  const relationships = Array.isArray(storedRelationships) ? sanitizePublicRelationships(storedRelationships) : campaign.id === "camp-saika-1569" ? saikaPublicRelationships() : [];
+  const foundationMemories = campaign.id === "camp-saika-1569" ? saikaRelationshipFoundationMemories() : [];
+  const memories = [...state.memories, ...foundationMemories.filter((memory) => !state.memories.some((existing) => existing.id === memory.id))];
   return {
     ...state,
-    schemaVersion: 5,
+    schemaVersion: 6,
     character: { ...state.character, weakness: flaws[0] ?? "มีหนี้ที่ยังไม่กล้าพูดถึง", flaws: flaws.length ? flaws : ["มีหนี้ที่ยังไม่กล้าพูดถึง"], attributes, statXp, inventory, masteries: state.character.masteries.map((entry) => normalizeMasteryProgress(entry, legacyState)), vitals: { wounds: vitals.wounds, focus: vitals.focus } },
     missions,
     rolls,
+    memories,
+    relationships,
     progression: { ...progression, currentAge: Math.max(progression.currentAge, progression.ageAtCampaignStart) },
     economy: state.economy ?? (campaign.id === "camp-saika-1569" ? buildSaikaEconomy() : buildCampaignEconomy(campaign)),
   };
@@ -727,15 +879,15 @@ const outcomeCopy: Record<Outcome, { label: string; narrative: string; consequen
 
 function localOutcomeNarration(preview: RollPreview, state: GameState, outcome: Outcome, consequence: string) {
   const speaker = state.currentScene.speaker || state.missions[0]?.issuer || "ผู้มอบงาน";
-  const first = `${preview.intent} ทำให้บรรยากาศใน ${state.currentScene.location} เปลี่ยนไปก่อนที่ใครจะเอ่ยคำตอบ เสียงเชือกเสียดสีกับลังไม้และเสียงฝีเท้าหน้าด่านยังดังอยู่เหมือนเดิม แต่คนที่ยืนใกล้ที่สุดเริ่มขยับออกจากกันราวกับกลัวว่าชื่อของตนจะถูกผูกเข้ากับเรื่องนี้ด้วย ${state.currentScene.pressure} ไม่ได้หายไปไหน มันเพียงย้ายจากอากาศรอบตัวมาวางหนักอยู่บนบ่าของ ${state.character.name} แทน.`;
+  const first = `${preview.intent} ทำให้อากาศใน ${state.currentScene.location} เงียบลงชั่วขณะ เสียงไม้เก่าลั่นใต้ฝ่าเท้าและเสียงผ้ากระทบกันยังอยู่ แต่คนใกล้ที่สุดต่างเลือกถอยครึ่งก้าว ราวกับไม่อยากให้ชื่อของตนติดไปกับเรื่องนี้ ${state.currentScene.pressure} ไม่ได้คลายตัว มันเพียงย้ายจากมุมมืดของฉากมาวางหนักบนบ่าของ ${state.character.name} จนทุกลมหายใจมีน้ำหนักขึ้น.`;
   const middle = outcome === "failure_with_consequence"
     ? `${speaker} ไม่ได้ตำหนิทันที เขาปล่อยให้ความเงียบกัดอยู่ครู่หนึ่ง ก่อนใช้นิ้วโป้งลูบรอยยับบนเอกสารแล้วกล่าวว่า “ถ้าจะกู้เรื่องนี้กลับมา เจ้าต้องเอาหลักฐานมาวางตรงหน้า ไม่ใช่เอาอารมณ์มาให้ข้าฟัง” คนข้างหลังเขาหลบตา คนหนึ่งแสร้งก้มผูกเชือกรองเท้า ไม่มีใครอยากรับเป็นพยานให้ความผิดพลาดของ ${state.character.name} แต่ทุกคนได้ยินคำพูดนั้นครบถ้วน.`
     : `${speaker} มอง ${state.character.name} อยู่นานกว่าที่ควรจะเป็น ราวกับกำลังชั่งว่าความกล้านี้เป็นของที่ซื้อได้หรือเป็นภัยที่ต้องระวัง แล้วจึงเอ่ยว่า “ข้าจะให้ทางเจ้าเดินต่อ แต่จำไว้ ทางที่เปิดขึ้นเพราะชื่อของเจ้า ย่อมปิดลงเพราะชื่อนั้นได้เหมือนกัน” ไม่มีใครปรบมือให้ผลลัพธ์นี้ ทว่าใบหน้าคนรอบข้างเปลี่ยนจากการรอดูเป็นการคำนวณ ว่าในครั้งหน้าใครจะได้ประโยชน์และใครจะต้องจ่ายแทน.`;
   const last = outcome === "decisive_success"
-    ? `ผลของการกระทำเปิดช่องให้กว้างกว่าที่ผู้คนคาดไว้ แต่ ${consequence} ไม่ใช่ของขวัญเปล่า ๆ มันเป็นรอยผูกมัดเส้นใหม่ระหว่าง ${state.character.name} กับคนใน ${state.currentScene.location} เมื่อมือของผู้มอบงานขยับไปจับสิ่งที่เคยปฏิเสธ เขาก็ทำให้ทุกคนเห็นแล้วว่าทางเลือกนี้มีราคา และวันหนึ่งราคานั้นอาจถูกทวงคืน.`
+    ? `ช่องทางที่เปิดขึ้นกว้างกว่าที่คนในฉากคาดไว้ แต่ ${consequence} ไม่ใช่ของขวัญเปล่า ๆ มันผูกชื่อของ ${state.character.name} ไว้กับผู้คนใน ${state.currentScene.location} แน่นขึ้นอีกเส้น เมื่อมือของ ${speaker} ยอมขยับไปแตะสิ่งที่เคยปฏิเสธ ทุกคนก็เห็นตรงกันว่าทางนี้มีราคา และวันหนึ่งราคานั้นย่อมถูกทวงคืน.`
     : outcome === "failure_with_consequence"
-      ? `ความผิดพลาดยังไม่ใช่จุดจบ แต่ ${consequence} ทำให้ทางเดิมใช้ไม่ได้อีกต่อไป ก่อนการตัดสินใจครั้งถัดไป ${state.character.name} ต้องยอมเสียบางอย่างเพื่อซื้อเวลา หรือปล่อยให้คนอื่นเขียนคำอธิบายแทน เมื่อประตูด่านขยับปิดลงทีละน้อย ไม่มีใครพูดว่าเรื่องนี้จบแล้ว ทว่าทุกคนรู้ว่าต่อจากนี้การแก้ตัวจะมีราคาสูงกว่าเดิม.`
-      : `สิ่งที่ ${state.character.name} ต้องการเกิดขึ้นเพียงส่วนหนึ่ง และ ${consequence} ก็ถูกทิ้งไว้ในฉากเหมือนรอยเท้าบนดินชื้นที่ฝนยังลบไม่ทัน มันจะตามไปในวันที่ผู้คนเริ่มคิดว่าตนเองได้ประโยชน์จากเรื่องนี้เช่นกัน ผู้มอบงานเก็บของของตนช้า ๆ ราวกับให้เวลาสั้น ๆ สำหรับมองผลที่ทำลงไป ก่อนจะหันไปทางเส้นทางหลักซึ่งยังเต็มไปด้วยคนที่พร้อมฟังข่าวผิดเพี้ยนเสมอ.`;
+      ? `เรื่องนี้ยังไม่จบ แต่ ${consequence} ทำให้ทางเดิมใช้ไม่ได้อีกต่อไป ก่อนจะขยับครั้งต่อไป ${state.character.name} ต้องยอมเสียบางอย่างเพื่อซื้อเวลา หรือปล่อยให้คนอื่นเรียบเรียงคำอธิบายแทน เมื่อทางผ่านด้านนอกถูกปิดลงทีละน้อย ไม่มีใครเอ่ยคำตัดสิน ทว่าทุกคนรู้ว่าจากนี้คำแก้ตัวจะมีราคาสูงกว่าเดิม.`
+      : `สิ่งที่ ${state.character.name} ต้องการเกิดขึ้นเพียงส่วนหนึ่ง และ ${consequence} ก็ยังค้างอยู่ในฉากเหมือนรอยเท้าบนดินชื้นที่ฝนลบไม่ทัน มันจะตามไปเมื่อคนเริ่มเห็นผลประโยชน์ของตนในเรื่องเดียวกัน ${speaker} เก็บของช้า ๆ ราวกับให้เวลาสั้น ๆ แก่ทุกคนมองสิ่งที่เกิดขึ้น ก่อนหันไปยังทางหลักซึ่งยังเต็มไปด้วยหูที่พร้อมรับข่าวผิดเพี้ยน.`;
   return [first, middle, last].join("\n\n");
 }
 
@@ -857,6 +1009,40 @@ function progressActiveMission(state: GameState, record: RollRecord): { missions
   return { missions: state.missions.map((entry) => entry.id === mission.id ? updated : entry), inventory: rewardItem ? [...state.character.inventory, rewardItem] : state.character.inventory, transaction, update: { missionId: mission.id, current, required: mission.progress.required, state: updated.state, reward } };
 }
 
+function relationshipEvidenceTone(record: RollRecord): PublicRelationshipEvent["tone"] {
+  return record.outcome === "failure_with_consequence" ? "vermilion" : record.outcome === "success_with_cost" ? "ochre" : record.outcome === "partial_success" ? "navy" : "teal";
+}
+
+/**
+ * Relationship evidence is derived only from player-visible roll/context data.
+ * It never reads the server dossier and does not change dice, resources, or NPC behavior.
+ */
+export function captureRelationshipEvidence(state: GameState, record: RollRecord, mission?: Mission): PublicRelationshipContact[] {
+  const sourceText = [record.action, record.intent, record.summary, record.consequence ?? "", record.narrative, state.currentScene.speaker, mission?.issuer ?? "", mission?.title ?? ""].join("\n").toLocaleLowerCase();
+  return state.relationships.map((contact) => {
+    const mentioned = [contact.nameTh, contact.nameEn, contact.contactId]
+      .filter(Boolean)
+      .some((name) => sourceText.includes(name.toLocaleLowerCase()));
+    if (!mentioned) return contact;
+    const eventId = `relationship-roll-${contact.contactId}-${record.id}`;
+    if (contact.events.some((event) => event.id === eventId)) return contact;
+    const event: PublicRelationshipEvent = {
+      id: eventId,
+      sourceType: "roll",
+      sourceId: record.id,
+      inGameDay: state.campaign.day,
+      tick: record.tick,
+      title: relationshipText(`A visible consequence involving ${contact.nameEn}`, `เหตุการณ์ที่เกี่ยวข้องกับ${contact.nameTh}`),
+      detail: relationshipText(`The resolved action left a public consequence connected to ${contact.nameEn}.`, `${record.summary}${record.consequence ? ` · ${record.consequence}` : ""}`),
+      tone: relationshipEvidenceTone(record),
+    };
+    const latestDailyLog = contact.latestDailyLog?.inGameDay === state.campaign.day
+      ? contact.latestDailyLog
+      : { id: `relationship-pending-${contact.contactId}-${state.campaign.day}`, inGameDay: state.campaign.day, status: "pending" as const, summary: relationshipText("Analysis is waiting for the day's evidence.", "กำลังรอวิเคราะห์หลักฐานของวันในเกมนี้"), eventIds: [] };
+    return { ...contact, events: [...contact.events, event], latestDailyLog: { ...latestDailyLog, eventIds: Array.from(new Set([...latestDailyLog.eventIds, event.id])) } };
+  });
+}
+
 export function applyRoll(state: GameState, record: RollRecord): GameState {
   const copy = outcomeCopy[record.outcome];
   const success = record.outcome !== "failure_with_consequence";
@@ -867,6 +1053,7 @@ export function applyRoll(state: GameState, record: RollRecord): GameState {
   const calendar = advanceCampaignCalendar(state.campaign, clock.progression, clock.dayAdvance);
   const missionResult = progressActiveMission(state, record);
   const activeMission = state.missions.find((entry) => entry.state === "offered" || entry.state === "active");
+  const relationships = captureRelationshipEvidence(state, record, activeMission);
   const updatedCharacter: Character = {
     ...state.character,
     attributes: traitAwarded.attributes,
@@ -911,7 +1098,7 @@ export function applyRoll(state: GameState, record: RollRecord): GameState {
     suggestedActions: success ? ["รับรางวัลแล้วถามเงื่อนไข", "ตามหาคนที่เป็นพยาน", "กลับไปดูภารกิจอื่น"] : ["แก้ความเข้าใจกับผู้คุม", "หาหลักฐานเพิ่ม", "ยอมรับผลแล้วเปลี่ยนแผน"],
   };
   const storedRecord: RollRecord = { ...record, practice: awarded.practice, statPractice: traitAwarded.practice, timeMark: clock.timeMark, missionUpdate: missionResult.update };
-  return { ...state, campaign: calendar.campaign, progression: { ...calendar.progression, lastPractice: awarded.practice, lastStatPractice: traitAwarded.practice }, character: updatedCharacter, currentScene: nextScene, missions, economy: missionResult.transaction ? { ...state.economy, transactions: [...state.economy.transactions, missionResult.transaction] } : state.economy, memories: [...state.memories, memory], rolls: [...state.rolls, storedRecord], tick: record.tick };
+  return { ...state, campaign: calendar.campaign, progression: { ...calendar.progression, lastPractice: awarded.practice, lastStatPractice: traitAwarded.practice }, character: updatedCharacter, currentScene: nextScene, missions, economy: missionResult.transaction ? { ...state.economy, transactions: [...state.economy.transactions, missionResult.transaction] } : state.economy, memories: [...state.memories, memory], rolls: [...state.rolls, storedRecord], relationships, tick: record.tick };
 }
 
 export function buyMarketOffer(state: GameState, offerId: string): { state: GameState; message: string } {

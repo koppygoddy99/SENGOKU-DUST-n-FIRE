@@ -23,6 +23,7 @@ export function buildReviewSeed(seed: ReviewSeedId): GameState {
     case "saika-exchanges":
     case "saika-character":
     case "saika-chronicle":
+    case "saika-relationships":
     case "saika-archive":
     case "saika-safekeeping":
     case "saika-load":

@@ -1,6 +1,7 @@
 import { z } from "zod";
 import { invokeLLM } from "./_core/llm";
 import { sengokuSocialFacts, type SengokuSocialFact } from "../shared/sengokuSocialFacts";
+import { narrativeQualityFlags, narrativeStylePrompt } from "../shared/narrativeStyle";
 
 const languageSchema = z.enum(["en", "th"]);
 const statSchema = z.enum(["body", "hand", "wit", "mind", "heart"]);
@@ -160,6 +161,11 @@ function normalizeResolveCandidate(value: unknown) {
   };
 }
 
+function assertNarrationQuality(narration: string[], language: "en" | "th") {
+  const flags = narrativeQualityFlags(narration.join("\n"), language);
+  if (flags.length) throw new Error(`AI GM narration rejected by Narrative Style Contract: ${flags.join(", ")}`);
+}
+
 type ContextForHistory = z.infer<typeof contextSchema>;
 
 function domainsForText(text: string): SengokuSocialFact["domains"] {
@@ -233,6 +239,8 @@ export async function resolveWithGM(input: z.infer<typeof resolveInputSchema>) {
     model: "gpt-5-mini",
     messages: [{ role: "system", content: systemRules }, { role: "user", content: `Narrate the resolved roll. The total, outcome, and consequence are final rules output; do not alter them.
 
+${narrativeStylePrompt(input.language)}
+
 Narrative standard for this response:
 - Return exactly 3 substantial prose paragraphs in narration. Each paragraph must be 120–1100 characters. Write roughly 500–1,800 Thai characters in total: vivid enough to read as a scene, but not a chapter.
 - Paragraph 1 grounds the immediate aftermath through 1–2 concrete sensory or physical details that arise naturally from the supplied location, season, pressure, and the player's action. Do not use stock filler such as "the story moves on" or generic wagon-and-rumor imagery unless the context specifically supports it.
@@ -250,5 +258,7 @@ ${JSON.stringify(input)}` }],
     outputSchema: resolveOutputSchema,
     signal,
   }));
-  return { ...resolveResultSchema.parse(normalizeResolveCandidate(JSON.parse(getTextContent(response.choices[0]?.message.content ?? "")))), historicalFactIds: history.factIds };
+  const parsed = resolveResultSchema.parse(normalizeResolveCandidate(JSON.parse(getTextContent(response.choices[0]?.message.content ?? ""))));
+  assertNarrationQuality(parsed.narration, input.language);
+  return { ...parsed, historicalFactIds: history.factIds };
 }

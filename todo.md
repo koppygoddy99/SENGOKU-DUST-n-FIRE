@@ -305,3 +305,18 @@
 - [x] ย้ายแฟ้มตัวละครจากเมนูจัดเตรียมไปอยู่ในเมนูเรื่องราว โดยคง route และข้อมูลเดิม
 - [x] ปรับ Play Scene เป็นสองคอลัมน์: prose ที่เลื่อนอ่านได้ด้านซ้าย และ decision/ledger เดิมด้านขวาตามภาพอ้างอิง
 - [x] อัปเดต regression ตรวจ navigation และ Play Scene layout พร้อมตรวจ TypeScript/tests/build และ push main
+- [x] แก้ Mastery Ledger และ scroll owner ของ Play Scene รวมทั้งหน้าแสดงผลเต็มให้เลื่อนอ่านได้จริง
+- [x] เพิ่ม data contract, migration และ public/private NPC relationship records ที่กันข้อมูลลับจาก client
+- [x] รีเซ็ต Narrative Style Contract สองภาษาและเพิ่ม AI relationship analysis ที่ตรวจ evidence ได้
+- [x] สร้าง Character Sheet แบบ player-safe และ Chronicle → Relationships/ความสัมพันธ์ พร้อม card/detail UI และไอคอน NPC
+- [x] เพิ่ม regression สำหรับ spoiler boundary, daily relationship log, navigation, scroll และ responsive behavior
+- [x] ตรวจ TypeScript, tests, build, visual flow และ push ชุด Character Sheet/Relationships ขึ้น main
+- [ ] Commit และ push ทุกชิ้นของชุดงานเก่าที่ผ่านการตรวจรับขึ้น GitHub repository ที่เชื่อมไว้
+- [ ] ตรวจและจัดทำ audit จากข้อมูลเดิมของระบบเดินเรือ แผนที่ ไทม์ไลน์ปี และ content reset โดยไม่เริ่มงานวิจัยใหม่
+- [ ] สร้างสไลด์ละเอียดจากข้อมูลเดิมของโปรเจกต์: content reset, แผนที่/ไทม์ไลน์/เดินเรือ และขอบเขตความรู้ AI GM
+- [ ] ตรวจว่ามีไทม์ไลน์ประวัติศาสตร์รายปีเรียงละเอียดในรีโปเพียงใด และวางรายการรีเซ็ต/เติมต่อจากข้อมูลเดิม
+- [ ] พัฒนา Application Management แบบผู้เล่นและผู้ดูแล พร้อม detail panel สองภาษาและสถานะกำลังเตรียม
+- [ ] เพิ่ม regression ของ Application Management สำหรับ visibility ตาม role, navigation, ภาษา และการไม่เรียก service ภายนอก
+- [ ] ตรวจ TypeScript, tests, build, visual flow และ push ชุด Application Management ขึ้น main
+- [ ] ทำงาน Play Scene และ Character Sheet/Relationships ที่อนุมัติให้เสร็จก่อนเริ่ม Application Management
+- [ ] เปลี่ยน Application Management ที่พักไว้ให้เมนูย่อยเปิดหน้าแยก พร้อมรายละเอียดทั่วไปเท่าที่มีข้อมูลจริง

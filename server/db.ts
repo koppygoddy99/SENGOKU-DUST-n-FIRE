@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/mysql2";
 import { and, eq, gte, sql } from "drizzle-orm";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertRelationshipDailySummary, InsertUser, relationshipDailySummaries, users } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -112,4 +112,22 @@ export async function spendUserTrialCredits(userId: number, amount: number) {
   });
 }
 
-// TODO: add feature queries here as your schema grows.
+export async function findRelationshipDailySummary(ownerId: number, campaignId: string, contactId: string, inGameDay: number, sourceHash: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is unavailable");
+  const result = await db.select().from(relationshipDailySummaries).where(and(
+    eq(relationshipDailySummaries.ownerId, ownerId),
+    eq(relationshipDailySummaries.campaignId, campaignId),
+    eq(relationshipDailySummaries.contactId, contactId),
+    eq(relationshipDailySummaries.inGameDay, inGameDay),
+    eq(relationshipDailySummaries.sourceHash, sourceHash),
+  )).limit(1);
+  return result[0];
+}
+
+export async function createRelationshipDailySummary(summary: InsertRelationshipDailySummary) {
+  const db = await getDb();
+  if (!db) throw new Error("Database is unavailable");
+  await db.insert(relationshipDailySummaries).values(summary);
+  return findRelationshipDailySummary(summary.ownerId, summary.campaignId, summary.contactId, summary.inGameDay, summary.sourceHash);
+}
