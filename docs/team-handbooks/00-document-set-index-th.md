@@ -9,7 +9,7 @@
 
 เอกสารชุดนี้เป็นคู่มือแบบตัวอักษรล้วนสำหรับทีมที่สร้างและดูแล **Dust & Fire: Sengoku Stories** ซึ่งเป็นเกม tabletop role-playing เชิงนิยายประวัติศาสตร์ต้นฉบับในบริบทญี่ปุ่นยุคเซ็นโกกุ เอกสารมิได้แทนที่โค้ดหรือผลทดสอบ แต่กำหนดภาษาเดียวกันสำหรับการตัดสินใจ ออกแบบ พัฒนา ตรวจคุณภาพ และปล่อยเกม
 
-ชุดนี้มี **8 ฉบับ**: เอกสารกลางหนึ่งฉบับ และคู่มือเชิงลึกของเจ็ดทีมหนึ่งฉบับต่อทีม ทุกฉบับอ้างอิงกติกา canonical จาก `docs/dust-fire-core-game-source-of-truth-th.md` เมื่อข้อความในคู่มือทีมขัดกับเอกสารคอร์เกม ให้ถือเอกสารคอร์เกมเป็นข้อผูกพันด้าน state transition และให้ Game Director เป็นผู้ตัดสินข้อขัดแย้งเชิงผลิตภัณฑ์
+ชุดนี้มี **9 ฉบับ**: เอกสารกลางหนึ่งฉบับ และคู่มือเชิงลึกของแปดทีมหนึ่งฉบับต่อทีม ทุกฉบับอ้างอิงกติกา canonical จาก `docs/dust-fire-core-game-source-of-truth-th.md` เมื่อข้อความในคู่มือทีมขัดกับเอกสารคอร์เกม ให้ถือเอกสารคอร์เกมเป็นข้อผูกพันด้าน state transition และให้ Game Director เป็นผู้ตัดสินข้อขัดแย้งเชิงผลิตภัณฑ์
 
 | รหัส | ไฟล์ | เจ้าของหลัก | หน้าที่ของเอกสาร |
 |---|---|---|---|
@@ -22,6 +22,7 @@
 | 06 | `06-art-audio-handbook-th.md` | Team 5 | art direction, typography, motion, sound direction และสิทธิ์ในทรัพยากร |
 | 07 | `07-qa-testing-handbook-th.md` | Team 6 | test strategy, bug report, difficulty validation และ browser matrix |
 | 08 | `08-release-operations-handbook-th.md` | Team 7 | performance, release, observability, incident response และการดูแลหลังเปิดตัว |
+| 09 | `09-backend-systems-handbook-th.md` | Team 8 | server contracts, persistence, migration, AI GM integration, asset delivery และ observability เชิงระบบ |
 
 ## กฎการใช้เอกสาร
 
@@ -34,10 +35,10 @@
 | คำ | ความหมายที่ใช้ร่วมกัน |
 |---|---|
 | **Intent / เจตนา** | ประโยคการกระทำหนึ่งประโยคที่ผู้เล่นยืนยันก่อนทอย |
-| **Axis / แกน** | วิธีหลักห้าแบบ: พละกำลัง ฝีมือ ไหวพริบ ปัญญา และพลังใจ |
+| **Stat / คุณลักษณะ** | คุณลักษณะหลักห้าแบบ: พลังกาย ฝีมือ ไหวพริบ ปัญญา และใจสู้ |
 | **Mastery / ความชำนาญ** | วิชาเฉพาะรายตัวที่มี Step 1–20, XP และโบนัส ไม่ใช่เลเวลรวม |
 | **Step** | ขั้นของ mastery; Step 20 เป็นเพดานและเปลี่ยนเป็น Mastery Mark เชิงเรื่อง |
-| **Leaf** | หน้าหรือบทของแคมเปญที่เกิดจากเวลาสะสมหลายวัน ไม่ใช่ตัวนับทุกการทอย |
+| **Page** | หน้าหรือบทของแคมเปญที่เกิดจากเวลาสะสมหลายวัน ไม่ใช่ตัวนับทุกการทอย |
 | **Mission Thread** | เส้นเรื่องที่ระบบติดตามจาก action และผลลัพธ์ ไม่ใช่ปุ่มรับเควส |
 | **Agreement** | สมุดสัญญาและผลประโยชน์ที่บันทึกผู้เกี่ยวข้อง สิ่งที่เปลี่ยนมือ พยาน และผลตามมา |
 | **Local Trial** | การ resolve ในเครื่องเมื่อ AI GM ใช้ไม่ได้ โดยไม่หักเครดิตและยังเซฟต่อได้ |
@@ -60,6 +61,7 @@
 | ภาพ เสียง ฟอนต์ และสิทธิ์ทรัพย์สิน | Art and Audio | Game Director, UI/UX Frontend |
 | เกณฑ์ผ่าน การทำซ้ำบั๊ก และความยาก | QA and Testing | ทุกทีม |
 | เวลา release, monitoring และ incident | Release and Operations | Game Development, QA |
+| server contract, persistence, migration, asset delivery และ backend observability | Backend Systems | Game Development, QA, Release and Operations |
 
 ## วิธีขยายเอกสาร
 

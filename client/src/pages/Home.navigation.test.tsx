@@ -15,7 +15,7 @@ describe("Campaign 1 navigation", () => {
   it("opens the Prepare group with its campaign ledgers and marks the active child", () => {
     const html = renderToStaticMarkup(<CampaignNavigation campaignTitle="Ash over Kinokawa" language="en" page="localmarket" expanded onToggle={() => undefined} onOpen={() => undefined} />);
     expect(html).toContain('aria-expanded="true"');
-    ["Prepare", "Character Dossier", "Carried Gear", "This Market", "Services &amp; Hands", "Debts &amp; Favors", "Agreements &amp; Consequences"].forEach((item) => expect(html).toContain(`>${item}<`));
+    ["Prepare", "Character Dossier", "Carried Gear", "This Market", "Services &amp; Hands", "Leverage", "Bonds"].forEach((item) => expect(html).toContain(`>${item}<`));
     expect(html).toContain("campaign-nav__items");
     expect(html).toContain("nav-item--child nav-item--active");
     expect(html).not.toContain(">Campaign Command<");
