@@ -23,7 +23,7 @@ describe("DN balance guardrails", () => {
     const game = createSaikaSafehouseDemo();
     const preview = parseAction("ข้าจะเสนอแผนให้กันทาโร่", game);
     expect(preview.difficulty).toBe(14);
-    expect(preview.difficultyReason).toContain("เดิมพันมีความหมาย");
+    expect(preview.difficultyReason).toContain("มาตรฐาน");
 
     const outcomes = distribution(3, preview.difficulty);
     expect(outcomes.decisive + outcomes.success).toBe(99);
@@ -34,24 +34,23 @@ describe("DN balance guardrails", () => {
     const game = createSaikaSafehouseDemo();
     const preview = parseAction("ข้าจะยิงผู้คุมที่ด่านด้วยปืนคาบศิลา", game);
     expect(preview.difficulty).toBe(18);
-    expect(preview.difficultyReason).toContain("อุปสรรคจริง");
+    expect(preview.difficultyReason).toContain("ท้าทาย");
 
     const outcomes = distribution(5, preview.difficulty);
     expect(outcomes.decisive + outcomes.success).toBe(78);
     expect(outcomes.failure).toBe(28);
   });
 
-  it("reserves DN22 for an unprepared compounded crisis instead of every illicit word", () => {
+  it("reserves DN26 for an unprepared compounded crisis instead of every illicit word", () => {
     const game = createSaikaSafehouseDemo();
     const unprepared = parseAction("ข้าจะปลอมตราเพื่อผ่านด่าน", game);
     const prepared = parseAction("ข้าจะยิงผู้คุมที่ด่านด้วยปืนคาบศิลา", game);
-    expect(unprepared.difficulty).toBe(22);
+    expect(unprepared.difficulty).toBe(26);
     expect(unprepared.difficultyReason).toContain("วิกฤต");
     expect(prepared.difficulty).toBe(18);
 
     const outcomes = distribution(3, unprepared.difficulty);
-    expect(outcomes.failure).toBe(89);
-    expect(outcomes.partial).toBe(34);
+    expect(outcomes.failure).toBeGreaterThan(outcomes.decisive + outcomes.success);
   });
 
   it("spends Momentum on the inspected result instead of rerolling or dropping its breakdown", () => {

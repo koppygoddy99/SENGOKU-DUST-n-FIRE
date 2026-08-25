@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { RELATIONSHIP_QUESTIONS, STARTER_TEMPLATES, createGameState, masteryTierForRank, type CharacterDraft } from "./game";
+import { RELATIONSHIP_QUESTIONS, STARTER_TEMPLATES, createGameState, masteryTierForRank, startingAttributesForTemplate, type CharacterDraft } from "./game";
 
 function draftFor(templateId: string, overrides: Partial<CharacterDraft> = {}): CharacterDraft {
   return {
@@ -47,7 +47,7 @@ describe("starter occupation templates", () => {
     });
     const state = createGameState({ id: "background-test", title: "บัญชีเก่า", year: 1578, season: "Summer", region: "Mikawa", location: "หมู่บ้าน", warShadow: 3, day: 1 }, draft);
     expect(RELATIONSHIP_QUESTIONS).toHaveLength(2);
-    expect(state.character.attributes).toEqual(template.attributes);
+    expect(state.character.attributes).toEqual(startingAttributesForTemplate(template));
     expect(state.character.pulls.map((entry) => entry.answer)).toEqual(["เคยคัดบัญชีข้าวให้บ้านเกิด", "ไม่ยืนข้างคนที่ใช้บัญชีทำร้ายผู้หิวโหย"]);
   });
 

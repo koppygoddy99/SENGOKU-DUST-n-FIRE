@@ -24,7 +24,7 @@ export function withGMResponseTimeout<T>(operation: (signal: AbortSignal) => Pro
 
 const contextSchema = z.object({
   campaign: z.object({ title: z.string().max(120), year: z.number().int().min(1454).max(1616), season: z.string().max(20), region: z.string().max(80), location: z.string().max(160), warShadow: z.number().int().min(0).max(6), day: z.number().int().min(1).max(366) }),
-  character: z.object({ name: z.string().max(100), occupation: z.string().max(120), origin: z.string().max(240), strengths: z.string().max(240), weakness: z.string().max(240), attributes: z.record(statSchema, z.number().int().min(0).max(6)), masteries: z.array(z.object({ name: z.string().max(100), level: z.number().int().min(0).max(3), source: z.string().max(180) })).max(10), background: z.array(z.object({ question: z.string().max(240), answer: z.string().max(500), tags: z.array(z.string().max(60)).max(6) })).max(2).optional() }),
+  character: z.object({ name: z.string().max(100), occupation: z.string().max(120), origin: z.string().max(240), strengths: z.string().max(240), weakness: z.string().max(240), flaws: z.array(z.string().trim().min(2).max(240)).max(2).default([]), attributes: z.record(statSchema, z.number().int().min(1).max(10)), masteries: z.array(z.object({ name: z.string().max(100), level: z.number().int().min(0).max(6), source: z.string().max(180) })).max(10), background: z.array(z.object({ question: z.string().max(240), answer: z.string().max(500), tags: z.array(z.string().max(60)).max(6) })).max(2).optional() }),
   currentScene: z.object({ title: z.string().max(160), location: z.string().max(160), summary: z.string().max(4000), pressure: z.string().max(300), declaredChoices: z.array(z.string().max(180)).max(6) }),
   activeMission: z.object({ title: z.string().max(160), giver: z.string().max(120), objective: z.string().max(500), deadline: z.string().max(160), reward: z.string().max(300) }).optional(),
   socialState: z.object({ honor: z.number().int().min(0).max(6), influence: z.number().int().min(0).max(6), stain: z.number().int().min(0).max(6), rumors: z.array(z.string().max(200)).max(5), oaths: z.array(z.string().max(200)).max(5), debts: z.array(z.string().max(200)).max(5) }),
@@ -45,6 +45,10 @@ const analyzeResultSchema = z.object({
   suggestedMastery: z.string().max(100).nullable(),
   difficulty: z.number().int().min(5).max(30),
   contextBonus: z.number().int().min(0).max(2),
+  flawTriggered: z.boolean().default(false),
+  flawBonus: z.union([z.literal(-2), z.literal(0)]).default(0),
+  triggeredFlaw: z.string().min(2).max(240).nullable().default(null),
+  flawReason: z.string().min(2).max(300).nullable().default(null),
   contextReason: z.string().min(2).max(300),
   risk: z.string().min(2).max(320),
   confirmation: z.string().min(2).max(280),
@@ -68,9 +72,9 @@ const analyzeOutputSchema = {
   schema: {
     type: "object", additionalProperties: false,
     properties: {
-      intentSummary: { type: "string" }, stat: { type: "string", enum: ["body", "hand", "wit", "mind", "heart"] }, suggestedMastery: { type: ["string", "null"] }, difficulty: { type: "integer" }, contextBonus: { type: "integer" }, contextReason: { type: "string" }, risk: { type: "string" }, confirmation: { type: "string" }, historicalFence: { type: "string" }, historicalStatus: { type: "string", enum: ["fact-supported", "contextual-play", "campaign-fiction", "insufficient-evidence"] },
+      intentSummary: { type: "string" }, stat: { type: "string", enum: ["body", "hand", "wit", "mind", "heart"] }, suggestedMastery: { type: ["string", "null"] }, difficulty: { type: "integer" }, contextBonus: { type: "integer" }, flawTriggered: { type: "boolean" }, flawBonus: { type: "integer", enum: [-2, 0] }, triggeredFlaw: { type: ["string", "null"] }, flawReason: { type: ["string", "null"] }, contextReason: { type: "string" }, risk: { type: "string" }, confirmation: { type: "string" }, historicalFence: { type: "string" }, historicalStatus: { type: "string", enum: ["fact-supported", "contextual-play", "campaign-fiction", "insufficient-evidence"] },
     },
-    required: ["intentSummary", "stat", "suggestedMastery", "difficulty", "contextBonus", "contextReason", "risk", "confirmation", "historicalFence", "historicalStatus"],
+    required: ["intentSummary", "stat", "suggestedMastery", "difficulty", "contextBonus", "flawTriggered", "flawBonus", "triggeredFlaw", "flawReason", "contextReason", "risk", "confirmation", "historicalFence", "historicalStatus"],
   },
 } as const;
 
@@ -88,7 +92,8 @@ const resolveOutputSchema = {
 
 const systemRules = `You are the AI Game Master for Dust & Fire: Sengoku Stories, an original historical-fiction tabletop role-playing game.
 You interpret player intent and narrate consequences; you never roll dice, change player resources, invent bonuses above +2, or override the deterministic 2d12 engine.
-The five stats are exactly: body (Prowess), hand (Craft), wit (Instinct), mind (Judgment), heart (Resolve). Recommend only these DN bands: DN14 for a meaningful attempt with ordinary stakes; DN18 for a guarded obstacle, direct danger, or an illicit act that will leave a trace; DN22 only for a compounded crisis where an illicit act meets a guarded obstacle and the character has no relevant mastery or prepared tool. Do not recommend DN10 for a declared action that reaches the roll screen. The client rounds any number to a canonical tier.
+The five stats are exactly: body (Prowess), hand (Craft), wit (Instinct), mind (Judgment), heart (Resolve). Recommend only these DN bands: DN8 for safe rest or a routine action already mastered; DN10 for an easy familiar action; DN14 for ordinary stakes; DN18 for a guarded obstacle, direct danger, or an illicit act that will leave a trace; DN22 for a compounded obstacle where preparation or relevant skill still gives a viable route; DN26 only for a nearly impossible pivotal crisis with no relevant mastery or prepared tool. The client rounds any number to a canonical tier.
+Character flaws are not a permanent penalty. Inspect context.flaws before analysis. Set flawTriggered=true, flawBonus=-2, and identify exactly one triggeredFlaw only when the declared action and current scene make that flaw directly relevant. Otherwise return flawTriggered=false, flawBonus=0, triggeredFlaw=null, flawReason=null. The player never chooses a trigger. You only declare the trigger; the deterministic engine applies the -2 before comparing DN.
 For action analysis, be concise. For resolved narration, write a complete, vivid scene rather than a summary, a moral, or a generic transition. Keep fictional NPCs and events clearly fictional. Never assert invented history as fact. You will receive a Historical Brief selected from curated fact cards. Use it only within its stated era, region, and confidence boundary. Do not turn a structural fact into a universal law, do not invent a historical event, and label campaign invention or insufficient evidence in historicalFence. Set historicalStatus exactly as follows: fact-supported only for a specific statement directly supported by the supplied Brief; contextual-play when a structural fact informs a fictional scene; campaign-fiction when the scene detail is invented for the campaign; insufficient-evidence when a requested historical detail exceeds the supplied Brief.
 Respect the user's language selection. In Thai, use natural Thai with a Sengoku-war chronicle tone, not royal language. In English, use precise literary English. Character background is remembered fiction, not a mechanical bonus: it may return only indirectly as a rumor, person, pressure, place, or difficult choice when the current scene makes it natural. Never force it into every scene, guarantee a reunion, or change dice, Stat, Mastery, DN, or outcome because of it. For suggestedMastery, provide only the exact mastery name from the supplied character data, or null; never put an explanation in that field. Output only JSON matching the schema.`;
 
@@ -97,10 +102,13 @@ function getTextContent(value: string | unknown[]): string {
   return value.map((item) => typeof item === "object" && item && "text" in item ? String((item as { text: unknown }).text) : "").join("\n");
 }
 
-function canonicalDifficulty(value: number): 10 | 14 | 18 | 22 {
+function canonicalDifficulty(value: number): 8 | 10 | 14 | 18 | 22 | 26 {
+  if (value <= 9) return 8;
+  if (value <= 12) return 10;
   if (value <= 16) return 14;
   if (value <= 20) return 18;
-  return 22;
+  if (value <= 24) return 22;
+  return 26;
 }
 
 function normalizeAnalysisCandidate(value: unknown) {
@@ -114,11 +122,16 @@ function normalizeAnalysisCandidate(value: unknown) {
   const legacyStat = typeof candidate.axis === "string" ? candidate.axis : undefined;
   const statCandidate = typeof candidate.stat === "string" ? candidate.stat : legacyStat;
   const stat = typeof statCandidate === "string" && ["body", "hand", "wit", "mind", "heart"].includes(statCandidate) ? statCandidate : "wit";
+  const flawTriggered = candidate.flawTriggered === true && candidate.flawBonus === -2 && typeof candidate.triggeredFlaw === "string" && candidate.triggeredFlaw.trim().length >= 2;
   return {
     ...candidate,
     stat,
     difficulty: clampNumber("difficulty", 5, 30, 14),
     contextBonus: clampNumber("contextBonus", 0, 2, 0),
+    flawTriggered,
+    flawBonus: flawTriggered ? -2 : 0,
+    triggeredFlaw: flawTriggered ? truncate("triggeredFlaw", 240) : null,
+    flawReason: flawTriggered ? truncate("flawReason", 300) : null,
     intentSummary: truncate("intentSummary", 260),
     suggestedMastery: truncate("suggestedMastery", 100),
     contextReason: truncate("contextReason", 300),

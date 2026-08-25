@@ -6,7 +6,7 @@ export type GMStat = "body" | "hand" | "wit" | "mind" | "heart";
 
 export type GMContext = {
   campaign: { title: string; year: number; season: string; region: string; location: string; warShadow: number; day: number };
-  character: { name: string; occupation: string; origin: string; strengths: string; weakness: string; attributes: Record<GMStat, number>; masteries: Array<{ name: string; level: number; source: string }> };
+  character: { name: string; occupation: string; origin: string; strengths: string; weakness: string; flaws: string[]; attributes: Record<GMStat, number>; masteries: Array<{ name: string; level: number; source: string }> };
   currentScene: { title: string; location: string; summary: string; pressure: string; declaredChoices: string[] };
   activeMission?: { title: string; giver: string; objective: string; deadline: string; reward: string };
   socialState: { honor: number; influence: number; stain: number; rumors: string[]; oaths: string[]; debts: string[] };
@@ -22,6 +22,10 @@ export type GMAnalyzeResponse = {
   suggestedMastery: string | null;
   difficulty: number;
   contextBonus: 0 | 1 | 2;
+  flawTriggered: boolean;
+  flawBonus: -2 | 0;
+  triggeredFlaw: string | null;
+  flawReason: string | null;
   contextReason: string;
   risk: string;
   confirmation: string;

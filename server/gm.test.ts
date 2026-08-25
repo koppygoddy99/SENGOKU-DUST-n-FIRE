@@ -40,7 +40,7 @@ describe("AI GM structured contracts", () => {
   it("clamps numeric analysis output to the game-rule boundaries", async () => {
     mocks.invokeLLM.mockResolvedValueOnce({ choices: [{ message: { content: JSON.stringify({ intentSummary: "Buy time with the ledger.", stat: "mind", suggestedMastery: null, difficulty: 99, contextBonus: -2, contextReason: "The clerk recognizes the ledger.", risk: "The witness may repeat your name.", confirmation: "You cite the ledger and ask for time.", historicalFence: "This is fictional play context, not a historical claim." }) } }] });
     const result = await analyzeWithGM({ action: "I show the ledger and ask the clerk for time.", language: "en", context });
-    expect(result.difficulty).toBe(22);
+    expect(result.difficulty).toBe(26);
     expect(result.contextBonus).toBe(0);
   });
 

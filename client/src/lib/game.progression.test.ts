@@ -51,13 +51,14 @@ describe("skill progression and campaign time", () => {
     const base = createSaikaSafehouseDemo();
     const veteran = { ...base, character: { ...base.character, masteries: base.character.masteries.map((mastery, index) => index === 0 ? { ...mastery, rank: 13, level: 4, xp: 0, totalXp: 88 } : mastery) } };
     const lowPressureRecord = recordFor(veteran, "success_with_cost");
-    expect(lowPressureRecord.difficulty).toBe(14);
+    expect(lowPressureRecord.difficulty).toBe(10);
     const next = applyRoll(veteran, lowPressureRecord);
     expect(next.progression?.lastPractice).toMatchObject({ gained: 0, rankAfter: 13, note: "ต้องเผชิญงาน DN 18+ เพื่อฝึกขั้นนี้" });
     expect(bonusForMasteryRank(4)).toBe(1);
     expect(bonusForMasteryRank(5)).toBe(2);
     expect(bonusForMasteryRank(13)).toBe(4);
     expect(masteryTierForRank(17)).toMatchObject({ minimumDifficulty: 22, bonus: 5 });
+    expect(masteryTierForRank(20)).toMatchObject({ bonus: 6 });
   });
 
   it("opens a new Page only after the campaign has accumulated several days of movement", () => {

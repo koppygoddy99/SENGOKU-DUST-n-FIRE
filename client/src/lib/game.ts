@@ -19,6 +19,17 @@ export const STATS: { id: StatId; en: string; th: string; hint: string }[] = [
 ];
 
 export type Attributes = Record<StatId, number>;
+export type StatXp = Record<StatId, { xp: number; totalXp: number }>;
+
+export type StatPractice = {
+  stat: StatId;
+  gained: number;
+  valueBefore: number;
+  valueAfter: number;
+  xp: number;
+  xpNeeded: number;
+  note?: string;
+};
 
 export type Mastery = {
   id: string;
@@ -64,6 +75,7 @@ export type ProgressionState = {
   birthSeason: Season;
   campaignStartYear: number;
   lastPractice?: SkillPractice;
+  lastStatPractice?: StatPractice;
   lastTimeMark?: TimeMark;
 };
 
@@ -107,7 +119,9 @@ export type Character = {
   origin: string;
   strength: string;
   weakness: string;
+  flaws: string[];
   attributes: Attributes;
+  statXp: StatXp;
   masteries: Mastery[];
   vitals: { wounds: number; focus: number; momentum: number };
   social: { rank: number; honor: number; influence: number; information: number; stain: number };
@@ -232,8 +246,12 @@ export type RollPreview = {
   mastery?: Mastery;
   contextBonus: number;
   contextReason?: string;
-  difficulty: 10 | 14 | 18 | 22;
+  difficulty: Difficulty;
   difficultyReason?: string;
+  flawTriggered?: boolean;
+  flawBonus?: -2 | 0;
+  triggeredFlaw?: string;
+  flawReason?: string;
   risks: string[];
   witnesses: string[];
   historical?: HistoricalBoundary;
@@ -254,6 +272,7 @@ export type RollRecord = RollPreview & {
   consequence?: string;
   tick: number;
   practice?: SkillPractice;
+  statPractice?: StatPractice;
   timeMark?: TimeMark;
   missionUpdate?: { missionId: string; current: number; required: number; state: MissionState; reward?: string };
 };
@@ -272,7 +291,7 @@ export type Scene = {
 };
 
 export type GameState = {
-  schemaVersion: 2;
+  schemaVersion: number;
   credits: number;
   campaign: CampaignContext;
   character: Character;
@@ -296,6 +315,8 @@ export type CharacterDraft = {
   origin: string;
   strength: string;
   weakness: string;
+  skills?: string[];
+  flaws?: string[];
   answers: Record<string, string>;
 };
 
@@ -317,6 +338,31 @@ export type StarterTemplate = {
 
 const item = (id: string, label: string, kind: ItemKind, description: string, slots: number, functions: InventoryItem["functions"], bonus?: InventoryItem["bonus"]): InventoryItem => ({ id, label, kind, description, slots, functions, bonus, condition: "usable" });
 export const MAX_MASTERY_RANK = 20;
+export const MIN_STAT_VALUE = 1;
+export const MAX_STAT_VALUE = 10;
+export type Difficulty = 8 | 10 | 14 | 18 | 22 | 26;
+
+export function normalizeStatValue(value: number) {
+  return Math.max(MIN_STAT_VALUE, Math.min(MAX_STAT_VALUE, Math.round(value)));
+}
+
+export function bonusForStatValue(value: number) {
+  return Math.ceil(normalizeStatValue(value) / 2);
+}
+
+export function statXpNeededForValue(value: number) {
+  const normalized = normalizeStatValue(value);
+  if (normalized >= MAX_STAT_VALUE) return 0;
+  if (normalized <= 2) return 5;
+  if (normalized <= 4) return 6;
+  if (normalized <= 6) return 7;
+  if (normalized <= 8) return 10;
+  return 14;
+}
+
+export function defaultStatXp(): StatXp {
+  return { body: { xp: 0, totalXp: 0 }, hand: { xp: 0, totalXp: 0 }, wit: { xp: 0, totalXp: 0 }, mind: { xp: 0, totalXp: 0 }, heart: { xp: 0, totalXp: 0 } };
+}
 
 export function xpNeededForRank(rank: number) {
   if (rank >= MAX_MASTERY_RANK) return 0;
@@ -328,6 +374,7 @@ export function xpNeededForRank(rank: number) {
 }
 
 export function bonusForMasteryRank(rank: number) {
+  if (rank >= 20) return 6;
   if (rank >= 17) return 5;
   if (rank >= 13) return 4;
   if (rank >= 9) return 3;
@@ -336,7 +383,7 @@ export function bonusForMasteryRank(rank: number) {
 }
 
 export function masteryTierForRank(rank: number) {
-  if (rank >= 20) return { id: "mastered", en: "Mastered", th: "อาจารย์ที่เชี่ยวชาญ", minimumDifficulty: 0, bonus: 5, note: "ชื่อและลายมือของเจ้าเปลี่ยนวิธีที่โลกตอบกลับ" };
+  if (rank >= 20) return { id: "mastered", en: "Mastered", th: "อาจารย์ที่เชี่ยวชาญ", minimumDifficulty: 0, bonus: 6, note: "ชื่อและลายมือของเจ้าเปลี่ยนวิธีที่โลกตอบกลับ" };
   if (rank >= 17) return { id: "renowned", en: "Renowned", th: "มีชื่อเสียง", minimumDifficulty: 22, bonus: 5, note: "ต้องเจองานที่เดิมพันสูงจึงจะขัดเกลาต่อได้" };
   if (rank >= 13) return { id: "proven", en: "Proven", th: "มีฝีมือไร้คนสงสัย", minimumDifficulty: 18, bonus: 4, note: "งานธรรมดาไม่ทำให้ฝีมือขยับอีกแล้ว" };
   if (rank >= 9) return { id: "trusted", en: "Trusted", th: "เชื่อมือได้", minimumDifficulty: 14, bonus: 3, note: "เริ่มเติบโตจากงานที่มีคนและผลประโยชน์เกี่ยวข้อง" };
@@ -415,9 +462,33 @@ export function templateById(id: string) {
   return STARTER_TEMPLATES.find((template) => template.id === id) ?? STARTER_TEMPLATES[2];
 }
 
+export function startingAttributesForTemplate(template: StarterTemplate): Attributes {
+  const startingValue = (value: number) => value <= 1 ? 1 : value <= 2 ? 2 : 3;
+  return { body: startingValue(template.attributes.body), hand: startingValue(template.attributes.hand), wit: startingValue(template.attributes.wit), mind: startingValue(template.attributes.mind), heart: startingValue(template.attributes.heart) };
+}
+
+function selectedMasteriesForDraft(draft: CharacterDraft, template: StarterTemplate): Mastery[] {
+  const requested = (draft.skills ?? template.masteries.map((entry) => entry.label)).map((entry) => entry.trim()).filter((entry) => template.masteries.some((mastery) => mastery.label === entry));
+  const labels = Array.from(new Set([...requested, ...template.masteries.map((entry) => entry.label)])).slice(0, 5);
+  const selected = labels.slice(0, Math.max(3, Math.min(5, labels.length)));
+  return selected.map((label, index) => {
+    const templateMastery = template.masteries.find((entry) => entry.label === label);
+    if (templateMastery) return normalizeMasteryProgress({ ...templateMastery, level: 1, rank: 1, xp: 0, totalXp: 0, masteryMark: undefined });
+    return normalizeMasteryProgress({ id: `chosen-skill-${index + 1}`, label, level: 1, rank: 1, xp: 0, totalXp: 0, origin: "เลือกตอนสร้างตัวละคร", tags: ["custom"] });
+  });
+}
+
+function selectedFlawsForDraft(draft: CharacterDraft) {
+  const supplied = (draft.flaws ?? []).map((entry) => entry.trim()).filter(Boolean);
+  const candidate = supplied.length ? supplied : [draft.weakness.trim()];
+  const flaws = Array.from(new Set(candidate)).slice(0, 2);
+  return flaws.length ? flaws : ["มีหนี้ที่ยังไม่กล้าพูดถึง"];
+}
+
 export function createCharacter(draft: CharacterDraft): Character {
   const template = templateById(draft.templateId);
   const occupation = draft.templateId === "freeform" ? (draft.freeformOccupation.trim() || "ผู้เดินทางไร้สังกัด") : template.label;
+  const flaws = selectedFlawsForDraft(draft);
   return {
     id: `char-${Date.now()}`,
     name: draft.name.trim() || "ผู้ไร้นาม",
@@ -426,9 +497,11 @@ export function createCharacter(draft: CharacterDraft): Character {
     occupation,
     origin: draft.origin.trim() || template.start,
     strength: draft.strength.trim() || "ทำงานภายใต้แรงกดดันได้",
-    weakness: draft.weakness.trim() || "มีหนี้ที่ยังไม่กล้าพูดถึง",
-    attributes: { ...template.attributes },
-    masteries: template.masteries.map((entry) => ({ ...entry })),
+    weakness: flaws[0],
+    flaws,
+    attributes: startingAttributesForTemplate(template),
+    statXp: defaultStatXp(),
+    masteries: selectedMasteriesForDraft(draft, template),
     vitals: { wounds: 0, focus: 5, momentum: 2 },
     social: { ...template.social },
     resources: { ...template.resources },
@@ -462,7 +535,7 @@ export function createGameState(context: CampaignContext, draft: CharacterDraft)
   const mission: Mission = { ...template.mission, id: `mission-${Date.now()}`, state: "offered" as MissionState, progress: { current: 0, required: 2, triggerPhrases: template.mission.options } };
   const opening = openingScene(character, context, mission);
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     credits: 50,
     campaign: context,
     character,
@@ -481,7 +554,7 @@ export function createGameState(context: CampaignContext, draft: CharacterDraft)
 export function createSaikaSafehouseDemo(): GameState {
   const campaign: CampaignContext = { id: "camp-saika-1569", title: "Smoke Beneath Sakai", year: 1569, season: "Spring", region: "Sakai / Izumi", location: "เซฟเฮาส์ลับของไซกะ — นอกชายเขตเมืองซาไก", warShadow: 5, day: 1 };
   const character: Character = {
-    id: "char-sanefuyu", name: "ซาเนฟุยุ", identity: "เด็กชายวัยสิบสามปี", occupationId: "freeform", occupation: "ทหารรับจ้างถือปืนของไซกะ", origin: "กิอิ", strength: "อ่านผลประโยชน์และพูดในจังหวะที่คนกำลังลังเล", weakness: "บาดเจ็บสาหัสและถูกความหยามเกียรติผลักให้พลั้งมือ", attributes: { body: 1, hand: 3, wit: 3, mind: 2, heart: 3 }, masteries: [mastery("saika-firearm", "ปืนคาบศิลาและคนไซกะ", 2, "งานคุ้มกันและการรบ", ["fight", "weapon", "gunpowder"]), mastery("hard-bargain", "ต่อรองผลประโยชน์", 1, "เอาตัวรอด", ["negotiation", "social"]), mastery("water-escape", "หนีทางน้ำ", 1, "รอดจากการจมน้ำ", ["water", "escape"])], vitals: { wounds: 5, focus: 3, momentum: 1 }, social: { rank: 0, honor: 0, influence: 1, information: 2, stain: 2 }, resources: { property: 1, supplies: 1, credit: 0 }, inventory: [item("bandaged-arm", "ผ้าพันแผลชุ่มยา", "status", "ไหล่ซ้ายและแขนขวาบาดเจ็บ ใช้งานได้จำกัด", 0, []), item("saika-matchlock", "ปืนคาบศิลาเปียกชื้น", "equipment", "ปืนที่ต้องซ่อมและทำให้แห้งก่อนใช้", 2, ["bonus"], { stat: "hand", value: 1, tags: ["fight", "weapon"] }), item("dry-ration", "ข้าวปั้นตากแห้งกับเต้าเจี้ยว", "reserve", "ของกินที่กันทาโร่โยนให้", 1, ["bonus"])], pulls: RELATIONSHIP_QUESTIONS.map(([id, question, tags]) => ({ id, question, answer: id === "life_before" ? "เติบโตท่ามกลางเส้นทางค้าของคิอิ ก่อนกลายเป็นทหารรับจ้างของไซกะ" : "ยืนข้างไซกะตราบใดที่ผลประโยชน์ยังตรงกัน", tags: [...tags], weight: 2 })),
+    id: "char-sanefuyu", name: "ซาเนฟุยุ", identity: "เด็กชายวัยสิบสามปี", occupationId: "freeform", occupation: "ทหารรับจ้างถือปืนของไซกะ", origin: "กิอิ", strength: "อ่านผลประโยชน์และพูดในจังหวะที่คนกำลังลังเล", weakness: "บาดเจ็บสาหัสและถูกความหยามเกียรติผลักให้พลั้งมือ", flaws: ["บาดเจ็บสาหัสและถูกความหยามเกียรติผลักให้พลั้งมือ"], attributes: { body: 1, hand: 3, wit: 3, mind: 2, heart: 3 }, statXp: defaultStatXp(), masteries: [mastery("saika-firearm", "ปืนคาบศิลาและคนไซกะ", 2, "งานคุ้มกันและการรบ", ["fight", "weapon", "gunpowder"]), mastery("hard-bargain", "ต่อรองผลประโยชน์", 1, "เอาตัวรอด", ["negotiation", "social"]), mastery("water-escape", "หนีทางน้ำ", 1, "รอดจากการจมน้ำ", ["water", "escape"])], vitals: { wounds: 5, focus: 3, momentum: 1 }, social: { rank: 0, honor: 0, influence: 1, information: 2, stain: 2 }, resources: { property: 1, supplies: 1, credit: 0 }, inventory: [item("bandaged-arm", "ผ้าพันแผลชุ่มยา", "status", "ไหล่ซ้ายและแขนขวาบาดเจ็บ ใช้งานได้จำกัด", 0, []), item("saika-matchlock", "ปืนคาบศิลาเปียกชื้น", "equipment", "ปืนที่ต้องซ่อมและทำให้แห้งก่อนใช้", 2, ["bonus"], { stat: "hand", value: 1, tags: ["fight", "weapon"] }), item("dry-ration", "ข้าวปั้นตากแห้งกับเต้าเจี้ยว", "reserve", "ของกินที่กันทาโร่โยนให้", 1, ["bonus"])], pulls: RELATIONSHIP_QUESTIONS.map(([id, question, tags]) => ({ id, question, answer: id === "life_before" ? "เติบโตท่ามกลางเส้นทางค้าของคิอิ ก่อนกลายเป็นทหารรับจ้างของไซกะ" : "ยืนข้างไซกะตราบใดที่ผลประโยชน์ยังตรงกัน", tags: [...tags], weight: 2 })),
   };
   const mission: Mission = { id: "mission-echiya", issuer: "กันทาโร่", issuerType: "samurai", title: "คำตอบใต้ห้องขัง", request: "เสนอทางจัดการเอจิยะและตั๋วสัญญาปืนสามสิบกระบอก โดยไม่ให้สิทธิ์การค้าของไซกะในซาไกพังลง", pressure: "เอโกะชูเพิ่มเวรยาม ปิดประตูเมือง และตรวจเรือเข้าออกตามหาพ่อค้าเอจิยะ", deadline: "ก่อนเมืองซาไกยืนยันข่าวการหายตัว", reward: "การคุ้มครองของกันทาโร่และส่วนแบ่งค่าปืน", risk: "หัวของซาเนฟุยุและเอจิยะอาจถูกส่งไปแลกสิทธิ์การค้า", options: ["เสนอแผนปิดปาก", "สอบเอจิยะ", "หาตั๋วสัญญาปืน"], state: "offered", progress: { current: 0, required: 2, triggerPhrases: ["เอจิยะ", "ตั๋ว", "ปืน", "แผน"], rewardItem: { label: "จดหมายรับรองของกันทาโร่", kind: "document", description: "หลักฐานคุ้มครองชั่วคราวที่ช่วยให้คนของไซกะยอมฟังคำอธิบาย", slots: 0, functions: ["unlock"], bonus: { stat: "heart", value: 1, tags: ["saika", "protection"] }, condition: "usable", location: "carried", ownership: "owned" } } };
   const opening: Scene = {
@@ -494,20 +567,27 @@ export function createSaikaSafehouseDemo(): GameState {
     ],
     speaker: "กันทาโร่", prompt: "ซาเนฟุยุจะตอบกันทาโร่ว่าอย่างไร?", pressure: mission.pressure, suggestedActions: mission.options,
   };
-  return { schemaVersion: 2, credits: 50, campaign, character, community: { food: 2, labor: 2, voice: 1, safety: 1, cohesion: 2, lastChange: "เมืองซาไกเพิ่มเวรยามและตรวจเรือ" }, currentScene: opening, missions: [mission], market: buildSaikaMarket(), economy: buildSaikaEconomy(), memories: [{ id: "memory-saika-opening", kind: "stain", title: "คืนที่เมืองซาไกตื่น", detail: opening.body.join("\n\n"), tick: 1, tone: "vermilion" }], rolls: [], progression: defaultProgression(campaign, 13, "Spring"), tick: 1 };
+  return { schemaVersion: 3, credits: 50, campaign, character, community: { food: 2, labor: 2, voice: 1, safety: 1, cohesion: 2, lastChange: "เมืองซาไกเพิ่มเวรยามและตรวจเรือ" }, currentScene: opening, missions: [mission], market: buildSaikaMarket(), economy: buildSaikaEconomy(), memories: [{ id: "memory-saika-opening", kind: "stain", title: "คืนที่เมืองซาไกตื่น", detail: opening.body.join("\n\n"), tick: 1, tone: "vermilion" }], rolls: [], progression: defaultProgression(campaign, 13, "Spring"), tick: 1 };
 }
 
 export function normalizeGameState(state: GameState): GameState {
   const campaign = state.campaign;
+  const legacyState = state.schemaVersion < 3;
   const progression = state.progression ?? defaultProgression(campaign, state.character.identity.includes("สิบสาม") ? 13 : 20, campaign.season);
   const missions = state.missions.map((mission) => mission.progress ? mission : { ...mission, progress: { current: mission.state === "resolved" ? 2 : 0, required: 2, triggerPhrases: mission.options } });
   const legacyRolls = state.rolls as Array<RollRecord & { axis?: StatId }>;
   const legacyInventory = state.character.inventory as Array<GameState["character"]["inventory"][number] & { bonus?: { axis?: StatId; stat?: StatId; value: number; tags: string[] } }>;
   const rolls = legacyRolls.map((roll) => roll.stat ? roll : { ...roll, stat: roll.axis ?? "wit" });
   const inventory = legacyInventory.map((item) => item.bonus?.stat ? item : item.bonus?.axis ? { ...item, bonus: { ...item.bonus, stat: item.bonus.axis } } : item);
+  const legacyAttributeValue = (value: number) => [1, 2, 3, 5, 7, 9, 10][Math.max(0, Math.min(6, Math.round(value)))] ?? 1;
+  const attributes = Object.fromEntries(STATS.map(({ id }) => [id, legacyState ? legacyAttributeValue(state.character.attributes[id]) : normalizeStatValue(state.character.attributes[id])])) as Attributes;
+  const storedStatXp = state.character.statXp as Partial<StatXp> | undefined;
+  const statXp = Object.fromEntries(STATS.map(({ id }) => [id, { xp: Math.max(0, storedStatXp?.[id]?.xp ?? 0), totalXp: Math.max(0, storedStatXp?.[id]?.totalXp ?? 0) }])) as StatXp;
+  const flaws = Array.from(new Set((state.character.flaws?.length ? state.character.flaws : [state.character.weakness]).map((entry) => entry.trim()).filter(Boolean))).slice(0, 2);
   return {
     ...state,
-    character: { ...state.character, inventory, masteries: state.character.masteries.map(normalizeMasteryProgress) },
+    schemaVersion: 3,
+    character: { ...state.character, weakness: flaws[0] ?? "มีหนี้ที่ยังไม่กล้าพูดถึง", flaws: flaws.length ? flaws : ["มีหนี้ที่ยังไม่กล้าพูดถึง"], attributes, statXp, inventory, masteries: state.character.masteries.map(normalizeMasteryProgress) },
     missions,
     rolls,
     progression: { ...progression, currentAge: Math.max(progression.currentAge, progression.ageAtCampaignStart) },
@@ -550,6 +630,7 @@ export function buildMarket(season: Season): MarketOffer[] {
 }
 
 const actionKeywords: { tags: string[]; stat: StatId; method: string; masteryTags: string[] }[] = [
+  { tags: ["พัก", "ฟื้น", "ทำแผล", "คุย", "ทัก", "งานประจำ"], stat: "heart", method: "พักฟื้นหรือประคองความสัมพันธ์ในพื้นที่ปลอดภัย", masteryTags: ["rest", "care", "talk"] },
   { tags: ["ฟัน", "แทง", "ปัด", "ซ่อม", "ทำ", "จับ", "แกะ", "ยิง"], stat: "hand", method: "ใช้ฝีมือและการลงมือที่แม่นยำ", masteryTags: ["fight", "weapon", "repair", "craft", "metal"] },
   { tags: ["แบก", "ผลัก", "ยก", "ปีน", "วิ่ง", "ฝ่า", "ยื้อ"], stat: "body", method: "ใช้พลังกายและความอดทน", masteryTags: ["travel", "labor", "protect"] },
   { tags: ["หลบ", "ลอบ", "หลอก", "สังเกต", "หนี", "ซ่อน", "นำทาง"], stat: "wit", method: "อ่านจังหวะและใช้ไหวพริบ", masteryTags: ["hide", "route", "travel", "news", "wit"] },
@@ -560,21 +641,30 @@ const actionKeywords: { tags: string[]; stat: StatId; method: string; masteryTag
 export function parseAction(action: string, state: GameState): RollPreview {
   const normalized = action.trim().toLowerCase();
   const match = actionKeywords.find((entry) => entry.tags.some((tag) => normalized.includes(tag))) ?? actionKeywords[2];
-  const selectedMastery = [...state.character.masteries].sort((a, b) => {
+  const rankedMasteries = [...state.character.masteries].sort((a, b) => {
     const score = (mastery: Mastery) => mastery.tags.some((tag) => match.masteryTags.includes(tag) || normalized.includes(tag)) ? 1 : 0;
     return score(b) - score(a) || b.level - a.level;
-  })[0];
+  });
+  const selectedMastery = rankedMasteries.find((mastery) => mastery.tags.some((tag) => match.masteryTags.includes(tag) || normalized.includes(tag)));
   const matchingItem = state.character.inventory.find((entry) => entry.condition === "usable" && entry.bonus && entry.bonus.tags.some((tag) => normalized.includes(tag) || match.masteryTags.includes(tag)));
   const illicitRisk = normalized.includes("ฆ่า") || normalized.includes("ปลอม") || normalized.includes("ขโมย") || normalized.includes("บุก");
   const guardedObstacle = normalized.includes("ด่าน") || normalized.includes("ผู้คุม") || normalized.includes("ค่าย");
   const hasRelevantMastery = selectedMastery?.tags.some((tag) => match.masteryTags.includes(tag) || normalized.includes(tag)) ?? false;
   const isPrepared = Boolean(matchingItem?.bonus?.value);
-  const difficulty: 10 | 14 | 18 | 22 = illicitRisk && guardedObstacle && !hasRelevantMastery && !isPrepared ? 22 : illicitRisk || guardedObstacle ? 18 : 14;
-  const difficultyReason = difficulty === 22
+  const veryEasy = /(พัก|ฟื้น|ทำแผล|คุย|ทัก|ถามเพื่อน|งานประจำ)/.test(normalized) && !illicitRisk && !guardedObstacle;
+  const easy = hasRelevantMastery && !illicitRisk && !guardedObstacle;
+  const difficulty: Difficulty = illicitRisk && guardedObstacle && !hasRelevantMastery && !isPrepared ? 26 : illicitRisk && guardedObstacle ? 22 : illicitRisk || guardedObstacle ? 18 : veryEasy ? 8 : easy ? 10 : 14;
+  const difficultyReason = difficulty === 26
     ? "วิกฤต: การเสี่ยงผิดกฎหมายปะทะด่านหรือผู้คุม โดยยังไม่มีวิชาหรือเครื่องมือที่ช่วย"
-    : difficulty === 18
-      ? illicitRisk ? "เสี่ยงสูง: การกระทำนี้ทิ้งพยานหรือข้อครหา แม้ทำสำเร็จก็มีราคา" : "อุปสรรคจริง: มีด่าน ผู้คุม หรือคนคอยขวาง จึงต้องใช้ฝีมือหรือการเตรียมตัว"
-      : "เดิมพันมีความหมาย: หากสำเร็จฉากขยับ หากพลาดเรื่องยังเดินต่อพร้อมผลตามมา";
+    : difficulty === 22
+      ? "อุปสรรค: ฉากมีแรงกดดันซ้อนกัน ต้องมีแผน เครื่องมือ หรือยอมรับราคา"
+      : difficulty === 18
+        ? illicitRisk ? "ท้าทาย: การกระทำนี้ทิ้งพยานหรือข้อครหา แม้ทำสำเร็จก็มีราคา" : "ท้าทาย: มีด่าน ผู้คุม หรือคนคอยขวาง จึงต้องใช้ฝีมือหรือการเตรียมตัว"
+        : difficulty === 10
+          ? "ง่าย: ตัวละครมีความชำนาญตรงกับงานและยังไม่มีแรงกดดันสำคัญ"
+          : difficulty === 8
+            ? "ง่ายมาก: งานคุ้นมือในสถานการณ์ปลอดภัยหรือการพักฟื้น"
+            : "มาตรฐาน: งานคุ้นเคยแต่ยังมีผลต่อฉากและต้องระวัง";
   return {
     action: action.trim(),
     intent: action.trim() || "ยังไม่ได้ระบุการกระทำ",
@@ -585,6 +675,8 @@ export function parseAction(action: string, state: GameState): RollPreview {
     contextReason: matchingItem ? `ใช้ ${matchingItem.label}` : undefined,
     difficulty,
     difficultyReason,
+    flawTriggered: false,
+    flawBonus: 0,
     risks: illicitRisk ? ["เกิดพยาน", "ข้อครหาเพิ่ม", "สถานการณ์ปะทุ"] : guardedObstacle ? ["ชื่อถูกจด", "ผู้คุมตั้งคำถาม", "เสียเวลา"] : ["ใช้เสบียง", "มีคนได้ยิน", "เกิดหนี้เล็กน้อย"],
     witnesses: guardedObstacle ? ["ผู้คุมด่าน", "เสมียน", "คนรอคิว"] : ["คนในพื้นที่"],
     canUseMomentum: state.character.vitals.momentum > 0,
@@ -621,10 +713,11 @@ function localOutcomeNarration(preview: RollPreview, state: GameState, outcome: 
 
 export function resolveRoll(preview: RollPreview, state: GameState, spendMomentum: boolean): RollRecord {
   const dice: [number, number] = [Math.floor(Math.random() * 12) + 1, Math.floor(Math.random() * 12) + 1];
-  const statValue = state.character.attributes[preview.stat];
+  const statValue = bonusForStatValue(state.character.attributes[preview.stat]);
   const masteryValue = preview.mastery?.level ?? 0;
   const momentumSpent = spendMomentum && state.character.vitals.momentum > 0 ? 2 : 0;
-  const total = dice[0] + dice[1] + statValue + masteryValue + preview.contextBonus + momentumSpent;
+  const flawBonus = preview.flawTriggered && preview.flawBonus === -2 ? -2 : 0;
+  const total = dice[0] + dice[1] + statValue + masteryValue + preview.contextBonus + flawBonus + momentumSpent;
   const margin = total - preview.difficulty;
   const outcome = outcomeFromMargin(margin);
   const copy = outcomeCopy[outcome];
@@ -715,6 +808,34 @@ function awardPractice(masteries: Mastery[], record: RollRecord) {
   return { masteries: masteries.map((entry) => entry.id === after.id ? after : entry), practice };
 }
 
+function awardStatPractice(attributes: Attributes, statXp: StatXp, record: RollRecord) {
+  const stat = record.stat;
+  const valueBefore = normalizeStatValue(attributes[stat]);
+  const before = statXp[stat] ?? { xp: 0, totalXp: 0 };
+  if (valueBefore >= MAX_STAT_VALUE) {
+    return { attributes, statXp, practice: { stat, gained: 0, valueBefore, valueAfter: valueBefore, xp: 0, xpNeeded: 0, note: "Stat เติบโตถึงขั้นสูงสุดแล้ว" } as StatPractice };
+  }
+  const gained = record.difficulty >= 10 ? record.outcome === "decisive_success" ? 2 : 1 : 0;
+  let value = valueBefore;
+  let xp = before.xp + gained;
+  while (value < MAX_STAT_VALUE && xp >= statXpNeededForValue(value)) {
+    xp -= statXpNeededForValue(value);
+    value += 1;
+  }
+  if (value >= MAX_STAT_VALUE) xp = 0;
+  const after = { xp, totalXp: before.totalXp + gained };
+  const practice: StatPractice = {
+    stat,
+    gained,
+    valueBefore,
+    valueAfter: value,
+    xp,
+    xpNeeded: statXpNeededForValue(value),
+    note: gained ? `ใช้ ${STATS.find((entry) => entry.id === stat)?.th ?? stat} ในงาน DN ${record.difficulty}` : "งาน DN 8 เป็นงานคุ้นมือ จึงไม่เพิ่ม Stat XP",
+  };
+  return { attributes: { ...attributes, [stat]: value }, statXp: { ...statXp, [stat]: after }, practice };
+}
+
 function advanceClock(current: ProgressionState, outcome: Outcome): { progression: ProgressionState; timeMark: TimeMark; dayAdvance: number } {
   const segments: TimeSegment[] = ["dawn", "day", "dusk", "night"];
   const marks = outcome === "decisive_success" ? 2 : 1;
@@ -763,6 +884,7 @@ export function applyRoll(state: GameState, record: RollRecord): GameState {
   const success = record.outcome !== "failure_with_consequence";
   const initialProgression = state.progression ?? defaultProgression(state.campaign, state.character.identity.includes("สิบสาม") ? 13 : 20, state.campaign.season);
   const awarded = awardPractice(state.character.masteries, record);
+  const awardedStat = awardStatPractice(state.character.attributes, state.character.statXp, record);
   const clock = advanceClock(initialProgression, record.outcome);
   const calendar = advanceCampaignCalendar(state.campaign, clock.progression, clock.dayAdvance);
   const missionResult = progressActiveMission(state, record);
@@ -773,6 +895,8 @@ export function applyRoll(state: GameState, record: RollRecord): GameState {
     : missionResult.inventory;
   const updatedCharacter: Character = {
     ...state.character,
+    attributes: awardedStat.attributes,
+    statXp: awardedStat.statXp,
     masteries: awarded.masteries,
     inventory: inventoryAfterMomentum,
     vitals: {
@@ -816,9 +940,9 @@ export function applyRoll(state: GameState, record: RollRecord): GameState {
     pressure: record.consequence ?? state.currentScene.pressure,
     suggestedActions: success ? ["รับรางวัลแล้วถามเงื่อนไข", "ตามหาคนที่เป็นพยาน", "กลับไปดูภารกิจอื่น"] : ["แก้ความเข้าใจกับผู้คุม", "หาหลักฐานเพิ่ม", "ยอมรับผลแล้วเปลี่ยนแผน"],
   };
-  const storedRecord: RollRecord = { ...record, practice: awarded.practice, timeMark: clock.timeMark, missionUpdate: missionResult.update };
+  const storedRecord: RollRecord = { ...record, practice: awarded.practice, statPractice: awardedStat.practice, timeMark: clock.timeMark, missionUpdate: missionResult.update };
   const momentumMemory = record.momentumSpent && momentumSource ? [{ id: `momentum-${record.id}`, kind: "actor_relation" as const, title: `แรงฮึด: ${momentumSource.label}`, detail: `${momentumSource.note} · ${momentumSource.cost}`, tick: record.tick, tone: "ochre" as const }] : [];
-  return { ...state, campaign: calendar.campaign, progression: { ...calendar.progression, lastPractice: awarded.practice }, character: updatedCharacter, currentScene: nextScene, missions, economy: missionResult.transaction ? { ...state.economy, transactions: [...state.economy.transactions, missionResult.transaction] } : state.economy, memories: [...state.memories, memory, ...momentumMemory], rolls: [...state.rolls, storedRecord], tick: record.tick };
+  return { ...state, campaign: calendar.campaign, progression: { ...calendar.progression, lastPractice: awarded.practice, lastStatPractice: awardedStat.practice }, character: updatedCharacter, currentScene: nextScene, missions, economy: missionResult.transaction ? { ...state.economy, transactions: [...state.economy.transactions, missionResult.transaction] } : state.economy, memories: [...state.memories, memory, ...momentumMemory], rolls: [...state.rolls, storedRecord], tick: record.tick };
 }
 
 export function buyMarketOffer(state: GameState, offerId: string): { state: GameState; message: string } {
