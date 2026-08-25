@@ -279,3 +279,5 @@
 - [x] ตรวจ asset ทุก path ที่โปรเจกต์อ้างอิงและนำเฉพาะไฟล์ที่สิทธิ์ชัดเจนเข้า repository เพื่อไม่พึ่ง Manus storage
 - [x] ขยาย Team 8 Backend Systems ให้มีสมาชิก บทบาท หน้าที่ จุดรับส่งงาน และเกณฑ์ตรวจรับแบบละเอียด
 - [x] ปรับ `dev` script ให้ใช้ cross-env สำหรับ NODE_ENV และตรวจการเริ่ม development server ข้ามระบบปฏิบัติการ
+- [x] แก้ National Map ที่ไม่แสดงเมื่อรัน `pnpm dev` ผ่าน VS Code โดยใช้ asset และ path ที่ Vite local server เสิร์ฟได้จริง
+- [x] ตรวจ asset references ของหน้าเกมทั้งหมดและย้ายเฉพาะ asset ที่ได้รับอนุญาตเข้า GitHub repository เพื่อให้ clone แล้วรัน local ได้โดยไม่พึ่ง storage ภายนอก

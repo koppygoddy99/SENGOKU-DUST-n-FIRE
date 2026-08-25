@@ -79,7 +79,7 @@ AI GM เป็นบริการเสริม ไม่ใช่เงื�
 
 ### B8-6 — Asset Delivery & Runtime Engineer
 
-หน้าที่คือทำให้ไฟล์ที่ได้รับอนุญาตส่งถึง browser ได้ทั้ง environment ที่กำหนด พร้อมที่มาและ path ที่ตรวจได้ ไฟล์ขนาดใหญ่เก็บใน static storage ที่โครงการจัดการและต้องมี manifest; source code ใช้ path จาก manifest เดียวแทน URL กระจัดกระจาย ปัจจุบัน National Map ใช้ `/manus-storage/dust-fire-national-map-clean_73af6005.png` และต้องตรวจ `200 image/png` จาก local dev runtime ทุกครั้งที่เปลี่ยน path หรือ storage key
+หน้าที่คือทำให้ไฟล์ที่ได้รับอนุญาตส่งถึง browser ได้ทั้ง environment ที่กำหนด พร้อมที่มาและ path ที่ตรวจได้ ไฟล์ขนาดใหญ่เก็บใน static storage ที่โครงการจัดการและต้องมี manifest; source code ใช้ path จาก manifest เดียวแทน URL กระจัดกระจาย สำหรับ National Map ที่ผู้ใช้ต้องรันผ่าน VS Code ได้ โครงการเก็บสำเนา WebP ที่ลดขนาดแล้วใน `client/public/assets/dust-fire-national-map-clean.webp` และอ้างผ่าน `/assets/dust-fire-national-map-clean.webp` จึงต้องตรวจว่า Vite local ตอบ `200 image/webp` ทุกครั้งที่เปลี่ยน path หรือไฟล์
 
 | ขั้นตอน | สิ่งที่ต้องบันทึก | เกณฑ์ผ่าน |
 |---|---|---|

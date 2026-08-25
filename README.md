@@ -215,4 +215,4 @@ Repository นี้ใช้ `main` เป็น branch หลัก และ 
 
 | Asset | สิทธิ์/ที่มา | Runtime path | สถานะตรวจรับ |
 |---|---|---|---|
-| National Map clean | ผู้ใช้ยืนยันสิทธิ์สำหรับแผนที่ฐาน | `/manus-storage/dust-fire-national-map-clean_73af6005.png` | static storage ตอบ `200 image/png` จาก local dev runtime และหน้า Campaign Command render แล้ว |
+| National Map clean | ผู้ใช้ยืนยันสิทธิ์สำหรับแผนที่ฐาน | `client/public/assets/dust-fire-national-map-clean.webp` → `/assets/dust-fire-national-map-clean.webp` | WebP ขนาด 1600×900 ที่อยู่ใน repository เพื่อให้ทั้ง `pnpm dev` จาก VS Code และ deployment ของ Vite เสิร์ฟ path เดียวกัน |
