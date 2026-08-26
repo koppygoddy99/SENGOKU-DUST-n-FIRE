@@ -51,6 +51,9 @@ describe("historical timeline boundary", () => {
     expect(SENGOKU_66_PROVINCE_IDS).toHaveLength(66);
     expect(SENGOKU_ISLAND_PROVINCE_IDS).toEqual(["iki", "tsushima"]);
     expect(HISTORICAL_YEAR_LEDGER.some((entry) => entry.status === "no-reviewed-event")).toBe(true);
+    const year1566 = HISTORICAL_YEAR_LEDGER.find((entry) => entry.year === 1566);
+    expect(year1566).toMatchObject({ status: "reviewed-events" });
+    expect(year1566?.recordIds).toEqual(expect.arrayContaining(["1566-gassan-toda-fall", "1566-yamashiro-storm-flood"]));
   });
 
   it("withholds exact-date events until the campaign supplies a player-confirmed civil date", () => {

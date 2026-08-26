@@ -215,7 +215,7 @@ These cards do not state a player route, named castle, loss, famine causation, o
 
 ## CC BY disaster records: 1566 year-coverage batch
 
-The University of Tokyo viewer’s page 390 supplies a previously blank ledger year, **1566**, with row-level Gregorian conversion and regional metadata. The selected cards remain context-only and use the exact date only where the source row itself identifies a day. The Hitachi famine row identifies its Japanese date only to the eighth month, so its catalog card remains `month` precision rather than converting the viewer’s normalized Gregorian date into a civil day claim.
+The University of Tokyo viewer’s page 390 supplies **five additional records for 1566**, a year already represented in the catalog by the source-backed Gassan Toda Castle surrender card. The selected cards remain context-only and use the exact date only where the source row itself identifies a day. The Hitachi famine row identifies its Japanese date only to the eighth month, so its catalog card remains `month` precision rather than converting the viewer’s normalized Gregorian date into a civil day claim.
 
 | Catalog key | Source-bounded paraphrase | Original-source metadata shown by viewer |
 |---|---|---|
