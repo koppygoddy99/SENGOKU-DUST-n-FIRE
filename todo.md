@@ -354,3 +354,4 @@
 - [x] เติมปีว่าง ค.ศ. 1579 จาก viewer ข้อมูลเปิดมหาวิทยาลัยโตเกียว 8 record พร้อม date-precision guardrails และขยาย audit ให้แสดง blank-year list (67 reviewed years / 82 blank years)
 - [x] เติมปีว่าง ค.ศ. 1588 จาก viewer ข้อมูลเปิดมหาวิทยาลัยโตเกียว 7 record พร้อม guardrail สำหรับโรคระบาด/ผู้เสียหาย และ audit ที่ยืนยัน 68 reviewed years / 81 blank years
 - [x] เติมปีว่าง ค.ศ. 1589 จาก viewer ข้อมูลเปิดมหาวิทยาลัยโตเกียว 5 record พร้อม guardrail ระดับชาติ/แคว้นและ audit ที่ยืนยัน 69 reviewed years / 80 blank years
+- [x] เติมปีว่าง ค.ศ. 1593 จาก viewer ข้อมูลเปิดมหาวิทยาลัยโตเกียว 3 record พร้อม calendar-boundary guardrail และ audit ที่ยืนยัน 70 reviewed years / 79 blank years
