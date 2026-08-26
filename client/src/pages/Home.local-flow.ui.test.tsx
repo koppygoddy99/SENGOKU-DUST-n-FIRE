@@ -51,20 +51,30 @@ function finishNarrativeDraft() {
 }
 
 describe("UI Preview click flow", () => {
-  beforeEach(() => {
+  beforeEach(async () => {
     window.localStorage.clear();
     window.history.replaceState({}, "", "/");
     vi.clearAllMocks();
+    await act(async () => {
+      await Promise.all([
+        import("@/pages/CampaignsView"),
+        import("@/pages/MarketHub"),
+        import("@/features/play/PlayScene"),
+        import("@/features/chronicle/ChronicleView"),
+        import("@/features/relationships/RelationshipsView"),
+        import("@/features/management/ApplicationManagementView"),
+      ]);
+    });
   });
   afterEach(() => {
     cleanup();
     window.history.replaceState({}, "", "/");
   });
 
-  it("renders Play Scene as a reading pane with a decision sidebar", () => {
+  it("renders Play Scene as a reading pane with a decision sidebar", async () => {
     render(<Home />);
     fireEvent.click(screen.getByRole("button", { name: "Play Scene" }));
-    expect(document.querySelector(".play-scene__story-layout")).toBeTruthy();
+    await waitFor(() => expect(document.querySelector(".play-scene__story-layout")).toBeTruthy());
     expect(document.querySelector(".play-scene__reading-scroll")).toBeTruthy();
     expect(document.querySelector(".play-scene__decision-pane")).toBeTruthy();
     expect(document.querySelector(".play-scene__decision-scroll")).toBeTruthy();
@@ -72,7 +82,7 @@ describe("UI Preview click flow", () => {
     expect(document.querySelector(".play-scene__decision-pane #play-intent-composer")).toBeTruthy();
   });
 
-  it("loads the 1569 Saika safehouse from Campaign Command into Play and Chronicle", () => {
+  it("loads the 1569 Saika safehouse from Campaign Command into Play and Chronicle", async () => {
     render(<Home />);
     expect(screen.getAllByText("1569").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Sakai / Izumi").length).toBeGreaterThan(0);
@@ -80,15 +90,15 @@ describe("UI Preview click flow", () => {
     fireEvent.click(screen.getByRole("button", { name: /Return to/i }));
     expect(screen.getAllByText("คำตอบใต้ห้องขัง").length).toBeGreaterThan(0);
     openChronicle("Story Records");
-    expect(screen.getByTestId("story-records-view")).toBeTruthy();
+    expect(await screen.findByTestId("story-records-view")).toBeTruthy();
     expect(screen.getAllByText("คำตอบใต้ห้องขัง").length).toBeGreaterThan(0);
     expect(screen.getAllByText(/กันทาโร่/).length).toBeGreaterThan(0);
   });
 
-  it("opens player-safe Relationships cards and a public-only person detail", () => {
+  it("opens player-safe Relationships cards and a public-only person detail", async () => {
     render(<Home />);
     openChronicle("Relationships");
-    expect(screen.getByTestId("relationships-index")).toBeTruthy();
+    expect(await screen.findByTestId("relationships-index")).toBeTruthy();
     expect(screen.getByRole("button", { name: /Gantaro/i })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /Gantaro/i }));
     expect(screen.getByTestId("relationship-detail")).toBeTruthy();
@@ -100,11 +110,11 @@ describe("UI Preview click flow", () => {
     expect(mocks.relationshipAnalyzeMutate).not.toHaveBeenCalled();
   });
 
-  it("opens Application Management items as separate preparing pages without service actions", () => {
+  it("opens Application Management items as separate preparing pages without service actions", async () => {
     render(<Home />);
     fireEvent.click(screen.getByRole("button", { name: "Manage" }));
     fireEvent.click(screen.getByRole("button", { name: /Profile\s*Preparing/i }));
-    expect(screen.getByTestId("management-detail-page")).toBeTruthy();
+    expect(await screen.findByTestId("management-detail-page")).toBeTruthy();
     expect(screen.getByText("Preparing — no service is connected")).toBeTruthy();
     expect(screen.getByText("Account identity and personal preferences will appear here when account records are connected.")).toBeTruthy();
     expect(mocks.gmAnalyzeMutate).not.toHaveBeenCalled();
@@ -152,7 +162,7 @@ describe("UI Preview click flow", () => {
     expect(screen.getByText("CHARACTER BACKGROUND")).toBeTruthy();
   });
 
-  it("lists campaign records from Chronicle and restores the selected campaign into the Story group", () => {
+  it("lists campaign records from Chronicle and restores the selected campaign into the Story group", async () => {
     const saika = createSaikaSafehouseDemo();
     const earlier = createSaikaSafehouseDemo();
     earlier.campaign = { ...earlier.campaign, id: "camp-earlier", title: "Ashes at the river gate", year: 1568, location: "ท่าเรือคิอิ" };
@@ -162,11 +172,11 @@ describe("UI Preview click flow", () => {
     window.localStorage.setItem("dust-fire-local-game-v3-saika", JSON.stringify({ game: saika, saves: { manual: saika, leaf2: null, leaf3: null }, campaignLibrary: { [saika.campaign.id]: saika, [earlier.campaign.id]: earlier }, language: "en", readerMode: false, darkMode: false, fontSize: "normal", accent: "vermilion" }));
     render(<Home />);
     openMore("Campaign Library");
-    expect(screen.getAllByText("Smoke Beneath Sakai").length).toBeGreaterThan(0);
-    fireEvent.click(screen.getByRole("button", { name: /Ashes at the river gate/i }));
+    expect((await screen.findAllByText("Smoke Beneath Sakai")).length).toBeGreaterThan(0);
+    fireEvent.click(await screen.findByRole("button", { name: /Ashes at the river gate/i }));
     expect(screen.getAllByText("ข่าวจากท่าเรือ").length).toBeGreaterThan(0);
     openChronicle("Story Records");
-    expect(screen.getAllByText("เงาที่ท่าเรือคิอิ").length).toBeGreaterThan(0);
+    expect((await screen.findAllByText("เงาที่ท่าเรือคิอิ")).length).toBeGreaterThan(0);
     expect(screen.getByTestId("chronicle-campaign-scope").textContent).toContain("Ashes at the river gate");
   });
 
@@ -278,20 +288,20 @@ describe("UI Preview click flow", () => {
     expect(records.every((record) => record.tagName === "ARTICLE")).toBe(true);
   });
 
-  it("routes the Prepare group through gear, market, services, obligations, and exchange history", () => {
+  it("routes the Prepare group through gear, market, services, obligations, and exchange history", async () => {
     render(<Home />);
     fireEvent.click(screen.getByRole("button", { name: "Prepare" }));
     ["Carried Gear", "This Market", "Services & Hands", "Leverage", "Bonds"].forEach((item) => expect(screen.getByRole("button", { name: item })).toBeTruthy());
     fireEvent.click(screen.getByRole("button", { name: "Carried Gear" }));
-    expect(screen.getByText("Carried slots")).toBeTruthy();
+    expect(await screen.findByText("Carried slots")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "This Market" }));
-    expect(screen.getAllByText(/Market Factor:/i).length).toBeGreaterThan(0);
+    expect((await screen.findAllByText(/Market Factor:/i)).length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole("button", { name: "Services & Hands" }));
-    expect(screen.getByText("คนส่งสารท่าเรือ")).toBeTruthy();
+    expect(await screen.findByText("คนส่งสารท่าเรือ")).toBeTruthy();
     fireEvent.click(screen.getAllByRole("button", { name: "Leverage" })[0]);
-    expect(screen.getByText("หนี้ชีวิตจากการลากซาเนฟุยุขึ้นจากน้ำ")).toBeTruthy();
+    expect(await screen.findByText("หนี้ชีวิตจากการลากซาเนฟุยุขึ้นจากน้ำ")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Bonds" }));
-    expect(screen.getByText("กันทาโร่ลากซาเนฟุยุขึ้นจากน้ำ")).toBeTruthy();
+    expect(await screen.findByText("กันทาโร่ลากซาเนฟุยุขึ้นจากน้ำ")).toBeTruthy();
   });
 
   it("renders the shared ledger with Mastery Progress, agreements, and honest reward context across preparation and local save views", () => {

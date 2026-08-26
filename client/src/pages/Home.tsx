@@ -10,13 +10,7 @@ import { useAuth } from "@/_core/hooks/useAuth";
 import { startLogin } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { SengokuIcon, type SengokuIconName } from "@/components/SengokuIcon";
-import { CampaignsView } from "@/pages/CampaignsView";
-import { MarketHub } from "@/pages/MarketHub";
 import { StoryMap } from "@/features/story/StoryMap";
-import { PlayScene } from "@/features/play/PlayScene";
-import { ChronicleView } from "@/features/chronicle/ChronicleView";
-import { RelationshipsView } from "@/features/relationships/RelationshipsView";
-import { ApplicationManagementView } from "@/features/management/ApplicationManagementView";
 import { managementMenuFor, type ManagementItemId, type ManagementMenuItem } from "@/features/management/managementData";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { gmUnavailableLocalTrialNotice, historicalStatusLabel, openLocalPreview, saveLocalTrialResult, shouldFetchProfileCredits, shouldUseLocalRules, splitStoryParagraphs, withHistoricalBoundary } from "@/features/shared/gameplayHelpers";
@@ -55,6 +49,13 @@ type FontSize = "small" | "normal" | "large";
 type Accent = "vermilion" | "ochre" | "teal";
 type SaveLeaves = { manual: GameState | null; leaf2: GameState | null; leaf3: GameState | null };
 export { managementMenuFor, type ManagementMenuItem } from "@/features/management/managementData";
+
+const CampaignsView = React.lazy(() => import("@/pages/CampaignsView").then((module) => ({ default: module.CampaignsView })));
+const MarketHub = React.lazy(() => import("@/pages/MarketHub").then((module) => ({ default: module.MarketHub })));
+const PlayScene = React.lazy(() => import("@/features/play/PlayScene").then((module) => ({ default: module.PlayScene })));
+const ChronicleView = React.lazy(() => import("@/features/chronicle/ChronicleView").then((module) => ({ default: module.ChronicleView })));
+const RelationshipsView = React.lazy(() => import("@/features/relationships/RelationshipsView").then((module) => ({ default: module.RelationshipsView })));
+const ApplicationManagementView = React.lazy(() => import("@/features/management/ApplicationManagementView").then((module) => ({ default: module.ApplicationManagementView })));
 
 const STORAGE_KEY = "dust-fire-local-game-v3-saika";
 const LEGACY_STORAGE_KEYS = ["dust-fire-local-game-v1", "dust-fire-local-game-v2"];
@@ -339,26 +340,30 @@ export default function Home({ forceUiPreviewMode }: { forceUiPreviewMode?: bool
     </aside>
     <main data-testid="player-main-content" className={`main-content ${page === "play" ? "main-content--play" : ""}`} data-review-screen={reviewScreen?.screenshotFile} data-review-seed={reviewScreen?.seed} data-review-title={reviewScreen?.pageTitle}>
       {page === "home" && <StoryMap game={game} language={language} onOpen={open} />}
-      {page === "campaigns" && <CampaignsView campaigns={Object.values(campaignLibrary)} activeId={game.campaign.id} language={language} onSelect={selectCampaign} onNew={() => open("start")} />}
+      {page === "campaigns" && <React.Suspense fallback={<DeferredViewFallback language={language} />}><CampaignsView campaigns={Object.values(campaignLibrary)} activeId={game.campaign.id} language={language} onSelect={selectCampaign} onNew={() => open("start")} /></React.Suspense>}
       {page === "start" && <StartView language={language} onStart={beginNew} />}
-      {page === "play" && <PlayScene game={game} language={language} onOpen={open} onUpdate={updateGame} isAuthenticated={isAuthenticated} uiPreviewMode={uiPreviewMode} onLogin={startLogin} onAccountCreditChange={() => accountCredits.refetch()} />}
+      {page === "play" && <React.Suspense fallback={<DeferredViewFallback language={language} />}><PlayScene game={game} language={language} onOpen={open} onUpdate={updateGame} isAuthenticated={isAuthenticated} uiPreviewMode={uiPreviewMode} onLogin={startLogin} onAccountCreditChange={() => accountCredits.refetch()} /></React.Suspense>}
       {page === "missions" && <MissionsView game={game} language={language} />}
-      {page === "market" && <MarketHub game={game} language={language} onUpdate={updateGame} initialTab="market" />}
-      {page === "localmarket" && <MarketHub game={game} language={language} onUpdate={updateGame} initialTab="market" />}
-      {page === "gear" && <MarketHub game={game} language={language} onUpdate={updateGame} initialTab="gear" />}
-      {page === "services" && <MarketHub game={game} language={language} onUpdate={updateGame} initialTab="services" />}
-      {page === "obligations" && <MarketHub game={game} language={language} onUpdate={updateGame} initialTab="obligations" />}
-      {page === "exchanges" && <MarketHub game={game} language={language} onUpdate={updateGame} initialTab="history" />}
+      {page === "market" && <React.Suspense fallback={<DeferredViewFallback language={language} />}><MarketHub game={game} language={language} onUpdate={updateGame} initialTab="market" /></React.Suspense>}
+      {page === "localmarket" && <React.Suspense fallback={<DeferredViewFallback language={language} />}><MarketHub game={game} language={language} onUpdate={updateGame} initialTab="market" /></React.Suspense>}
+      {page === "gear" && <React.Suspense fallback={<DeferredViewFallback language={language} />}><MarketHub game={game} language={language} onUpdate={updateGame} initialTab="gear" /></React.Suspense>}
+      {page === "services" && <React.Suspense fallback={<DeferredViewFallback language={language} />}><MarketHub game={game} language={language} onUpdate={updateGame} initialTab="services" /></React.Suspense>}
+      {page === "obligations" && <React.Suspense fallback={<DeferredViewFallback language={language} />}><MarketHub game={game} language={language} onUpdate={updateGame} initialTab="obligations" /></React.Suspense>}
+      {page === "exchanges" && <React.Suspense fallback={<DeferredViewFallback language={language} />}><MarketHub game={game} language={language} onUpdate={updateGame} initialTab="history" /></React.Suspense>}
       {page === "character" && <CharacterView game={game} language={language} open={open} />}
-      {page === "log" && <ChronicleView game={game} language={language} readerMode={readerMode} setReaderMode={setReaderMode} />}
-      {page === "relationships" && <RelationshipsView game={game} language={language} isAuthenticated={isAuthenticated} uiPreviewMode={uiPreviewMode} onUpdate={updateGame} />}
-      {page === "management" && <ApplicationManagementView itemId={managementItemId} language={language} isAdmin={isAdmin} onBack={returnToManagementIndex} />}
+      {page === "log" && <React.Suspense fallback={<DeferredViewFallback language={language} />}><ChronicleView game={game} language={language} readerMode={readerMode} setReaderMode={setReaderMode} /></React.Suspense>}
+      {page === "relationships" && <React.Suspense fallback={<DeferredViewFallback language={language} />}><RelationshipsView game={game} language={language} isAuthenticated={isAuthenticated} uiPreviewMode={uiPreviewMode} onUpdate={updateGame} /></React.Suspense>}
+      {page === "management" && <React.Suspense fallback={<DeferredViewFallback language={language} />}><ApplicationManagementView itemId={managementItemId} language={language} isAdmin={isAdmin} onBack={returnToManagementIndex} /></React.Suspense>}
       {page === "archive" && <ArchiveView game={game} language={language} />}
       {page === "save" && <SaveView game={game} saves={saves} language={language} onSave={writeSave} onDelete={deleteSave} open={open} />}
       {page === "load" && <LoadView game={game} saves={saves} language={language} onLoad={loadSave} onDelete={deleteSave} />}
       {page === "settings" && <SettingsView language={language} setLanguage={setLanguage} darkMode={darkMode} setDarkMode={setDarkMode} fontSize={fontSize} setFontSize={setFontSize} accent={accent} setAccent={setAccent} readerMode={readerMode} setReaderMode={setReaderMode} onReset={resetLocal} />}
     </main>
   </div>;
+}
+
+function DeferredViewFallback({ language }: { language: Language }) {
+  return <section className="page deferred-view" role="status" aria-live="polite"><p className="section-kicker">OPENING FOLIO</p><h1>{label(language, "Preparing this campaign record", "กำลังเปิดบันทึกแคมเปญ")}</h1><p>{label(language, "The selected page is loading without interrupting the campaign state.", "กำลังโหลดหน้าที่เลือกโดยไม่ขัดจังหวะสถานะแคมเปญ")}</p></section>;
 }
 
 function OfflinePlayLock() {

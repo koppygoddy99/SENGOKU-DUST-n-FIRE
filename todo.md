@@ -346,3 +346,5 @@
 - [x] ถอด portrait NPC ขนาดใหญ่ทั้งสี่ออกจาก repository ตามอนุญาต และคงหน้า Relationships ในโหมดไอคอน/การ์ด
 - [x] ตรวจ regression หลังถอด portrait แล้วบันทึก checkpoint และซิงก์ GitHub ของ GM canon/timeline milestone
 - [x] ขยาย offline timeline เป็น yearly ledger 1467–1615 พร้อม cited record ครบ 68 province/island keys, audit ที่ทำซ้ำได้ และรายงานข้อจำกัด coverage โดยไม่อ้างว่าเป็นข้อมูลละเอียดครบทุกปี/แคว้น
+- [x] ตรวจและแก้ Vite/runtime error ที่ค้าง พร้อมแยก warning ที่ไม่บล็อกออกจากข้อผิดพลาดจริง
+- [x] ลด initial bundle ด้วย lazy loading ของหน้ารองและ style split โดยคงพฤติกรรมเกม, local save, historical guardrails และ regression เดิม
