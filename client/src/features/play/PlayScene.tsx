@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { SengokuIcon } from "@/components/SengokuIcon";
 import { localized } from "@/lib/localization";
 import { trpc } from "@/lib/trpc";
-import { STATS, applyRoll, canonicalDifficulty, masteryLevelDetails, parseAction, resolveRoll, traitLevelDetails, traitProgressNeededForLevel, traitValueForRoll, xpNeededForMasteryLevel, type GameState, type RollPreview } from "@/lib/game";
+import { STATS, activeMainMission, applyMissionDirective, applyRoll, canonicalDifficulty, masteryLevelDetails, parseAction, resolveRoll, traitLevelDetails, traitProgressNeededForLevel, traitValueForRoll, visibleSideLeads, xpNeededForMasteryLevel, type GameState, type RollPreview } from "@/lib/game";
 import "./playScene.css";
 import "./playSceneIntent.css";
 import "./playSceneProgression.css";
@@ -46,12 +46,14 @@ function RollFormula({ record, game, language }: { record: OutcomeRecord; game: 
 }
 
 function gmContext(game: GameState) {
-  const mission = game.missions.find((entry) => entry.state === "active" || entry.state === "offered");
+  const mission = activeMainMission(game);
   return {
     campaign: game.campaign,
     character: { name: game.character.name, occupation: game.character.occupation, origin: game.character.origin, strengths: game.character.strength, weakness: game.character.weakness, flaws: game.character.flaws, attributes: game.character.attributes, masteries: game.character.masteries.map((entry) => ({ name: entry.label, level: entry.level, source: entry.origin })), background: game.character.pulls.filter((entry) => entry.answer !== "ยังไม่บอก" && entry.answer !== "ยังไม่ตอบ").slice(0, 2).map((entry) => ({ question: entry.question, answer: entry.answer, tags: entry.tags })) },
     currentScene: { title: game.currentScene.title, location: game.currentScene.location, summary: game.currentScene.body.join("\n\n"), pressure: game.currentScene.pressure, declaredChoices: game.currentScene.suggestedActions },
     activeMission: mission ? { title: mission.title, giver: mission.issuer, objective: mission.request, deadline: mission.deadline, reward: mission.reward } : undefined,
+    mainThread: mission ? { id: mission.id, title: mission.title, giver: mission.issuer, objective: mission.request, pressure: mission.pressure, deadline: mission.deadline, reward: mission.reward, risk: mission.risk, canonTerms: mission.canon?.protectedTerms ?? [mission.issuer], challenge: mission.challenge ?? "ordinary" } : undefined,
+    sideLeads: visibleSideLeads(game).map((entry) => ({ id: entry.id, title: entry.title, objective: entry.request, pressure: entry.pressure, deadline: entry.deadline })),
     socialState: { honor: game.character.social.honor, influence: game.character.social.influence, stain: game.character.social.stain, rumors: game.memories.filter((entry) => entry.kind === "news").slice(-4).map((entry) => entry.detail), oaths: game.memories.filter((entry) => entry.kind === "oath").slice(-4).map((entry) => entry.detail), debts: game.memories.filter((entry) => entry.kind === "debt").slice(-4).map((entry) => entry.detail) },
     recentMemories: game.memories.slice(-8).map((entry) => ({ title: entry.title, detail: entry.detail, tone: entry.tone })),
   };
@@ -138,7 +140,7 @@ export function PlayScene({ game, language, onOpen, onUpdate, isAuthenticated, u
   const resolveGM = trpc.gm.resolve.useMutation();
   const spendCredit = trpc.profile.spendCredit.useMutation();
   const useLocal = localRules(uiPreviewMode, isAuthenticated);
-  const activeMission = game.missions.find((mission) => mission.state === "active" || mission.state === "offered");
+  const activeMission = activeMainMission(game);
   const focusComposer = () => {
     document.getElementById("play-intent-composer")?.scrollIntoView?.({ behavior: "smooth", block: "start" });
     window.setTimeout(() => document.getElementById("play-intent-field")?.focus(), 180);
@@ -165,8 +167,10 @@ export function PlayScene({ game, language, onOpen, onUpdate, isAuthenticated, u
     beginOutcome({ ...record, narrative: copy(language, "The account is weighing the roll, the scene pressure, and the consequences already moving through the room.", "บันทึกกำลังชั่งน้ำหนักผลทอย แรงกดดันของฉาก และผลกระทบที่เริ่มขยับอยู่ในห้องนี้") }, true);
     setNotice(copy(language, "AI assistance is recording the consequence…", "AI-assisted กำลังจดผลกระทบ…"));
     resolveGM.mutate({ language, context: gmContext(game), action: intent, roll: { outcome: record.outcome, total: record.total, difficulty: record.difficulty, summary: record.summary, consequence: record.consequence ?? null } }, { onSuccess: (answer) => { const narrated = { ...record, narrative: answer.narration.join("\n\n") }; const base = applyRoll(game, narrated); const next: GameState = { ...base, historicalBoundary: { status: answer.historicalStatus, fence: answer.historicalFence, tick: base.tick }, currentScene: { ...base.currentScene, title: answer.sceneTitle, body: answer.narration, prompt: answer.missionNote, suggestedActions: answer.nextChoices }, memories: [...base.memories, { id: `gm-memory-${Date.now()}`, kind: "news", title: answer.memory.title, detail: answer.memory.detail, tone: answer.memory.tone, tick: base.tick }, { id: `gm-history-${Date.now()}`, kind: "witness", title: `${copy(language, "Historical boundary", "ขอบเขตประวัติศาสตร์")} · ${historicalLabel(answer.historicalStatus, language)}`, detail: answer.historicalFence, tone: historicalTone(answer.historicalStatus), tick: base.tick }] };
-      const withStoryRecord: GameState = { ...next, storyRecords: (next.storyRecords ?? []).map((entry) => entry.id === `story-${record.id}` ? { ...entry, title: answer.sceneTitle, prose: answer.narration.join("\n\n"), location: next.currentScene.location } : entry) };
-      spendCredit.mutate({ amount: 1 }, { onSuccess: ({ credits }) => { onUpdate({ ...withStoryRecord, credits }, `${record.summary} · AI-assisted consequence recorded`); onAccountCreditChange(); setOutcome(narrated); setNarrationPending(false); setNotice(""); }, onError: () => { saveLocal(record, copy(language, "AI credit is unavailable; the deterministic result was saved locally.", "เครดิต AI ใช้ไม่ได้ จึงบันทึกผลตามกติกาไว้ในเครื่อง")); } });
+      const directive = applyMissionDirective(next, answer.missionDirective);
+      const directiveNotice = directive.notice.kind === "main-replaced" ? copy(language, `Main Thread changed: ${directive.notice.title} · ${directive.notice.detail}`, `เส้นเรื่องหลักเปลี่ยนแล้ว: ${directive.notice.title} · ${directive.notice.detail}`) : directive.notice.kind === "side-revealed" ? copy(language, `A Side Lead has surfaced: ${directive.notice.title}`, `ร่องรอยรองปรากฏขึ้น: ${directive.notice.title}`) : "";
+      const withStoryRecord: GameState = { ...directive.state, storyRecords: (directive.state.storyRecords ?? []).map((entry) => entry.id === `story-${record.id}` ? { ...entry, title: answer.sceneTitle, prose: answer.narration.join("\n\n"), location: directive.state.currentScene.location } : entry) };
+      spendCredit.mutate({ amount: 1 }, { onSuccess: ({ credits }) => { onUpdate({ ...withStoryRecord, credits }, `${record.summary} · AI-assisted consequence recorded`); onAccountCreditChange(); setOutcome(narrated); setNarrationPending(false); setNotice(directiveNotice); }, onError: () => { saveLocal(record, copy(language, "AI credit is unavailable; the deterministic result was saved locally.", "เครดิต AI ใช้ไม่ได้ จึงบันทึกผลตามกติกาไว้ในเครื่อง")); } });
     }, onError: () => { saveLocal(record, `${record.summary} · AI unavailable · Local Trial saved with no AI credit used`); } });
   };
   const intentComposer = !outcome ? <section className="play-scene__composer" id="play-intent-composer"><div className="play-scene__composer-heading"><div><p className="play-scene__eyebrow">{copy(language, "DECLARE YOUR INTENT", "ประกาศเจตนาของเจ้า")}</p><h2>{copy(language, "What will you do?", "เจ้าจะทำอย่างไร")}</h2></div>{!useLocal && !isAuthenticated && <button className="play-scene__login" onClick={onLogin}>{copy(language, "AI ASSISTANCE", "ใช้ AI-assisted")}</button>}</div>

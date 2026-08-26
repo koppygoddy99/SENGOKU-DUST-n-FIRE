@@ -107,7 +107,7 @@ Context และ Mastery ไม่ลด DN แบบลบล้างเด�
 
 Manual Save, Auto Save, Load Game และ Chronicle ต้องอ้างอิงแคมเปญที่เลือกอยู่ ไม่ปนประวัติของแคมเปญอื่น การเล่น Local Trial จึงดำเนินต่อได้แม้บริการ AI หรือเซิร์ฟเวอร์ไม่ตอบ
 
-ชุดอาชีพเริ่มต้น 10 แบบ, ภารกิจแรก, Mastery, สัมภาระ, สถานะเริ่มต้น และภูมิหลังตัวละครสองข้อที่ไม่เพิ่มแต้ม อ่านได้ที่ [`docs/game-design/starter-occupations-th.md`](docs/game-design/starter-occupations-th.md). ผังเทคนิคตั้งแต่กดทอยจน Local Save บันทึกผล อ่านได้ที่ [`docs/technical/one-turn-backend-flow-th.md`](docs/technical/one-turn-backend-flow-th.md).
+ชุดอาชีพเริ่มต้น 10 แบบ, ภารกิจแรก, Mastery, สัมภาระ, สถานะเริ่มต้น และภูมิหลังตัวละครสองข้อที่ไม่เพิ่มแต้ม อ่านได้ที่ [`docs/game-design/starter-occupations-th.md`](docs/game-design/starter-occupations-th.md). ผังเทคนิคตั้งแต่กดทอยจน Local Save บันทึกผล อ่านได้ที่ [`docs/technical/one-turn-backend-flow-th.md`](docs/technical/one-turn-backend-flow-th.md). Contract ของ Main Thread/Side Leads, canon consistency, offline yearly catalog และ historical date gate อ่านได้ที่ [`docs/technical/gm-canon-mission-timeline-contract-th.md`](docs/technical/gm-canon-mission-timeline-contract-th.md).
 
 ## AI GM และ historical guardrails
 
@@ -117,6 +117,8 @@ AI GM เป็นส่วนเสริม ไม่ใช่ผู้ตั�
 2. AI ห้ามให้ context bonus เกิน `+2` และ DN ต้องผ่าน canonical rule ของ client
 3. หาก AI timeout, credit ใช้ไม่ได้ หรือเป็น UI Preview เกมต้อง fallback เป็น Local Trial โดยไม่หัก AI credit
 4. NPC และเหตุการณ์ในแคมเปญเป็นเรื่องสมมติ เว้นแต่ระบบติด historical status ที่มีหลักฐานตรงจุด
+5. GM ใช้ Main Thread ได้หนึ่งรายการและ Side Leads ที่เปิดเผยได้ไม่เกินสองรายการ; การเบนเรื่องอย่างมีนัยสำคัญจึงเปลี่ยน Main Thread หลังผลทอยเท่านั้น
+6. เหตุการณ์จริงที่มี exact date จะถูกกล่าวว่าเกิดในฉากได้ต่อเมื่อ campaign มี `historicalDate` ที่ผู้เล่นยืนยันตรงกับ record; scene day ปกติเป็นเวลา gameplay ไม่ใช่วันที่ประวัติศาสตร์
 
 ## เทคโนโลยีและโครงสร้าง
 
@@ -204,6 +206,7 @@ Repository นี้ใช้ `main` เป็น branch หลัก และ 
 | [`docs/play-outcome-flow-review-2026-08-22-th.md`](docs/play-outcome-flow-review-2026-08-22-th.md) | ต้องการหลักฐาน QA ของ flow ลูกเต๋า/ผลเชิงเรื่องเล่า/DN ล่าสุด |
 | [`docs/team-work-status-2026-08-21-th.md`](docs/team-work-status-2026-08-21-th.md) | ต้องการสถานะตาม workflow ทีมผลิตเกม |
 | [`docs/team-handbooks/09-backend-systems-handbook-th.md`](docs/team-handbooks/09-backend-systems-handbook-th.md) | ต้องการขอบเขต server contracts, persistence, AI GM integration, asset delivery และ observability ของ Team 8 |
+| [`docs/technical/gm-canon-mission-timeline-contract-th.md`](docs/technical/gm-canon-mission-timeline-contract-th.md) | ต้องการข้อจำกัด Main Thread/Side Leads, canon consistency, offline historical catalog และ date gate ของ GM AI |
 
 ## สถานะปัจจุบันและงานที่ยังไม่ปิด
 

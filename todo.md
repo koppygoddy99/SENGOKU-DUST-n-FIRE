@@ -332,3 +332,16 @@
 - [ ] ทำสิบรอบการรีไฟน์ร้อยแก้ว AI GM ตาม sengoku-novelizer พร้อม rubric, corpus และรายงานก่อน–หลัง
 - [ ] รันสิบรอบผ่าน server-side LLM helper หลัง direct proxy ตอบ 412 โดยไม่แก้ผลประเมินเอง
 - [x] พักการรีไฟน์สิบรอบไว้ และ push เฉพาะ Narrative Contract/quality gate ที่ทำเสร็จแล้วขึ้น GitHub
+- [x] กำหนด GM AI ให้สร้างหรือยกเลิกภารกิจตามบริบทได้ โดย active ได้เพียงภารกิจหลักหนึ่งรายการและภารกิจเสริมไม่เกินสองรายการ
+- [x] ออกแบบ UI ภารกิจที่แยก Main Thread กับ Side Leads ชัดเจน แสดง capacity และไม่สร้างความรู้สึกว่าเป็น quest list แบบเกมทั่วไป
+- [x] คุม GM AI ให้อ้างเหตุการณ์จริงตามวันใน timeline อย่างเคร่งครัด โดยไม่บังคับให้กระทบผู้เล่นโดยตรง
+- [x] จำกัดรางวัล ผลกระทบ เมือง สถานที่ ผู้คน และอากาศของ GM AI ให้อยู่ใน research guardrails และขับเคลื่อนเฉพาะเหตุการณ์สำคัญ
+- [x] ตรวจเจตนาที่สวน Main Thread หลังทอย แล้วประกาศการเปลี่ยนภารกิจหลักอย่างชัดเจนเมื่อผู้เล่นเบนเรื่องอย่างมีนัยสำคัญ
+- [x] สร้าง Side Leads แบบ hidden ก่อนและเปิดเผยในหน้า Missions เฉพาะเมื่อเกิดขึ้นในเรื่อง โดย active ได้ไม่เกินสองรายการ
+- [x] เพิ่ม Canon Consistency rules ที่ห้าม GM AI สร้างภารกิจ รางวัล หรือผลที่ขัดกับความสัมพันธ์ ความทรงจำ ภารกิจ และข้อเท็จจริงที่มีอยู่
+- [x] สร้าง offline historical reference schema สำหรับ Gokishichidō 66 แคว้น, citations, national/provincial ledgers และ GM safe brief index
+- [ ] วิจัยและบันทึก timeline 1467–1615 ระดับชาติและระดับแคว้น รวมสงคราม เหตุการณ์สำคัญ และภัยพิบัติ โดยระบุ date precision และแหล่งอ้างอิงทุก record
+- [x] เพิ่ม calendar date resolver, Local Save migration และ guardrail ที่ให้ GM AI ใช้เหตุการณ์จริงเฉพาะวันที่ตรง record
+- [x] เพิ่ม validator/regression สำหรับ 66 แคว้น ความครบถ้วนของปี, citations, date precision, player boundary และ runtime offline lookup
+- [x] ถอด portrait NPC ขนาดใหญ่ทั้งสี่ออกจาก repository ตามอนุญาต และคงหน้า Relationships ในโหมดไอคอน/การ์ด
+- [x] ตรวจ regression หลังถอด portrait แล้วบันทึก checkpoint และซิงก์ GitHub ของ GM canon/timeline milestone

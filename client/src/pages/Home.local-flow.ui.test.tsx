@@ -74,7 +74,7 @@ describe("UI Preview click flow", () => {
 
   it("loads the 1569 Saika safehouse from Campaign Command into Play and Chronicle", () => {
     render(<Home />);
-    expect(screen.getByText("1569")).toBeTruthy();
+    expect(screen.getAllByText("1569").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Sakai / Izumi").length).toBeGreaterThan(0);
     expect(screen.getByText("ซาเนฟุยุ")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: /Return to/i }));

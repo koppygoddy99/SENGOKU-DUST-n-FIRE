@@ -6,7 +6,9 @@
 export type Season = "Spring" | "Summer" | "Autumn" | "Winter";
 export type StatId = "body" | "hand" | "wit" | "mind" | "heart";
 export type Outcome = "decisive_success" | "success_with_cost" | "partial_success" | "failure_with_consequence";
-export type MissionState = "offered" | "active" | "resolved" | "failed";
+export type MissionState = "offered" | "active" | "resolved" | "failed" | "retired";
+export type MissionRole = "main" | "side";
+export type MissionVisibility = "visible" | "hidden";
 export type ItemKind = "immediate" | "reserve" | "equipment" | "document" | "status" | "bond";
 export type MemoryKind = "news" | "witness" | "debt" | "favor" | "oath" | "stain" | "injury" | "market_change" | "community_change" | "actor_relation";
 
@@ -130,6 +132,8 @@ export type CampaignContext = {
   location: string;
   warShadow: number;
   day: number;
+  /** A real civil date is optional; synthetic scene days must never be treated as a historical calendar date. */
+  historicalDate?: { month: number; day: number; source: "player-confirmed" };
 };
 
 export type Community = {
@@ -150,10 +154,34 @@ export type Mission = {
   pressure: string;
   deadline: string;
   state: MissionState;
+  /** Legacy saves omit these fields; normalizeGameState upgrades them deterministically. */
+  role?: MissionRole;
+  visibility?: MissionVisibility;
+  challenge?: "ordinary" | "elevated";
   reward: string;
   risk: string;
   options: string[];
+  canon?: { premise: string; protectedTerms: string[]; evidence: string[] };
+  retiredReason?: string;
+  supersededBy?: string;
   progress?: { current: number; required: number; triggerPhrases: string[]; rewardItem?: Omit<InventoryItem, "id">; resolvedBy?: string; rewardGranted?: boolean };
+};
+
+export const MAX_VISIBLE_ACTIVE_MAIN_THREADS = 1;
+export const MAX_VISIBLE_ACTIVE_SIDE_LEADS = 2;
+
+export type MissionChangeNotice = {
+  kind: "main-replaced" | "main-retired" | "side-revealed" | "side-created" | "none";
+  title: string;
+  detail: string;
+};
+
+export type MissionDirectiveInput = {
+  kind: "keep" | "advance" | "resolve" | "fail" | "replace_main" | "create_hidden_side" | "reveal_side" | "retire_side";
+  targetMissionId: string | null;
+  reason: string;
+  evidence: string[];
+  replacement: { title: string; giver: string; objective: string; pressure: string; deadline: string; reward: string; risk: string; options: string[]; canonTerms: string[] } | null;
 };
 
 export type MarketOffer = {
@@ -425,6 +453,133 @@ export function saikaPublicRelationships(): PublicRelationshipContact[] {
 function isRecord(value: unknown): value is Record<string, unknown> { return typeof value === "object" && value !== null; }
 function readText(value: unknown, fallback: BilingualText): BilingualText { return isRecord(value) && typeof value.en === "string" && typeof value.th === "string" ? { en: value.en, th: value.th } : fallback; }
 function clampRelationship(value: unknown, minimum: number, maximum: number, fallback: number): number { return typeof value === "number" && Number.isFinite(value) ? Math.max(minimum, Math.min(maximum, Math.round(value))) : fallback; }
+
+function missionIsOpen(mission: Mission) {
+  return mission.state === "offered" || mission.state === "active";
+}
+
+export function missionRoleOf(mission: Mission): MissionRole {
+  return mission.role ?? "main";
+}
+
+export function missionVisibilityOf(mission: Mission): MissionVisibility {
+  return mission.visibility ?? "visible";
+}
+
+/**
+ * This enforces campaign structure at the save boundary. It never invents a
+ * story: malformed legacy excess threads are kept as hidden side leads rather
+ * than silently discarded.
+ */
+export function normalizeMissionThreads(missions: Mission[]): Mission[] {
+  let openMainCount = 0;
+  let visibleSideCount = 0;
+  return missions.map((mission, index) => {
+    let role: MissionRole = mission.role ?? (index === 0 ? "main" : "side");
+    let visibility: MissionVisibility = mission.visibility ?? "visible";
+    if (missionIsOpen(mission) && role === "main") {
+      if (openMainCount >= MAX_VISIBLE_ACTIVE_MAIN_THREADS) {
+        role = "side";
+        visibility = "hidden";
+      } else {
+        openMainCount += 1;
+      }
+    }
+    if (missionIsOpen(mission) && role === "side" && visibility === "visible") {
+      if (visibleSideCount >= MAX_VISIBLE_ACTIVE_SIDE_LEADS) visibility = "hidden";
+      else visibleSideCount += 1;
+    }
+    return { ...mission, role, visibility };
+  });
+}
+
+export function activeMainMission(state: Pick<GameState, "missions">): Mission | undefined {
+  return state.missions.find((mission) => missionIsOpen(mission) && missionRoleOf(mission) === "main" && missionVisibilityOf(mission) === "visible");
+}
+
+export function visibleSideLeads(state: Pick<GameState, "missions">): Mission[] {
+  return state.missions.filter((mission) => missionIsOpen(mission) && missionRoleOf(mission) === "side" && missionVisibilityOf(mission) === "visible");
+}
+
+function compactTerms(values: string[]) {
+  return Array.from(new Set(values.map((value) => value.trim()).filter((value) => value.length >= 2))).slice(0, 8);
+}
+
+function directiveText(input: MissionDirectiveInput) {
+  return [input.reason, ...input.evidence, input.replacement?.title, input.replacement?.giver, input.replacement?.objective, input.replacement?.pressure, input.replacement?.reward, input.replacement?.risk, ...(input.replacement?.options ?? [])].filter(Boolean).join(" ").toLowerCase();
+}
+
+/** Refuses an obvious violent betrayal of a person protected by an open thread. */
+export function missionDirectiveIsCanonConsistent(state: Pick<GameState, "missions">, directive: MissionDirectiveInput) {
+  if (!directive.replacement) return true;
+  const text = directiveText(directive);
+  if (!/(ฆ่า|สังหาร|ทำร้าย|เผา|ลอบฆ่า|kill|murder|burn|betray)/.test(text)) return true;
+  const protectedTerms = state.missions
+    .filter((mission) => missionIsOpen(mission))
+    .flatMap((mission) => compactTerms([mission.issuer, ...(mission.canon?.protectedTerms ?? [])]));
+  return !protectedTerms.some((term) => text.includes(term.toLowerCase()));
+}
+
+function directiveMission(id: string, source: NonNullable<MissionDirectiveInput["replacement"]>, role: MissionRole, visibility: MissionVisibility, challenge: Mission["challenge"], evidence: string[]): Mission {
+  const canonTerms = compactTerms([source.giver, ...source.canonTerms]);
+  return {
+    id,
+    issuer: source.giver,
+    issuerType: "commoner",
+    title: source.title,
+    request: source.objective,
+    pressure: source.pressure,
+    deadline: source.deadline,
+    state: "offered",
+    role,
+    visibility,
+    challenge,
+    reward: source.reward,
+    risk: source.risk,
+    options: source.options.slice(0, 3),
+    canon: { premise: source.objective, protectedTerms: canonTerms, evidence: evidence.slice(0, 4) },
+    progress: { current: 0, required: challenge === "elevated" ? 3 : 2, triggerPhrases: source.options.slice(0, 3) },
+  };
+}
+
+export function applyMissionDirective(state: GameState, directive: MissionDirectiveInput): { state: GameState; notice: MissionChangeNotice } {
+  const none = { state, notice: { kind: "none", title: "", detail: "" } as MissionChangeNotice };
+  if (!missionDirectiveIsCanonConsistent(state, directive)) return none;
+  const main = activeMainMission(state);
+  const target = directive.targetMissionId ? state.missions.find((mission) => mission.id === directive.targetMissionId) : undefined;
+  const safeReason = directive.reason.trim().slice(0, 300);
+  if (directive.kind === "replace_main") {
+    if (!main || directive.targetMissionId !== main.id || !directive.replacement) return none;
+    const replacementId = `mission-main-${state.tick + 1}`;
+    const replacement = directiveMission(replacementId, directive.replacement, "main", "visible", "elevated", directive.evidence);
+    const missions = normalizeMissionThreads(state.missions.map((mission) => mission.id === main.id ? { ...mission, state: "retired" as const, retiredReason: safeReason, supersededBy: replacementId } : mission).concat(replacement));
+    return { state: { ...state, missions }, notice: { kind: "main-replaced", title: replacement.title, detail: safeReason } };
+  }
+  if (directive.kind === "create_hidden_side") {
+    if (!directive.replacement) return none;
+    const openSides = state.missions.filter((mission) => missionIsOpen(mission) && missionRoleOf(mission) === "side");
+    if (openSides.length >= MAX_VISIBLE_ACTIVE_SIDE_LEADS) return none;
+    const side = directiveMission(`mission-side-${state.tick + 1}-${openSides.length + 1}`, directive.replacement, "side", "hidden", "ordinary", directive.evidence);
+    return { state: { ...state, missions: normalizeMissionThreads([...state.missions, side]) }, notice: { kind: "side-created", title: side.title, detail: safeReason } };
+  }
+  if (directive.kind === "reveal_side") {
+    if (!target || missionRoleOf(target) !== "side" || missionVisibilityOf(target) !== "hidden" || visibleSideLeads(state).length >= MAX_VISIBLE_ACTIVE_SIDE_LEADS) return none;
+    const missions = state.missions.map((mission) => mission.id === target.id ? { ...mission, visibility: "visible" as const } : mission);
+    return { state: { ...state, missions }, notice: { kind: "side-revealed", title: target.title, detail: safeReason } };
+  }
+  if (directive.kind === "retire_side") {
+    if (!target || missionRoleOf(target) !== "side" || !missionIsOpen(target)) return none;
+    const missions = state.missions.map((mission) => mission.id === target.id ? { ...mission, state: "retired" as const, retiredReason: safeReason } : mission);
+    return { state: { ...state, missions }, notice: { kind: "main-retired", title: target.title, detail: safeReason } };
+  }
+  if (directive.kind === "resolve" || directive.kind === "fail") {
+    if (!target || !missionIsOpen(target)) return none;
+    const stateName: MissionState = directive.kind === "resolve" ? "resolved" : "failed";
+    const missions = state.missions.map((mission) => mission.id === target.id ? { ...mission, state: stateName } : mission);
+    return { state: { ...state, missions }, notice: { kind: "none", title: target.title, detail: safeReason } };
+  }
+  return none;
+}
 
 /** Whitelists public fields so any legacy/private keys are never carried forward into the browser save. */
 export function sanitizePublicRelationships(value: unknown): PublicRelationshipContact[] {
@@ -704,10 +859,10 @@ function openingScene(character: Character, campaign: CampaignContext, mission: 
 export function createGameState(context: CampaignContext, draft: CharacterDraft): GameState {
   const character = createCharacter(draft);
   const template = templateById(draft.templateId);
-  const mission: Mission = { ...template.mission, id: `mission-${Date.now()}`, state: "offered" as MissionState, progress: { current: 0, required: 2, triggerPhrases: template.mission.options } };
+  const mission: Mission = { ...template.mission, id: `mission-${Date.now()}`, state: "offered" as MissionState, role: "main", visibility: "visible", progress: { current: 0, required: 2, triggerPhrases: template.mission.options } };
   const opening = openingScene(character, context, mission);
   return {
-    schemaVersion: 7,
+    schemaVersion: 8,
     credits: 50,
     campaign: context,
     character,
@@ -741,14 +896,14 @@ export function createSaikaSafehouseDemo(): GameState {
     ],
     speaker: "กันทาโร่", prompt: "ซาเนฟุยุจะตอบกันทาโร่ว่าอย่างไร?", pressure: mission.pressure, suggestedActions: mission.options,
   };
-  return { schemaVersion: 7, credits: 50, campaign, character, community: { food: 2, labor: 2, voice: 1, safety: 1, cohesion: 2, lastChange: "เมืองซาไกเพิ่มเวรยามและตรวจเรือ" }, currentScene: opening, missions: [mission], market: buildSaikaMarket(), economy: buildSaikaEconomy(), memories: [{ id: "memory-saika-opening", kind: "stain", title: "คืนที่เมืองซาไกตื่น", detail: opening.body.join("\n\n"), tick: 1, tone: "vermilion" }, ...saikaRelationshipFoundationMemories()], rolls: [], storyRecords: [{ id: "story-saika-opening", tick: 1, inGameDay: 1, title: opening.title, prose: opening.body.join("\n\n"), location: opening.location }], relationships: saikaPublicRelationships(), progression: defaultProgression(campaign, 13, "Spring"), tick: 1 };
+  return { schemaVersion: 8, credits: 50, campaign, character, community: { food: 2, labor: 2, voice: 1, safety: 1, cohesion: 2, lastChange: "เมืองซาไกเพิ่มเวรยามและตรวจเรือ" }, currentScene: opening, missions: [{ ...mission, role: "main", visibility: "visible" }], market: buildSaikaMarket(), economy: buildSaikaEconomy(), memories: [{ id: "memory-saika-opening", kind: "stain", title: "คืนที่เมืองซาไกตื่น", detail: opening.body.join("\n\n"), tick: 1, tone: "vermilion" }, ...saikaRelationshipFoundationMemories()], rolls: [], storyRecords: [{ id: "story-saika-opening", tick: 1, inGameDay: 1, title: opening.title, prose: opening.body.join("\n\n"), location: opening.location }], relationships: saikaPublicRelationships(), progression: defaultProgression(campaign, 13, "Spring"), tick: 1 };
 }
 
 export function normalizeGameState(state: GameState): GameState {
   const campaign = state.campaign;
   const legacyState = state.schemaVersion < 4;
   const progression = state.progression ?? defaultProgression(campaign, state.character.identity.includes("สิบสาม") ? 13 : 20, campaign.season);
-  const missions = state.missions.map((mission) => mission.progress ? mission : { ...mission, progress: { current: mission.state === "resolved" ? 2 : 0, required: 2, triggerPhrases: mission.options } });
+  const missions = normalizeMissionThreads(state.missions.map((mission) => mission.progress ? mission : { ...mission, progress: { current: mission.state === "resolved" ? 2 : 0, required: 2, triggerPhrases: mission.options } }));
   const legacyRolls = state.rolls as Array<RollRecord & { axis?: StatId; momentumSpent?: number; momentumSource?: unknown; canUseMomentum?: boolean }>;
   const legacyInventory = state.character.inventory as Array<GameState["character"]["inventory"][number] & { bonus?: { axis?: StatId; stat?: StatId; value: number; tags: string[] } }>;
   const rolls = legacyRolls.map((roll) => {
@@ -777,7 +932,7 @@ export function normalizeGameState(state: GameState): GameState {
       : [{ id: `story-opening-${campaign.id}`, tick: 1, inGameDay: campaign.day, title: state.currentScene.title, prose: state.currentScene.body.join("\n\n"), location: state.currentScene.location }];
   return {
     ...state,
-    schemaVersion: 7,
+    schemaVersion: 8,
     character: { ...state.character, weakness: flaws[0] ?? "มีหนี้ที่ยังไม่กล้าพูดถึง", flaws: flaws.length ? flaws : ["มีหนี้ที่ยังไม่กล้าพูดถึง"], attributes, statXp, inventory, masteries: state.character.masteries.map((entry) => normalizeMasteryProgress(entry, legacyState)), vitals: { wounds: vitals.wounds, focus: vitals.focus } },
     missions,
     rolls,
@@ -1016,7 +1171,7 @@ function advanceCampaignCalendar(campaign: CampaignContext, progression: Progres
 }
 
 function progressActiveMission(state: GameState, record: RollRecord): { missions: Mission[]; inventory: InventoryItem[]; transaction?: ExchangeRecord; update?: RollRecord["missionUpdate"] } {
-  const mission = state.missions.find((entry) => entry.state === "offered" || entry.state === "active");
+  const mission = activeMainMission(state) ?? state.missions.find((entry) => entry.state === "offered" || entry.state === "active");
   if (!mission?.progress || record.outcome === "failure_with_consequence") return { missions: state.missions, inventory: state.character.inventory };
   const gained = record.outcome === "decisive_success" ? 2 : 1;
   const current = Math.min(mission.progress.required, mission.progress.current + gained);

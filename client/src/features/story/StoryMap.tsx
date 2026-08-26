@@ -123,7 +123,7 @@ export function StoryMap({ game, language, onOpen }: { game: GameState; language
     <section data-testid="campaign-command-grid" className="story-command-grid" aria-label={copy(language, "Campaign command desk", "โต๊ะบัญชาการแคมเปญ")}>
       <article className="story-map-card story-map-card--map">
         <div className="story-map-card__heading"><span><Globe2 size={17} /> {copy(language, "NATIONAL MAP", "แผนที่ระดับประเทศ")}</span><small>{copy(language, "Current position · campaign context", "ตำแหน่งปัจจุบัน · บริบทแคมเปญ")}</small></div>
-        <NationalContextMap language={language} game={game} currentProvince={timelineRegionKey(game.campaign.region)} />
+        <NationalContextMap language={language} game={game} currentProvince={provinceContext.marker} />
       </article>
 
       <article className="story-map-card story-map-card--desk">

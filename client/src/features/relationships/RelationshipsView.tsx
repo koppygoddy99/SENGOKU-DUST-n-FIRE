@@ -32,7 +32,6 @@ function ToneScale({ contact, language }: { contact: PublicRelationshipContact; 
 
 export function RelationshipsView({ game, language, isAuthenticated, uiPreviewMode, onUpdate }: { game: GameState; language: Language; isAuthenticated: boolean; uiPreviewMode: boolean; onUpdate: (state: GameState, notice: string) => void }) {
   const [selectedId, setSelectedId] = useState<PublicRelationshipContact["contactId"] | null>(null);
-  const [unavailableIcons, setUnavailableIcons] = useState<string[]>([]);
   const analyzer = trpc.relationships.analyzeDay.useMutation();
   const selected = game.relationships.find((contact) => contact.contactId === selectedId);
   const canAnalyze = Boolean(selected?.latestDailyLog?.status === "pending" && isAuthenticated && !uiPreviewMode && !analyzer.isPending);
@@ -76,7 +75,7 @@ export function RelationshipsView({ game, language, isAuthenticated, uiPreviewMo
     return <div className={`page relationship-view relationship-view--${selected.colorTone}`} data-testid="relationship-detail">
       <button className="relationship-back" onClick={() => setSelectedId(null)}><ArrowLeft size={16} />{label(language, "All relationships", "ความสัมพันธ์ทั้งหมด")}</button>
       <header className="relationship-detail-header">
-        <RelationshipEmblem contact={selected} unavailable={unavailableIcons.includes(selected.iconKey)} onImageError={() => setUnavailableIcons((items) => [...items, selected.iconKey])} />
+        <RelationshipEmblem contact={selected} />
         <div><p className="section-kicker">{label(language, "RELATIONSHIP RECORD", "บันทึกความสัมพันธ์")}</p><h1>{language === "en" ? selected.nameEn : selected.nameTh}</h1><p>{text(language, selected.relationshipRole)} · {text(language, selected.publicStatus)}</p></div>
       </header>
       <ToneScale contact={selected} language={language} />
@@ -93,10 +92,10 @@ export function RelationshipsView({ game, language, isAuthenticated, uiPreviewMo
 
   return <div className="page relationship-view" data-testid="relationships-index">
     <header className="page-heading"><div><p className="section-kicker">{label(language, "CHRONICLE · RELATIONSHIPS", "จดหมายเหตุ · ความสัมพันธ์")}</p><h1>{label(language, "People you know", "ผู้คนที่เจ้ารู้จัก")}</h1><p>{label(language, "These records contain only what the campaign has made visible. Familiarity and affinity describe the story; they grant no automatic control over anyone.", "บันทึกนี้มีเฉพาะสิ่งที่แคมเปญเปิดให้เจ้ารู้ ความคุ้นเคยและความรู้สึกเป็นแรงของเรื่อง ไม่ได้ทำให้บังคับผู้ใดได้")}</p></div><div className="relationship-boundary"><BookOpen size={18} /><span>{label(language, "Player-visible record only", "เฉพาะบันทึกที่ผู้เล่นมองเห็น")}</span></div></header>
-    <section className="relationship-index" aria-label={label(language, "People you know", "ผู้คนที่เจ้ารู้จัก")}>{game.relationships.map((contact) => <button className={`relationship-card relationship-card--${contact.colorTone}`} key={contact.contactId} onClick={() => setSelectedId(contact.contactId)}><RelationshipEmblem contact={contact} unavailable={unavailableIcons.includes(contact.iconKey)} onImageError={() => setUnavailableIcons((items) => [...items, contact.iconKey])} /><span className="relationship-card__copy"><small>{text(language, contact.relationshipRole)}</small><strong>{language === "en" ? contact.nameEn : contact.nameTh}</strong><em>{contact.latestDailyLog?.status === "pending" ? label(language, "New evidence waiting", "มีหลักฐานใหม่รออยู่") : text(language, contact.visibleSummary ?? contact.publicStatus)}</em></span><ArrowRight size={18} /></button>)}</section>
+    <section className="relationship-index" aria-label={label(language, "People you know", "ผู้คนที่เจ้ารู้จัก")}>{game.relationships.map((contact) => <button className={`relationship-card relationship-card--${contact.colorTone}`} key={contact.contactId} onClick={() => setSelectedId(contact.contactId)}><RelationshipEmblem contact={contact} /><span className="relationship-card__copy"><small>{text(language, contact.relationshipRole)}</small><strong>{language === "en" ? contact.nameEn : contact.nameTh}</strong><em>{contact.latestDailyLog?.status === "pending" ? label(language, "New evidence waiting", "มีหลักฐานใหม่รออยู่") : text(language, contact.visibleSummary ?? contact.publicStatus)}</em></span><ArrowRight size={18} /></button>)}</section>
   </div>;
 }
 
-function RelationshipEmblem({ contact, unavailable, onImageError }: { contact: PublicRelationshipContact; unavailable: boolean; onImageError: () => void }) {
-  return <span className={`relationship-emblem relationship-emblem--${contact.colorTone}`} aria-hidden="true">{unavailable ? <b>{contact.nameTh.slice(0, 1)}</b> : <img src={`/assets/relationships/${contact.iconKey}.png`} alt="" onError={onImageError} />}</span>;
+function RelationshipEmblem({ contact }: { contact: PublicRelationshipContact }) {
+  return <span className={`relationship-emblem relationship-emblem--${contact.colorTone}`} aria-hidden="true"><b>{contact.nameTh.slice(0, 1)}</b></span>;
 }

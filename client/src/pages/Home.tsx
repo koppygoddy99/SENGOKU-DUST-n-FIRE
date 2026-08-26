@@ -30,6 +30,7 @@ import {
   RELATIONSHIP_QUESTIONS,
   STARTER_TEMPLATES,
   applyRoll,
+  activeMainMission,
   buyMarketOffer,
   createSaikaSafehouseDemo,
   createGameState,
@@ -40,6 +41,7 @@ import {
   startingAttributesForTemplate,
   traitLevelDetails,
   traitProgressNeededForLevel,
+  visibleSideLeads,
   xpNeededForMasteryLevel,
   type CharacterDraft,
   type GameState,
@@ -85,7 +87,7 @@ function historicalTone(status: NonNullable<RollPreview["historical"]>["status"]
 }
 
 function toGMContext(game: GameState) {
-  const mission = game.missions.find((entry) => entry.state === "active" || entry.state === "offered");
+  const mission = activeMainMission(game);
   return {
     campaign: game.campaign,
     character: {
@@ -107,6 +109,8 @@ function toGMContext(game: GameState) {
       declaredChoices: game.currentScene.suggestedActions,
     },
     activeMission: mission ? { title: mission.title, giver: mission.issuer, objective: mission.request, deadline: mission.deadline, reward: mission.reward } : undefined,
+    mainThread: mission ? { id: mission.id, title: mission.title, giver: mission.issuer, objective: mission.request, pressure: mission.pressure, deadline: mission.deadline, reward: mission.reward, risk: mission.risk, canonTerms: mission.canon?.protectedTerms ?? [mission.issuer], challenge: mission.challenge ?? "ordinary" } : undefined,
+    sideLeads: visibleSideLeads(game).map((entry) => ({ id: entry.id, title: entry.title, objective: entry.request, pressure: entry.pressure, deadline: entry.deadline })),
     socialState: {
       honor: game.character.social.honor,
       influence: game.character.social.influence,
@@ -418,8 +422,16 @@ function StepControls({ previous, next, nextLabel }: { previous?: () => void; ne
   return <div className="credit-confirm">{previous ? <Button className="df-button df-button--ghost" onClick={previous}><ArrowLeft size={17} /> Back</Button> : <span />}{nextLabel ? <Button className="df-button df-button--primary" onClick={next}>{nextLabel} <ArrowRight size={17} /></Button> : <Button className="df-button df-button--primary" onClick={next}>Continue <ArrowRight size={17} /></Button>}</div>;
 }
 
+function MissionFolio({ mission, language, section }: { mission: NonNullable<ReturnType<typeof activeMainMission>>; language: Language; section: string }) {
+  const progress = mission.progress;
+  return <article className={`mission-folio mission-folio--${mission.state} mission-folio--${mission.challenge ?? "ordinary"}`} key={mission.id}><div className="folio-marker">{mission.state === "resolved" ? "✓" : mission.state === "active" ? "!" : "·"}</div><div><SectionKicker>{section}</SectionKicker><h2>{localized(language, mission.title)}</h2><p>{localized(language, mission.request)}</p><div className="mission-meta"><span><b>{label(language, "Pressure", "แรงกดดัน")}</b>{localized(language, mission.pressure)}</span><span><b>{label(language, "Deadline", "เส้นตาย")}</b>{mission.deadline}</span><span><b>{label(language, "Reward when the story resolves", "รางวัลเมื่อเรื่องคลี่คลาย")}</b>{localized(language, mission.reward)}</span><span><b>{label(language, "Risk", "ความเสี่ยง")}</b>{localized(language, mission.risk)}</span></div>{progress && <div className="context-check"><SengokuIcon name="log" tone={mission.state === "resolved" ? "teal" : "ochre"} />{label(language, "Story movement:", "ความคืบหน้าในเรื่อง:")} {progress.current}/{progress.required} · {mission.challenge === "elevated" ? label(language, "This new direction carries a heavier price.", "เส้นทางใหม่นี้มีราคาที่หนักกว่าเดิม") : mission.state === "resolved" ? label(language, "The reward has entered the campaign record.", "รางวัลเข้าสู่บันทึกแคมเปญแล้ว") : label(language, "Relevant outcomes move this thread; nothing is accepted with a button.", "ผลที่เกี่ยวข้องจะขยับเส้นเรื่องนี้เอง ไม่มีปุ่มรับภารกิจ")}</div>}<div className="mission-options">{mission.options.map((option) => <span key={option}>{option}</span>)}</div></div></article>;
+}
+
 function MissionsView({ game, language }: { game: GameState; language: Language }) {
-  return <div className="page mission-view"><div className="page-heading"><div><SectionKicker>FIRST MISSION · LIVE THREADS</SectionKicker><h1>{label(language, "What the first mission is pressing toward", "เรื่องที่ภารกิจแรกกำลังกดดันอยู่")}</h1><p>{label(language, "This page records the work already moving through the scene. It changes when your decisions and rolls change the world; there is nothing to accept or complete here.", "หน้านี้บอกเพียงว่างานใดกำลังเคลื่อนอยู่ในฉาก มันจะเปลี่ยนเมื่อการตัดสินใจและผลทอยของเจ้าทำให้โลกเปลี่ยน ไม่มีปุ่มรับหรือกดจบภารกิจ")}</p></div></div><section className="mission-ledger">{game.missions.map((mission, index) => { const progress = mission.progress; return <article className={`mission-folio mission-folio--${mission.state}`} key={mission.id}><div className="folio-marker">{mission.state === "resolved" ? "✓" : mission.state === "active" ? "!" : "·"}</div><div><SectionKicker>{index === 0 ? label(language, "FIRST MISSION", "ภารกิจแรก") : `${mission.issuerType.toUpperCase()} · ${mission.state.toUpperCase()}`}</SectionKicker><h2>{localized(language, mission.title)}</h2><p>{localized(language, mission.request)}</p><div className="mission-meta"><span><b>{label(language, "Pressure", "แรงกดดัน")}</b>{localized(language, mission.pressure)}</span><span><b>{label(language, "Deadline", "เส้นตาย")}</b>{mission.deadline}</span><span><b>{label(language, "Reward when the story resolves", "รางวัลเมื่อเรื่องคลี่คลาย")}</b>{localized(language, mission.reward)}</span><span><b>{label(language, "Risk", "ความเสี่ยง")}</b>{localized(language, mission.risk)}</span></div>{progress && <div className="context-check"><SengokuIcon name="log" tone={mission.state === "resolved" ? "teal" : "ochre"} />{label(language, "Story movement:", "ความคืบหน้าในเรื่อง:")} {progress.current}/{progress.required} · {mission.state === "resolved" ? label(language, "The reward has entered the campaign record.", "รางวัลเข้าสู่บันทึกแคมเปญแล้ว") : label(language, "Keep playing the scene; relevant outcomes move this thread.", "เล่นฉากต่อไป ผลที่เกี่ยวข้องจะขยับเส้นเรื่องนี้เอง")}</div>}<div className="mission-options">{mission.options.map((option) => <span key={option}>{option}</span>)}</div></div></article>; })}</section></div>;
+  const main = activeMainMission(game);
+  const sideLeads = game.missions.filter((mission) => (mission.role ?? "main") === "side" && (mission.visibility ?? "visible") === "visible" && (mission.state === "offered" || mission.state === "active"));
+  const retiredMain = game.missions.filter((mission) => (mission.role ?? "main") === "main" && mission.state === "retired");
+  return <div className="page mission-view"><div className="page-heading"><div><SectionKicker>{label(language, "MAIN THREAD · SIDE LEADS", "เส้นเรื่องหลัก · ร่องรอยรอง")}</SectionKicker><h1>{label(language, "What your choices are pressing toward", "สิ่งที่การตัดสินใจของเจ้ากำลังกดดันอยู่")}</h1><p>{label(language, "The campaign holds one Main Thread and up to two Side Leads. They move only after a recorded outcome; there is nothing to accept or complete with a button.", "แคมเปญมีเส้นเรื่องหลักได้หนึ่งเส้น และร่องรอยรองได้ไม่เกินสองเส้น ทุกอย่างขยับหลังบันทึกผลทอยเท่านั้น ไม่มีปุ่มรับหรือกดจบภารกิจ")}</p></div><div className="mission-capacity" aria-label={label(language, "Mission capacity", "จำนวนเส้นเรื่อง")}><span><small>{label(language, "MAIN THREAD", "เส้นเรื่องหลัก")}</small><b>{main ? "1/1" : "0/1"}</b></span><span><small>{label(language, "SIDE LEADS", "ร่องรอยรอง")}</small><b>{sideLeads.length}/2</b></span></div></div><section className="mission-ledger">{main ? <MissionFolio mission={main} language={language} section={label(language, "MAIN THREAD · CURRENT DIRECTION", "เส้นเรื่องหลัก · ทิศทางปัจจุบัน")} /> : <p className="mission-empty">{label(language, "No Main Thread is open. The next recorded consequence may establish one.", "ยังไม่มีเส้นเรื่องหลักเปิดอยู่ ผลที่บันทึกครั้งถัดไปอาจทำให้มันปรากฏ")}</p>}{sideLeads.length > 0 && <section className="mission-side-section"><header><SectionKicker>{label(language, "SIDE LEADS · WHAT HAS SURFACED", "ร่องรอยรอง · สิ่งที่ปรากฏแล้ว")}</SectionKicker><p>{label(language, "These are leads the character has encountered, not contracts they have accepted.", "นี่คือร่องรอยที่ตัวละครพบแล้ว ไม่ใช่สัญญาที่ตัวละครกดยอมรับ")}</p></header>{sideLeads.map((mission) => <MissionFolio key={mission.id} mission={mission} language={language} section={label(language, "SIDE LEAD", "ร่องรอยรอง")} />)}</section>}{retiredMain.length > 0 && <section className="mission-history"><SectionKicker>{label(language, "EARLIER DIRECTION", "ทิศทางก่อนหน้า")}</SectionKicker>{retiredMain.slice(-1).map((mission) => <p key={mission.id}><b>{localized(language, mission.title)}</b> · {mission.retiredReason ?? label(language, "The campaign moved elsewhere.", "เรื่องเดินไปอีกทางหนึ่งแล้ว")}</p>)}</section>}</section></div>;
 }
 
 function MarketView({ game, language, onUpdate }: { game: GameState; language: Language; onUpdate: (next: GameState, message: string) => void }) {

@@ -3,12 +3,34 @@
  * The model may interpret and narrate; the deterministic browser/game engine owns dice, costs, and state changes.
  */
 export type GMStat = "body" | "hand" | "wit" | "mind" | "heart";
+export type GMMissionDirectiveKind = "keep" | "advance" | "resolve" | "fail" | "replace_main" | "create_hidden_side" | "reveal_side" | "retire_side";
+export type GMMissionDirectiveMission = {
+  title: string;
+  giver: string;
+  objective: string;
+  pressure: string;
+  deadline: string;
+  reward: string;
+  risk: string;
+  options: string[];
+  canonTerms: string[];
+};
+export type GMMissionDirective = {
+  kind: GMMissionDirectiveKind;
+  targetMissionId: string | null;
+  reason: string;
+  evidence: string[];
+  replacement: GMMissionDirectiveMission | null;
+};
 
 export type GMContext = {
-  campaign: { title: string; year: number; season: string; region: string; location: string; warShadow: number; day: number };
+  campaign: { id: string; title: string; year: number; season: string; region: string; location: string; warShadow: number; day: number; historicalDate?: { month: number; day: number; source: "player-confirmed" } };
   character: { name: string; occupation: string; origin: string; strengths: string; weakness: string; flaws: string[]; attributes: Record<GMStat, number>; masteries: Array<{ name: string; level: 0 | 1 | 2 | 3 | 4 | 5; source: string }> };
   currentScene: { title: string; location: string; summary: string; pressure: string; declaredChoices: string[] };
+  /** Compatibility field for older callers; new clients should send mainThread. */
   activeMission?: { title: string; giver: string; objective: string; deadline: string; reward: string };
+  mainThread?: { id: string; title: string; giver: string; objective: string; pressure: string; deadline: string; reward: string; risk: string; canonTerms: string[]; challenge: "ordinary" | "elevated" };
+  sideLeads: Array<{ id: string; title: string; objective: string; pressure: string; deadline: string }>;
   socialState: { honor: number; influence: number; stain: number; rumors: string[]; oaths: string[]; debts: string[] };
   recentMemories: Array<{ title: string; detail: string; tone: string }>;
 };
@@ -46,6 +68,7 @@ export type GMResolveResponse = {
   nextChoices: string[];
   memory: { title: string; detail: string; tone: "navy" | "teal" | "vermilion" | "ochre" };
   missionNote: string;
+  missionDirective: GMMissionDirective;
   historicalFence: string;
 };
 

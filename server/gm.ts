@@ -2,6 +2,7 @@ import { z } from "zod";
 import { invokeLLM } from "./_core/llm";
 import { sengokuSocialFacts, type SengokuSocialFact } from "../shared/sengokuSocialFacts";
 import { narrativeQualityFlags, narrativeStylePrompt } from "../shared/narrativeStyle";
+import { historicalBriefForCampaign } from "../client/src/lib/historicalTimeline";
 
 const languageSchema = z.enum(["en", "th"]);
 const statSchema = z.enum(["body", "hand", "wit", "mind", "heart"]);
@@ -24,10 +25,13 @@ export function withGMResponseTimeout<T>(operation: (signal: AbortSignal) => Pro
 }
 
 const contextSchema = z.object({
-  campaign: z.object({ title: z.string().max(120), year: z.number().int().min(1454).max(1616), season: z.string().max(20), region: z.string().max(80), location: z.string().max(160), warShadow: z.number().int().min(0).max(6), day: z.number().int().min(1).max(366) }),
+  campaign: z.object({ title: z.string().max(120), year: z.number().int().min(1454).max(1616), season: z.string().max(20), region: z.string().max(80), location: z.string().max(160), warShadow: z.number().int().min(0).max(6), day: z.number().int().min(1).max(366), historicalDate: z.object({ month: z.number().int().min(1).max(12), day: z.number().int().min(1).max(31), source: z.literal("player-confirmed") }).optional() }),
   character: z.object({ name: z.string().max(100), occupation: z.string().max(120), origin: z.string().max(240), strengths: z.string().max(240), weakness: z.string().max(240), flaws: z.array(z.string().trim().min(2).max(240)).max(2).default([]), attributes: z.record(statSchema, z.number().int().min(1).max(10)), masteries: z.array(z.object({ name: z.string().max(100), level: z.number().int().min(0).max(5), source: z.string().max(180) })).max(10), background: z.array(z.object({ question: z.string().max(240), answer: z.string().max(500), tags: z.array(z.string().max(60)).max(6) })).max(2).optional() }),
   currentScene: z.object({ title: z.string().max(160), location: z.string().max(160), summary: z.string().max(4000), pressure: z.string().max(300), declaredChoices: z.array(z.string().max(180)).max(6) }),
+  /** Retained only so Local Save/client versions from before thread migration still validate. */
   activeMission: z.object({ title: z.string().max(160), giver: z.string().max(120), objective: z.string().max(500), deadline: z.string().max(160), reward: z.string().max(300) }).optional(),
+  mainThread: z.object({ id: z.string().max(160), title: z.string().max(160), giver: z.string().max(120), objective: z.string().max(500), pressure: z.string().max(300), deadline: z.string().max(160), reward: z.string().max(300), risk: z.string().max(300), canonTerms: z.array(z.string().max(100)).max(8), challenge: z.enum(["ordinary", "elevated"]) }).optional(),
+  sideLeads: z.array(z.object({ id: z.string().max(160), title: z.string().max(160), objective: z.string().max(500), pressure: z.string().max(300), deadline: z.string().max(160) })).max(2).default([]),
   socialState: z.object({ honor: z.number().int().min(0).max(6), influence: z.number().int().min(0).max(6), stain: z.number().int().min(0).max(6), rumors: z.array(z.string().max(200)).max(5), oaths: z.array(z.string().max(200)).max(5), debts: z.array(z.string().max(200)).max(5) }),
   recentMemories: z.array(z.object({ title: z.string().max(160), detail: z.string().max(360), tone: z.string().max(30) })).max(8),
 });
@@ -63,6 +67,13 @@ const resolveResultSchema = z.object({
   nextChoices: z.array(z.string().min(2).max(180)).length(3),
   memory: z.object({ title: z.string().min(2).max(160), detail: z.string().min(2).max(520), tone: toneSchema }),
   missionNote: z.string().min(2).max(300),
+  missionDirective: z.object({
+    kind: z.enum(["keep", "advance", "resolve", "fail", "replace_main", "create_hidden_side", "reveal_side", "retire_side"]),
+    targetMissionId: z.string().min(1).max(160).nullable(),
+    reason: z.string().min(2).max(300),
+    evidence: z.array(z.string().min(2).max(180)).max(4),
+    replacement: z.object({ title: z.string().min(2).max(160), giver: z.string().min(2).max(120), objective: z.string().min(2).max(500), pressure: z.string().min(2).max(300), deadline: z.string().min(2).max(160), reward: z.string().min(2).max(300), risk: z.string().min(2).max(300), options: z.array(z.string().min(2).max(180)).min(1).max(3), canonTerms: z.array(z.string().min(2).max(100)).max(8) }).nullable(),
+  }),
   historicalFence: z.string().min(2).max(320),
   historicalStatus: historicalStatusSchema.default("campaign-fiction"),
 });
@@ -85,9 +96,9 @@ const resolveOutputSchema = {
   schema: {
     type: "object", additionalProperties: false,
     properties: {
-      sceneTitle: { type: "string" }, narration: { type: "array", minItems: 3, maxItems: 3, items: { type: "string" } }, nextChoices: { type: "array", minItems: 3, maxItems: 3, items: { type: "string" } }, memory: { type: "object", additionalProperties: false, properties: { title: { type: "string" }, detail: { type: "string" }, tone: { type: "string", enum: ["navy", "teal", "vermilion", "ochre"] } }, required: ["title", "detail", "tone"] }, missionNote: { type: "string" }, historicalFence: { type: "string" }, historicalStatus: { type: "string", enum: ["fact-supported", "contextual-play", "campaign-fiction", "insufficient-evidence"] },
+      sceneTitle: { type: "string" }, narration: { type: "array", minItems: 3, maxItems: 3, items: { type: "string" } }, nextChoices: { type: "array", minItems: 3, maxItems: 3, items: { type: "string" } }, memory: { type: "object", additionalProperties: false, properties: { title: { type: "string" }, detail: { type: "string" }, tone: { type: "string", enum: ["navy", "teal", "vermilion", "ochre"] } }, required: ["title", "detail", "tone"] }, missionNote: { type: "string" }, missionDirective: { type: "object", additionalProperties: false, properties: { kind: { type: "string", enum: ["keep", "advance", "resolve", "fail", "replace_main", "create_hidden_side", "reveal_side", "retire_side"] }, targetMissionId: { type: ["string", "null"] }, reason: { type: "string" }, evidence: { type: "array", maxItems: 4, items: { type: "string" } }, replacement: { type: ["object", "null"], additionalProperties: false, properties: { title: { type: "string" }, giver: { type: "string" }, objective: { type: "string" }, pressure: { type: "string" }, deadline: { type: "string" }, reward: { type: "string" }, risk: { type: "string" }, options: { type: "array", minItems: 1, maxItems: 3, items: { type: "string" } }, canonTerms: { type: "array", maxItems: 8, items: { type: "string" } } }, required: ["title", "giver", "objective", "pressure", "deadline", "reward", "risk", "options", "canonTerms"] } }, required: ["kind", "targetMissionId", "reason", "evidence", "replacement"] }, historicalFence: { type: "string" }, historicalStatus: { type: "string", enum: ["fact-supported", "contextual-play", "campaign-fiction", "insufficient-evidence"] },
     },
-    required: ["sceneTitle", "narration", "nextChoices", "memory", "missionNote", "historicalFence", "historicalStatus"],
+    required: ["sceneTitle", "narration", "nextChoices", "memory", "missionNote", "missionDirective", "historicalFence", "historicalStatus"],
   },
 } as const;
 
@@ -96,6 +107,8 @@ You interpret player intent and narrate consequences; you never roll dice, chang
 The five Traits are exactly: body (Prowess), hand (Craft), wit (Instinct), mind (Judgment), heart (Resolve). Their raw Level 1–10 values are added by the client and can grow only through deterministic Trait Progress; never invent a Trait bonus tier. Masteries have only levels 0–5, where level is the matching roll bonus. The ordinary formula is 2d12 + Trait Level + Mastery Level + Context/Gear + Flaw; there is no Momentum. Recommend only these DN bands: DN8 for safe rest or routine work; DN12 for a fairly easy action with a clear method; DN16 for ordinary stakes; DN20 for a guarded obstacle, direct danger, or an illicit act that will leave a trace; DN24 for a compounded obstacle where preparation or relevant skill still gives a viable route; DN28 for a pivotal crisis with no relevant mastery or prepared tool; DN32 only for a legendary, decisive obstacle that should offer alternate routes. A deterministic specialized item may set DN0 and pass without a roll; never overrule or imitate that item effect. The client rounds any number to a canonical tier.
 Character flaws are not a permanent penalty. Inspect context.flaws before analysis. Set flawTriggered=true, flawBonus=-2, and identify exactly one triggeredFlaw only when the declared action and current scene make that flaw directly relevant. Otherwise return flawTriggered=false, flawBonus=0, triggeredFlaw=null, flawReason=null. The player never chooses a trigger. You only declare the trigger; the deterministic engine applies the -2 before comparing DN.
 For action analysis, be concise. For resolved narration, write a complete, vivid scene rather than a summary, a moral, or a generic transition. Keep fictional NPCs and events clearly fictional. Never assert invented history as fact. You will receive a Historical Brief selected from curated fact cards. Use it only within its stated era, region, and confidence boundary. Do not turn a structural fact into a universal law, do not invent a historical event, and label campaign invention or insufficient evidence in historicalFence. Set historicalStatus exactly as follows: fact-supported only for a specific statement directly supported by the supplied Brief; contextual-play when a structural fact informs a fictional scene; campaign-fiction when the scene detail is invented for the campaign; insufficient-evidence when a requested historical detail exceeds the supplied Brief.
+For every resolved roll, return missionDirective. The deterministic engine—not you—decides whether it applies. Most turns use keep with targetMissionId=null and replacement=null. You may advance, resolve, or fail only a supplied mainThread/sideLead ID. Use replace_main only after the player has materially chosen a direction opposite the supplied Main Thread; target its exact ID and provide one elevated, campaign-fiction replacement that follows the player's choice but adds a credible cost. Use create_hidden_side only for a natural unresolved lead, never more than one at a time, with targetMissionId=null. Hidden leads are not shown to the player yet. Never create a mission that demands violence against, betrayal of, or irreconcilable harm to a person protected by an existing open thread. Do not use directives to grant numeric rewards, change inventory, revise historical outcomes, or force the player into any course.
+Rewards, consequences, cities, places, people, weather, and disaster pressure must stay inside supplied records and social fact cards. If the brief does not support a named historical place/person/event, write it as bounded campaign fiction rather than fact. Weather may be sensory seasonal texture only unless a supplied disaster/timeline record supports an actual event. Never fabricate a named disaster, local regulation, casualty count, historical reward, or province-wide condition. The only important historical event that may occur in narration is one in exactRecords on the player-confirmed date; otherwise keep it background context and never make it directly happen to the player.
 Respect the user's language selection. In Thai, use natural Thai with a Sengoku-war chronicle tone, not royal language. In English, use precise literary English. Character background is remembered fiction, not a mechanical bonus: it may return only indirectly as a rumor, person, pressure, place, or difficult choice when the current scene makes it natural. Never force it into every scene, guarantee a reunion, or change dice, Stat, Mastery, DN, or outcome because of it. For suggestedMastery, provide only the exact mastery name from the supplied character data, or null; never put an explanation in that field. Output only JSON matching the schema.`;
 
 function getTextContent(value: string | unknown[]): string {
@@ -150,6 +163,12 @@ function normalizeResolveCandidate(value: unknown) {
   const memoryRecord = candidate.memory && typeof candidate.memory === "object" && !Array.isArray(candidate.memory)
     ? candidate.memory as Record<string, unknown>
     : null;
+  const directive = candidate.missionDirective && typeof candidate.missionDirective === "object" && !Array.isArray(candidate.missionDirective)
+    ? candidate.missionDirective as Record<string, unknown>
+    : { kind: "keep", targetMissionId: null, reason: "The campaign thread remains unchanged.", evidence: [], replacement: null };
+  const replacement = directive.replacement && typeof directive.replacement === "object" && !Array.isArray(directive.replacement)
+    ? directive.replacement as Record<string, unknown>
+    : null;
   return {
     ...candidate,
     sceneTitle: truncate(candidate.sceneTitle, 160),
@@ -157,6 +176,13 @@ function normalizeResolveCandidate(value: unknown) {
     nextChoices: Array.isArray(candidate.nextChoices) ? candidate.nextChoices.slice(0, 3).map((choice) => truncate(choice, 180)) : candidate.nextChoices,
     memory: memoryRecord ? { ...memoryRecord, title: truncate(memoryRecord.title, 160), detail: truncate(memoryRecord.detail, 520) } : candidate.memory,
     missionNote: truncate(candidate.missionNote, 300),
+    missionDirective: {
+      ...directive,
+      targetMissionId: truncate(directive.targetMissionId, 160),
+      reason: truncate(directive.reason, 300),
+      evidence: Array.isArray(directive.evidence) ? directive.evidence.slice(0, 4).map((entry) => truncate(entry, 180)) : directive.evidence,
+      replacement: replacement ? { ...replacement, title: truncate(replacement.title, 160), giver: truncate(replacement.giver, 120), objective: truncate(replacement.objective, 500), pressure: truncate(replacement.pressure, 300), deadline: truncate(replacement.deadline, 160), reward: truncate(replacement.reward, 300), risk: truncate(replacement.risk, 300), options: Array.isArray(replacement.options) ? replacement.options.slice(0, 3).map((entry) => truncate(entry, 180)) : replacement.options, canonTerms: Array.isArray(replacement.canonTerms) ? replacement.canonTerms.slice(0, 8).map((entry) => truncate(entry, 100)) : replacement.canonTerms } : null,
+    },
     historicalFence: truncate(candidate.historicalFence, 320),
   };
 }
@@ -224,12 +250,18 @@ function historicalBrief(context: ContextForHistory, action: string) {
     })
     .slice(0, 5);
 
-  return {
-    factIds: selected.map((fact) => fact.id),
-    briefing: selected.length
-      ? selected.map((fact) => JSON.stringify({ id: fact.id, confidence: fact.confidence, era: fact.era, regions: fact.regions, claim: fact.claim, gmUse: fact.gmUse, prohibition: fact.prohibition, sourceIds: fact.sourceIds })).join("\n")
-      : "No curated social-history fact card applies directly. Treat scene detail as campaign fiction and say so in historicalFence.",
-  };
+  const timeline = historicalBriefForCampaign(context.campaign);
+  const socialBrief = selected.length
+    ? selected.map((fact) => JSON.stringify({ id: fact.id, confidence: fact.confidence, era: fact.era, regions: fact.regions, claim: fact.claim, gmUse: fact.gmUse, prohibition: fact.prohibition, sourceIds: fact.sourceIds })).join("\n")
+    : "No curated social-history fact card applies directly.";
+  const timelineBrief = JSON.stringify({
+    dateGate: timeline.dateGate,
+    ledgerStatus: timeline.ledger.status,
+    exactRecords: timeline.exactRecords.map((entry) => ({ id: entry.id, date: entry.date, title: entry.title, summary: entry.summary, regions: entry.regionKeys, source: entry.source })),
+    contextualRecords: timeline.contextualRecords.map((entry) => ({ id: entry.id, precision: entry.precision, date: entry.date, title: entry.title, summary: entry.summary, regions: entry.regionKeys, source: entry.source })),
+    rule: "Only exactRecords may be stated as happening on the current date. contextualRecords may inform broad background but may not be narrated as occurring today. If dateGate.kind is synthetic-scene-day, do not claim any named event occurs today.",
+  });
+  return { factIds: [...selected.map((fact) => fact.id), ...timeline.exactRecords.map((entry) => entry.id), ...timeline.contextualRecords.map((entry) => entry.id)], briefing: `${socialBrief}\nOFFLINE TIMELINE BRIEF:\n${timelineBrief}` };
 }
 
 export async function analyzeWithGM(input: z.infer<typeof analyzeInputSchema>) {
