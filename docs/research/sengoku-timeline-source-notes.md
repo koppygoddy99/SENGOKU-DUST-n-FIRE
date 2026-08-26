@@ -129,3 +129,37 @@ Sources sometimes display events as a Gregorian date while Japanese chronicles u
 The current seed references 36 of the project’s 68 tracked keys (66 provinces plus Iki and Tsushima). The remaining 32 must stay explicitly unfilled until sourced: **Awaji, Bingo, Bitchū, Bizen, Dewa, Echigo, Etchū, Hida, Hōki, Iga, Iki, Inaba, Ise, Iwami, Izu, Izumo, Kii, Mimasaka, Mutsu, Nagato, Noto, Oki, Sado, Shima, Suō, Suruga, Tajima, Tanba, Tango, Tsushima, Wakasa, and Yamato.**
 
 This audit is a correctness control, not a claim that those provinces had no relevant history. It exists so the GM cannot turn missing research into false “quiet year” prose.
+
+## CC BY disaster records selected for provincial expansion
+
+The University of Tokyo dataset prints a Gregorian conversion and a region/original-source field. The following are candidates for catalog cards; summaries below are paraphrases, not copied chronicle text.
+
+| Gregorian date | Catalog key | Paraphrased record | Dataset region and original-source metadata |
+|---|---|---|---|
+| 1586-04-19 | musashi | An unusually persistent ice event was recorded in Musashi, remaining into daylight. | 武蔵; 年代記配合抄, 内閣文庫 |
+| 1586-05-16 | yamato | A rain event followed a recent dry spell in Yamato. | 大和; 多聞院日記 4 |
+| 1586-05-28 | satsuma | Flooding was recorded as preventing an intended troop movement in Satsuma. | 薩摩; 上井覚兼日記下 |
+| 1596-05-02 | kozuke | Heavy late-season snow was recorded in Kōzuke. | 上野; 赤城山年代記, 赤城神社奉讃会 |
+| 1596-06-04 | owari + mino | Flooding was recorded for the Owari–Mino region. | 東海 尾濃; 当代記, 日本凶荒史考 |
+| 1596-06-22 | bizen | A source report described a good harvest in Bizen; this is environmental/economic context, not a reward. | 備前; 多聞院日記 5 |
+| 1596-07-02 | echigo | Earthquake and drought were recorded in Echigo. | 越後; 宝林寺年代記, 南魚沼市舞子 |
+| 1615-05-15 | mutsu | Snow and drought were both recorded in Mutsu; the entry also chronicles Osaka’s fall, so the catalog must separate the local environmental fact from the national political event. | 陸奥; 加納年代記, 石巻の歴史 1 |
+| 1615-06-26 | mutsu / Aizu context | Drought lasting through June was recorded in Aizu. The current 66-province key is Mutsu, but the displayed copy must preserve the source’s Aizu locality. | 会津; 異本塔寺長帳, 日本の気象史料 |
+| 1615-07-13 | hizen / Nagasaki context | A smallpox mortality report was recorded for Nagasaki; the catalog must label this as an archival report with source-specific scale, never turn it into a player-facing epidemic automatically. | 長崎; 大日本史料 12-22; リチャルド・コックス日記 |
+| 1615-07-23 | yamashiro | Flooding and substantial field loss were recorded for Ōsumi village in Yamashiro. | 山城大住村; 義演准后日記 19 |
+
+The open dataset is credited as **藤木久志 編『日本中世気象災害史年表稿』（高志書院）**, Tokyo Historiographical Institute, CC BY 4.0. Its own guidance requires care with chronicle criticism, so each card must retain source attribution and must not promote a report into a universal regional condition.
+
+## San’in–San’yō provincial records
+
+| Year / precision | Catalog key(s) | Source-supported context | Evidence boundary |
+|---|---|---|---|
+| 1510s–1520s / decade range | hoki + izumo | Tottori Prefectural Archives describes Amago Tsunehisa’s move from Izumo into Hōki’s Hino district and links it to later western advance routes. | Retain the decade range; do not invent a single campaign date or force the player into the conflict. |
+| 1521 / year | aki, bingo, bitchu, bizen, mimasaka, harima, inaba, hoki, izumo, iwami, oki | Yasugi Tourism’s overview dates Amago expansion across eleven San’in/San’yō provinces to 1521. | Treat as a source-labelled political reach claim, not a map-owner overlay or exact sequence of conquest for each province. |
+| 1562 / year | izumo + hoki | Tottori Prefectural Archives records Mōri Motonari’s advance toward Izumo/Hōki, return of displaced Hōki local leaders, and changing local allegiance. | Do not reduce the province to a single “owner” or imply universal acceptance. |
+| 1566 / year | izumo | Yasugi Tourism dates the surrender of Gassan Toda Castle and Amago Yoshihisa’s fall to 1566. | Preserve it as Izumo political context; avoid tactical/casualty claims not given by source. |
+| 1569 / year | izumo + hoki | Tottori Prefectural Archives records the Amago revival movement under Katsuhisa and Yamanaka in Izumo/Hōki. | Does not create a side mission unless the campaign has a source-consistent local connection. |
+| 1570 / approximate | hoki | The archive records Hino local leaders acting with Amago forces around 1570. | Use `year` precision in catalog; no day or month. |
+| 1578-07 / month | harima + hoki | Tottori archive dates the fall of Kōzuki Castle in July 1578 and records Hino figures among the Amago force there. | Kōzuki is in Harima; Hōki is an actor-origin connection, not the battle location. |
+
+The Tottori material is published by the **Tottori Prefectural Archives** and cites underlying documents and editions. The Yasugi article is a local tourism overview and forbids copying its prose, so catalog text must be independently paraphrased and source-labelled.
