@@ -259,3 +259,7 @@ The audit identified **1588** as `no-reviewed-event`; the University of Tokyo vi
 | yamashiro-lightning-injury-report | Lightning and injuries reported in Saika-chō. | 京都; 言経卿記3; 大日本古記録 |
 
 These cards omit the source’s numeric fatalities, names beyond locality, property valuations, and any consequence for player movement, health, finances, or relationships. Source: [University of Tokyo Historiographical Institute, *Japanese Medieval Weather and Disaster History Chronology*, viewer page 419](https://www.hi.u-tokyo.ac.jp/collection/digitalgallery/disaster_events/?page=419&limit=30), CC BY 4.0.
+
+## CC BY disaster records: 1589 blank-year batch
+
+Page 420 of the University of Tokyo viewer supports five source-bounded 1589 cards: Sanuki hail, an attributed national hail report, Shinano water damage, Yamato drought, and Ise hail. The first two retain `year` precision; the other three preserve their displayed dates. None creates crop outcomes, tax relief, player travel constraints, or campaign-wide weather. Source: [viewer page 420](https://www.hi.u-tokyo.ac.jp/collection/digitalgallery/disaster_events/?page=420&limit=30), CC BY 4.0.
