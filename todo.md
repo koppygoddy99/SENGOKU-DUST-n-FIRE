@@ -322,3 +322,5 @@
 - [x] เปลี่ยน Application Management ที่พักไว้ให้เมนูย่อยเปิดหน้าแยก พร้อมรายละเอียดทั่วไปเท่าที่มีข้อมูลจริง
 - [x] ย่อ Roll Details, ยุบ flow หลังทอยเหลือหน้าเรื่องกับหน้าผลสรุป และเปลี่ยนปุ่มเป็น เล่นต่อ / Continue Playing
 - [x] เปลี่ยนเมนูย่อย Chronicle เป็น Story Records / บันทึกเรื่องราว พร้อมเก็บร้อยแก้วเต็มหนึ่ง record ต่อฉากโดยไม่ปนผลทอยหรือค่าสกิล
+- [x] ทำ playtest โรนินด้วย Character Creator, deterministic engine และ AI GM prompt ใน repository แบบโปร่งใส
+- [x] แก้ JSON schema ของ AI GM analysis ที่ upstream ปฏิเสธ enum ตัวเลขใน `flawBonus` และเพิ่ม regression

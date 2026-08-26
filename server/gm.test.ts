@@ -35,6 +35,7 @@ describe("AI GM structured contracts", () => {
     const historicalBrief = String(request?.messages?.[1]?.content ?? "");
     expect(historicalBrief).toContain('"id":"oaths-documents-and-witnesses"');
     expect(historicalBrief).not.toContain("[object Object]");
+    expect(request?.outputSchema?.schema.properties.flawBonus).toEqual({ type: "integer", minimum: -2, maximum: 0 });
   });
 
   it("clamps numeric analysis output to the game-rule boundaries", async () => {

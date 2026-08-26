@@ -73,7 +73,7 @@ const analyzeOutputSchema = {
   schema: {
     type: "object", additionalProperties: false,
     properties: {
-      intentSummary: { type: "string" }, stat: { type: "string", enum: ["body", "hand", "wit", "mind", "heart"] }, suggestedMastery: { type: ["string", "null"] }, difficulty: { type: "integer" }, contextBonus: { type: "integer" }, flawTriggered: { type: "boolean" }, flawBonus: { type: "integer", enum: [-2, 0] }, triggeredFlaw: { type: ["string", "null"] }, flawReason: { type: ["string", "null"] }, contextReason: { type: "string" }, risk: { type: "string" }, confirmation: { type: "string" }, historicalFence: { type: "string" }, historicalStatus: { type: "string", enum: ["fact-supported", "contextual-play", "campaign-fiction", "insufficient-evidence"] },
+      intentSummary: { type: "string" }, stat: { type: "string", enum: ["body", "hand", "wit", "mind", "heart"] }, suggestedMastery: { type: ["string", "null"] }, difficulty: { type: "integer" }, contextBonus: { type: "integer" }, flawTriggered: { type: "boolean" }, flawBonus: { type: "integer", minimum: -2, maximum: 0 }, triggeredFlaw: { type: ["string", "null"] }, flawReason: { type: ["string", "null"] }, contextReason: { type: "string" }, risk: { type: "string" }, confirmation: { type: "string" }, historicalFence: { type: "string" }, historicalStatus: { type: "string", enum: ["fact-supported", "contextual-play", "campaign-fiction", "insufficient-evidence"] },
     },
     required: ["intentSummary", "stat", "suggestedMastery", "difficulty", "contextBonus", "flawTriggered", "flawBonus", "triggeredFlaw", "flawReason", "contextReason", "risk", "confirmation", "historicalFence", "historicalStatus"],
   },
