@@ -349,3 +349,4 @@
 - [x] ตรวจและแก้ Vite/runtime error ที่ค้าง พร้อมแยก warning ที่ไม่บล็อกออกจากข้อผิดพลาดจริง
 - [x] ลด initial bundle ด้วย lazy loading ของหน้ารองและ style split โดยคงพฤติกรรมเกม, local save, historical guardrails และ regression เดิม
 - [x] เพิ่ม batch timeline ที่ตรวจจากแหล่งทางการของนครเกียวโตและนครยามางูจิ: 6 ปีใหม่/6 record, date precision guardrails, source notes และ coverage audit (66 reviewed years, 83 blank years)
+- [x] เพิ่ม batch ภัยพิบัติ ค.ศ. 1585 จาก viewer ข้อมูลเปิดมหาวิทยาลัยโตเกียว 6 record พร้อม exact-date guardrail, metadata source notes และ audit ที่คง 83 blank years ไว้ชัดเจน

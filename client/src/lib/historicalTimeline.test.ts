@@ -26,6 +26,10 @@ describe("historical timeline boundary", () => {
     expect(funaokayama).toMatchObject({ kind: "battle", year: 1511, precision: "month", month: 8, regionKeys: ["yamashiro"] });
     expect(funaokayama?.day).toBeUndefined();
     expect(funaokayama?.source.url).toContain("ja.kyoto.travel");
+
+    const mutsuTsunami = HISTORICAL_TIMELINE.find((record) => record.id === "1585-mutsu-tsunami-famine-report");
+    expect(mutsuTsunami).toMatchObject({ kind: "disaster", year: 1585, precision: "exact-date", month: 10, day: 21, regionKeys: ["mutsu"] });
+    expect(mutsuTsunami?.source.url).toContain("hi.u-tokyo.ac.jp");
   });
 
   it("maps the Saika/Sakai campaign context to Izumi without fabricating a territorial rule", () => {

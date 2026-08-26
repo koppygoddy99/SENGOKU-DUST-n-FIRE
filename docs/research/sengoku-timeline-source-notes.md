@@ -197,3 +197,18 @@ Ishikawa Prefectural Library’s biographical entry identifies Hosokawa Masamoto
 ## Suō records from Yamaguchi City Official Tourism chronology
 
 Yamaguchi City’s official Ōuchi-clan chronology supplies five year-precision local records suitable for an offline, context-only catalog. It dates Ōuchi Yoshioki’s succession to **1495**, his reception of former shogun Ashikaga Yoshitane at Shinkōji in Yamaguchi to **1500**, support for Yoshitane’s restoration to **1507**, Yoshioki’s return from Kyoto to Yamaguchi to **1518**, and Yoshioki’s death with Ōuchi Yoshitaka’s succession to **1528**. Each card is limited to **Suō** and its stated political-network context. The source does not authorize a province-control map, universal faction outcome, player audience, reward, or resource claim. Source: [Yamaguchi City Official Tourism, Ōuchi clan chronology](https://yamaguchi-city.jp/history/ouchi_chronology.html).
+
+## CC BY disaster records: 1585 provincial batch
+
+The University of Tokyo viewer’s page 415 exposes row-level Gregorian conversion, region, article, original source, and bibliography for **1585** records. The catalog paraphrases only the bounded source report and keeps every selected card at `exact-date` with the displayed Gregorian value.
+
+| Gregorian date | Catalog key | Source-bounded paraphrase | Original-source metadata shown by viewer |
+|---|---|---|---|
+| 1585-06-17 | hyuga | Flooding forced a route detour before an arrival in Miyazaki. | 日向; 上井覚兼日記中; 大日本古記録 |
+| 1585-06-28 | kii | Windstorm and flood. | 紀伊; 和歌山史要; 日本の気象史料 |
+| 1585-09-18 | mino | Major flood affected fields and houses; the entry records deaths. | 美濃; 荘厳講執事帳; 白山史料集下 |
+| 1585-09-20 | musashi | Heavy rain and wind damaged houses. | 武蔵; 家忠日記; 日本の気象史料 |
+| 1585-09-21 | shimosa | Strong wind and castle damage. | 下総; 海上八幡宮年代記; 海上町史史料編1 |
+| 1585-10-21 | mutsu | Tsunami and severe famine are listed in the same entry. | 陸奥; 加納家年代記; 石巻の歴史1 |
+
+These cards do not state a player route, named castle, loss, famine causation, or region-wide impact beyond their individual row. Source: [University of Tokyo Historiographical Institute, *Japanese Medieval Weather and Disaster History Chronology*, viewer page 415](https://www.hi.u-tokyo.ac.jp/collection/digitalgallery/disaster_events/?page=415&limit=30), CC BY 4.0.
