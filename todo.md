@@ -326,3 +326,9 @@
 - [x] แก้ JSON schema ของ AI GM analysis ที่ upstream ปฏิเสธ enum ตัวเลขใน `flawBonus` และเพิ่ม regression
 - [x] รีไฟน์ร้อยแก้ว AI GM ภาษาไทยตาม sengoku-novelizer และเพิ่มตัวกรองคำ/วัตถุ/จังหวะสมัยใหม่ก่อนแสดงผล
 - [x] เพิ่ม retry จำกัดครั้งเมื่อ AI GM คืน narration ไม่ครบสามย่อหน้าหรือไม่ผ่าน quality gate
+- [ ] ทดลองฉากสุ่มภาษาไทยแบบสั้นด้วย Narrative Contract ใหม่เพื่อรับ feedback ด้านโทนและบริบทยุค
+- [ ] ทดลองร้อยแก้ว AI GM ผ่าน flow repository โดยส่งผลการกระทำที่กำหนดและข้ามการสุ่มทอย
+- [ ] บังคับ JSON schema ของ AI GM ให้ narration มีสามย่อหน้าก่อนถึง validation/retry
+- [ ] ทำสิบรอบการรีไฟน์ร้อยแก้ว AI GM ตาม sengoku-novelizer พร้อม rubric, corpus และรายงานก่อน–หลัง
+- [ ] รันสิบรอบผ่าน server-side LLM helper หลัง direct proxy ตอบ 412 โดยไม่แก้ผลประเมินเอง
+- [x] พักการรีไฟน์สิบรอบไว้ และ push เฉพาะ Narrative Contract/quality gate ที่ทำเสร็จแล้วขึ้น GitHub

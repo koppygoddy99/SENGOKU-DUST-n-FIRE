@@ -85,7 +85,7 @@ const resolveOutputSchema = {
   schema: {
     type: "object", additionalProperties: false,
     properties: {
-      sceneTitle: { type: "string" }, narration: { type: "array", items: { type: "string" } }, nextChoices: { type: "array", items: { type: "string" } }, memory: { type: "object", additionalProperties: false, properties: { title: { type: "string" }, detail: { type: "string" }, tone: { type: "string", enum: ["navy", "teal", "vermilion", "ochre"] } }, required: ["title", "detail", "tone"] }, missionNote: { type: "string" }, historicalFence: { type: "string" }, historicalStatus: { type: "string", enum: ["fact-supported", "contextual-play", "campaign-fiction", "insufficient-evidence"] },
+      sceneTitle: { type: "string" }, narration: { type: "array", minItems: 3, maxItems: 3, items: { type: "string" } }, nextChoices: { type: "array", minItems: 3, maxItems: 3, items: { type: "string" } }, memory: { type: "object", additionalProperties: false, properties: { title: { type: "string" }, detail: { type: "string" }, tone: { type: "string", enum: ["navy", "teal", "vermilion", "ochre"] } }, required: ["title", "detail", "tone"] }, missionNote: { type: "string" }, historicalFence: { type: "string" }, historicalStatus: { type: "string", enum: ["fact-supported", "contextual-play", "campaign-fiction", "insufficient-evidence"] },
     },
     required: ["sceneTitle", "narration", "nextChoices", "memory", "missionNote", "historicalFence", "historicalStatus"],
   },
