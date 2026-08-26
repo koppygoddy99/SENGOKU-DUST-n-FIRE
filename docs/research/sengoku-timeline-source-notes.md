@@ -243,3 +243,19 @@ The reproducible audit identified **1579** as `no-reviewed-event`; page 405 of t
 | bitchu-flood-delays-movement | Heavy rain/flood delayed movement in the source letter. | 備中; 沼元家文書1; 山口県史史料編中世2 |
 
 The cards do not establish a named player route, troop order, harvest total, casualty count, active epidemic, or province-wide economic result. Source: [University of Tokyo Historiographical Institute, *Japanese Medieval Weather and Disaster History Chronology*, viewer page 405](https://www.hi.u-tokyo.ac.jp/collection/digitalgallery/disaster_events/?page=405&limit=30), CC BY 4.0.
+
+## CC BY disaster records: 1588 blank-year batch
+
+The audit identified **1588** as `no-reviewed-event`; the University of Tokyo viewer’s page 419 provides seven records with usable source metadata. The national epidemic record is retained at `year` precision because its Japanese date has no month/day. Every local card uses its displayed Gregorian day only where the row itself supplies a dated Japanese entry.
+
+| Catalog key | Source-bounded paraphrase | Original-source metadata shown by viewer |
+|---|---|---|
+| national-epidemic-report | Epidemic spread across the realm, year precision. | 諸国; 室町安土桃山時代医事年表; 室町安土桃山時代医学史の研究 |
+| yamato-windstorm-damage | Windstorm and structural damage. | 大和; 多聞院日記4; 角川書店 |
+| yamato-flooded-boat | Flood-related boat sinking with fatalities reported. | 大和; 多聞院日記4; 角川書店 |
+| mino-snow | Snow recorded on 1588-05-12. | 美濃; 荘厳講執事帳; 白山史料集下 |
+| yamashiro-flooded-crossings | Flooded Ōi/Kamo river crossings. | 京都; 享禄以来年代記 / 続本朝通鑑; 日本の気象史料 |
+| omi-land-water-damage | Mountain collapse, river change, and waterside damage mentioned in a petition. | 近江; 増補駒井日記乾37; 文献出版 |
+| yamashiro-lightning-injury-report | Lightning and injuries reported in Saika-chō. | 京都; 言経卿記3; 大日本古記録 |
+
+These cards omit the source’s numeric fatalities, names beyond locality, property valuations, and any consequence for player movement, health, finances, or relationships. Source: [University of Tokyo Historiographical Institute, *Japanese Medieval Weather and Disaster History Chronology*, viewer page 419](https://www.hi.u-tokyo.ac.jp/collection/digitalgallery/disaster_events/?page=419&limit=30), CC BY 4.0.

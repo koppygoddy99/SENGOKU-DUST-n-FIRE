@@ -352,3 +352,4 @@
 - [x] เพิ่ม batch ภัยพิบัติ ค.ศ. 1585 จาก viewer ข้อมูลเปิดมหาวิทยาลัยโตเกียว 6 record พร้อม exact-date guardrail, metadata source notes และ audit ที่คง 83 blank years ไว้ชัดเจน
 - [x] เพิ่ม batch ปี ค.ศ. 1566 จาก viewer ข้อมูลเปิดมหาวิทยาลัยโตเกียว 5 record พร้อม guardrail ระดับชาติ/แคว้น, month precision สำหรับฮิตาจิ และ audit ที่ยืนยัน 66 reviewed years / 83 blank years
 - [x] เติมปีว่าง ค.ศ. 1579 จาก viewer ข้อมูลเปิดมหาวิทยาลัยโตเกียว 8 record พร้อม date-precision guardrails และขยาย audit ให้แสดง blank-year list (67 reviewed years / 82 blank years)
+- [x] เติมปีว่าง ค.ศ. 1588 จาก viewer ข้อมูลเปิดมหาวิทยาลัยโตเกียว 7 record พร้อม guardrail สำหรับโรคระบาด/ผู้เสียหาย และ audit ที่ยืนยัน 68 reviewed years / 81 blank years

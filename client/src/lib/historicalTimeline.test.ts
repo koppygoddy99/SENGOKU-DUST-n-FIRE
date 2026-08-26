@@ -41,6 +41,10 @@ describe("historical timeline boundary", () => {
     const nationalEpidemic = HISTORICAL_TIMELINE.find((record) => record.id === "1579-national-epidemic-report");
     expect(nationalEpidemic).toMatchObject({ kind: "disaster", precision: "month", month: 5, regionKeys: [] });
     expect(nationalEpidemic?.day).toBeUndefined();
+
+    const nationalEpidemic1588 = HISTORICAL_TIMELINE.find((record) => record.id === "1588-national-epidemic-report");
+    expect(nationalEpidemic1588).toMatchObject({ kind: "disaster", precision: "year", regionKeys: [] });
+    expect(nationalEpidemic1588?.month).toBeUndefined();
   });
 
   it("maps the Saika/Sakai campaign context to Izumi without fabricating a territorial rule", () => {
@@ -61,6 +65,9 @@ describe("historical timeline boundary", () => {
     const year1579 = HISTORICAL_YEAR_LEDGER.find((entry) => entry.year === 1579);
     expect(year1579).toMatchObject({ status: "reviewed-events" });
     expect(year1579?.recordIds).toEqual(expect.arrayContaining(["1579-bungo-storm-flood", "1579-musashi-major-flood"]));
+    const year1588 = HISTORICAL_YEAR_LEDGER.find((entry) => entry.year === 1588);
+    expect(year1588).toMatchObject({ status: "reviewed-events" });
+    expect(year1588?.recordIds).toEqual(expect.arrayContaining(["1588-national-epidemic-report", "1588-yamato-flooded-boat"]));
   });
 
   it("withholds exact-date events until the campaign supplies a player-confirmed civil date", () => {
