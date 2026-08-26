@@ -26,6 +26,7 @@ const output = {
     totalYears: HISTORICAL_YEAR_LEDGER.length,
     reviewedYears: HISTORICAL_YEAR_LEDGER.filter((entry) => entry.status === "reviewed-events").length,
     blankYears: HISTORICAL_YEAR_LEDGER.filter((entry) => entry.status === "no-reviewed-event").length,
+    blankYearList: HISTORICAL_YEAR_LEDGER.filter((entry) => entry.status === "no-reviewed-event").map((entry) => entry.year),
   },
   records: {
     total: HISTORICAL_TIMELINE.length,

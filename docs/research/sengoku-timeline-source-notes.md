@@ -226,3 +226,20 @@ The University of Tokyo viewer’s page 390 supplies **five additional records f
 | yamato-water-damage | Several days of rain and water damage. | 大和; 多聞院日記1; 日本凶荒史考 |
 
 No card imports troop movement, an attributed death total, player travel, a named site, or an economic loss. Source: [University of Tokyo Historiographical Institute, *Japanese Medieval Weather and Disaster History Chronology*, viewer page 390](https://www.hi.u-tokyo.ac.jp/collection/digitalgallery/disaster_events/?page=390&limit=30), CC BY 4.0.
+
+## CC BY disaster records: 1579 blank-year batch
+
+The reproducible audit identified **1579** as `no-reviewed-event`; page 405 of the University of Tokyo viewer provides source-backed entries that allow it to become a reviewed year without inventing a political event. This batch preserves the source’s own precision: the Bungo storm/flood and Shimōsa persistent-flood entries remain `year`, the Musashi hail and national epidemic entries remain `month`, and only the entries that state a day use `exact-date`.
+
+| Catalog key | Source-bounded paraphrase | Original-source metadata shown by viewer |
+|---|---|---|
+| bungo-storm-flood | Windstorm and flood, year precision. | 豊後; 六郷山年代記; 豊後国都甲荘の調査資料編 |
+| shimosa-persistent-floods | Many years of flooding in a Shimōsa estate. | 下総; 武州古文書; 中世東国災害史略年表 |
+| musashi-hail | Hail described as soybean-sized, fifth-month precision. | 武蔵; 年代記配合抄; 内閣文庫 |
+| national-epidemic-report | Epidemic mortality across the realm, fifth-month precision. | 諸国; 宝林寺年代記; 南魚沼市舞子 |
+| musashi-major-flood | Rain followed by major flooding on 1579-07-08. | 武蔵; 年代記配合抄; 内閣文庫 |
+| mutsu-flood-casualty-report | Prolonged rain, flood, and deaths of people and horses in listed Rikuzen localities. | 陸前; 登米郡史; 日本の気象史料 |
+| yamato-field-flood-loss | Downpour and field loss. | 大和; 多聞院日記3; 角川書店 |
+| bitchu-flood-delays-movement | Heavy rain/flood delayed movement in the source letter. | 備中; 沼元家文書1; 山口県史史料編中世2 |
+
+The cards do not establish a named player route, troop order, harvest total, casualty count, active epidemic, or province-wide economic result. Source: [University of Tokyo Historiographical Institute, *Japanese Medieval Weather and Disaster History Chronology*, viewer page 405](https://www.hi.u-tokyo.ac.jp/collection/digitalgallery/disaster_events/?page=405&limit=30), CC BY 4.0.
