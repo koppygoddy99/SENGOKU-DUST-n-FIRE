@@ -11,13 +11,13 @@
 | ตัวชี้วัด | ผลตรวจ |
 |---|---:|
 | ช่วงปีใน yearly ledger | 1467–1615 (149 ปี) |
-| ปีที่มี record ผ่านการตรวจ | 60 ปี |
-| ปีที่ไม่มี record ตรวจแล้ว | 89 ปี |
-| Historical records ทั้งหมด | 86 รายการ |
-| สงคราม | 25 รายการ |
-| เหตุการณ์การเมือง/สังคม | 35 รายการ |
+| ปีที่มี record ผ่านการตรวจ | 66 ปี |
+| ปีที่ไม่มี record ตรวจแล้ว | 83 ปี |
+| Historical records ทั้งหมด | 92 รายการ |
+| สงคราม | 26 รายการ |
+| เหตุการณ์การเมือง/สังคม | 40 รายการ |
 | ภัยพิบัติ/สภาพแวดล้อม | 26 รายการ |
-| Source labels ที่แยกได้ | 50 รายการ |
+| Source labels ที่แยกได้ | 52 รายการ |
 | Coverage ของ province/island keys | 68/68; ไม่มี key ขาด |
 
 ตัวเลขนี้หมายถึงแต่ละ key มีอย่างน้อยหนึ่ง record ที่มี source ใน catalog ไม่ได้หมายความว่าแต่ละแคว้นมีเหตุการณ์สำคัญทุกปี และไม่ได้อนุญาตให้ AI สรุปว่า “ไม่มีอะไรเกิดขึ้น” ในความหมายทางประวัติศาสตร์
@@ -27,7 +27,7 @@
 | Precision | จำนวน | กติกาการใช้ |
 |---|---:|---|
 | `exact-date` | 21 | ใช้ได้ต่อเมื่อ campaign มี `historicalDate` ที่ผู้เล่นยืนยัน; scene day ที่ engine สร้างขึ้นเองใช้ไม่ได้ |
-| `month` | 6 | ใช้เป็นบริบทของเดือนและฤดู ไม่ใช้เป็นวันตายตัว |
+| `month` | 7 | ใช้เป็นบริบทของเดือนและฤดู ไม่ใช้เป็นวันตายตัว |
 | `season` | 1 | ใช้เป็นสีสันของฤดูกาลเท่านั้น |
 | `year` | 58 | ใช้เป็นบริบททั้งปี ไม่ผูกกับวันในฉาก |
 
@@ -35,7 +35,7 @@
 
 ## Source hierarchy ที่ใช้
 
-แหล่งหลักของ catalog คือหน้า timeline รายปีของ Sengoku Shogun Map ซึ่งถูกใช้เป็นดัชนีเหตุการณ์ระดับชาติและแคว้น แต่ทุก record ที่เพิ่มจากภัยพิบัติหรือแคว้นที่ไม่มีในดัชนีต้องคง URL และ label ของแหล่งท้องถิ่น/สถาบันไว้ใน record โดยตรง [1] ข้อมูลภัยพิบัติมาจากฐานของสถาบัน Historiographical Institute มหาวิทยาลัยโตเกียว ซึ่งเผยแพร่พร้อมกรอบสิทธิ์ CC BY 4.0 [2] ส่วน record ระดับแคว้นใช้ฐานวัฒนธรรมของหน่วยงานในพื้นที่เมื่อหาได้ เช่น ทากายามะ ซาโดะ ซูโมโตะ โทบะ ไมซูรุ นากาซากิ และยามางูจิ [3] [4] [5] [6] [7] [8] [9]
+แหล่งหลักของ catalog คือหน้า timeline รายปีของ Sengoku Shogun Map ซึ่งถูกใช้เป็นดัชนีเหตุการณ์ระดับชาติและแคว้น แต่ทุก record ที่เพิ่มจากภัยพิบัติหรือแคว้นที่ไม่มีในดัชนีต้องคง URL และ label ของแหล่งท้องถิ่น/สถาบันไว้ใน record โดยตรง [1] ข้อมูลภัยพิบัติมาจากฐานของสถาบัน Historiographical Institute มหาวิทยาลัยโตเกียว ซึ่งเผยแพร่พร้อมกรอบสิทธิ์ CC BY 4.0 [2] ส่วน record ระดับแคว้นใช้ฐานวัฒนธรรมของหน่วยงานในพื้นที่เมื่อหาได้ เช่น ทากายามะ ซาโดะ ซูโมโตะ โทบะ ไมซูรุ นากาซากิ ยามางูจิ และนครเกียวโต [3] [4] [5] [6] [7] [8] [9] [10] [11]
 
 Catalog ไม่ได้คัดลอกบทความยาวของแหล่งอ้างอิง แต่สรุปเป็นข้อความสั้นสองภาษา พร้อมปี/precision/region keys/source. หากแหล่งกล่าวถึงเรื่องเล่าหรือข้อสันนิษฐาน ระบบระบุว่าเป็นข้อถกเถียง หรือไม่เพิ่มส่วนที่เกินหลักฐานใน record.
 
@@ -56,3 +56,5 @@ Record ทุกตัวส่งเข้าสู่ GM ในฐานะ **
 [7]: https://yuragawa-maizuru.edumap.jp/tiiki "Maizuru Municipal Yuragawa Elementary School: Local history"
 [8]: https://www.pref.nagasaki.jp/bunkadb/index.php/view/532 "Nagasaki Prefecture Cultural Property Database: Katsumoto Castle"
 [9]: https://bunkazai.pref.yamaguchi.lg.jp/support/theme/tyousyuu/tnen.html "Yamaguchi Prefecture: Chōshū domain chronology"
+[10]: https://ja.kyoto.travel/tourism/single02.php?category_id=9&tourism_id=4 "Kyoto City Official Travel Guide: Funaokayama battlefield site"
+[11]: https://yamaguchi-city.jp/history/ouchi_chronology.html "Yamaguchi City Official Tourism: Ōuchi clan chronology"

@@ -348,3 +348,4 @@
 - [x] ขยาย offline timeline เป็น yearly ledger 1467–1615 พร้อม cited record ครบ 68 province/island keys, audit ที่ทำซ้ำได้ และรายงานข้อจำกัด coverage โดยไม่อ้างว่าเป็นข้อมูลละเอียดครบทุกปี/แคว้น
 - [x] ตรวจและแก้ Vite/runtime error ที่ค้าง พร้อมแยก warning ที่ไม่บล็อกออกจากข้อผิดพลาดจริง
 - [x] ลด initial bundle ด้วย lazy loading ของหน้ารองและ style split โดยคงพฤติกรรมเกม, local save, historical guardrails และ regression เดิม
+- [x] เพิ่ม batch timeline ที่ตรวจจากแหล่งทางการของนครเกียวโตและนครยามางูจิ: 6 ปีใหม่/6 record, date precision guardrails, source notes และ coverage audit (66 reviewed years, 83 blank years)

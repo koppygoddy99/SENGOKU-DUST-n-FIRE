@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { describe, expect, it } from "vitest";
 import { HISTORICAL_TIMELINE, HISTORICAL_YEAR_LEDGER, SENGOKU_66_PROVINCE_IDS, SENGOKU_ISLAND_PROVINCE_IDS, historicalBriefForCampaign, timelineForCampaign, timelineRegionKey } from "./historicalTimeline";
 
 describe("historical timeline boundary", () => {
@@ -17,6 +16,18 @@ describe("historical timeline boundary", () => {
     expect(omiRecords.every((record) => record.source.url.startsWith("https://"))).toBe(true);
   });
 
+  it("keeps newly reviewed Suō and Funaokayama context at the evidence-supported regional and month/year precision", () => {
+    const ouchiRestoration = HISTORICAL_TIMELINE.find((record) => record.id === "1507-ouchi-yoshitane-restoration");
+    expect(ouchiRestoration).toMatchObject({ year: 1507, precision: "year", regionKeys: ["suo"] });
+    expect(ouchiRestoration?.month).toBeUndefined();
+    expect(ouchiRestoration?.day).toBeUndefined();
+
+    const funaokayama = HISTORICAL_TIMELINE.find((record) => record.id === "1511-funaokayama-kyoto-recapture");
+    expect(funaokayama).toMatchObject({ kind: "battle", year: 1511, precision: "month", month: 8, regionKeys: ["yamashiro"] });
+    expect(funaokayama?.day).toBeUndefined();
+    expect(funaokayama?.source.url).toContain("ja.kyoto.travel");
+  });
+
   it("maps the Saika/Sakai campaign context to Izumi without fabricating a territorial rule", () => {
     expect(timelineRegionKey("Sakai / Izumi")).toBe("izumi");
     expect(timelineForCampaign(1569, "Sakai / Izumi").every((record) => record.relevance === "national")).toBe(true);
@@ -28,7 +39,7 @@ describe("historical timeline boundary", () => {
     expect(HISTORICAL_YEAR_LEDGER.at(-1)).toMatchObject({ year: 1615 });
     expect(SENGOKU_66_PROVINCE_IDS).toHaveLength(66);
     expect(SENGOKU_ISLAND_PROVINCE_IDS).toEqual(["iki", "tsushima"]);
-    expect(HISTORICAL_YEAR_LEDGER.find((entry) => entry.year === 1500)?.status).toBe("no-reviewed-event");
+    expect(HISTORICAL_YEAR_LEDGER.some((entry) => entry.status === "no-reviewed-event")).toBe(true);
   });
 
   it("withholds exact-date events until the campaign supplies a player-confirmed civil date", () => {

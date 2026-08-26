@@ -185,3 +185,15 @@ Maizuru City’s school historical material dates the fall of Tatebe Castle, the
 ## Iki record from Nagasaki Prefectural cultural-property database
 
 Nagasaki Prefecture’s cultural-property database dates the completion of Katsumoto Castle on Iki to **1591**. It identifies the castle as a logistics base built for Hideyoshi’s Korea campaigns, reports that construction took about four months, and states that the site was dismantled after the campaign period. The catalog may use the 1591 completion as provincial infrastructure context, but must never turn that fact into a player command role, a ship, or a supply reward. Source: [Nagasaki Prefecture Cultural Property Database, Katsumoto Castle ruins](https://www.pref.nagasaki.jp/bunkadb/index.php/view/532).
+
+## Yamashiro record from Kyoto City Official Travel Guide
+
+Kyoto City’s official travel guide for the Funaokayama battlefield site states that, in **August 1511**, Ashikaga Yoshitada, having previously fled to Tanba, and Hosokawa Takakuni attacked Hosokawa Sumimoto and Hosokawa Masakata at Funaokayama and retook Kyoto. The same page cautions by its historical framing that shogunal authority remained nominal amid the Sengoku conflict. The catalog therefore stores this as a **month-precision, Yamashiro provincial battle/context card**. It does not claim an exact day, a settled province-wide ruler, casualty figures, or any player consequence. Source: [Kyoto City Official Travel Guide, Funaokayama battlefield site](https://ja.kyoto.travel/tourism/single02.php?category_id=9&tourism_id=4).
+
+## Excluded 1507 candidate: evidence is insufficient for a regional card
+
+Ishikawa Prefectural Library’s biographical entry identifies Hosokawa Masamoto as a kanrei, shugo daimyo, and warrior, and gives his lifespan as **1466–1507**. It does not identify the location, cause, or political consequence of his death. The catalog therefore does **not** add a 1507 Yamashiro/Kinai record from this source alone: assigning a `regionKey` would exceed the inspected evidence. Source: [Ishikawa Prefectural Library, Hosokawa Masamoto biographical entry](https://www.library.pref.ishikawa.lg.jp/shosho/furucolle/list/prsn16196).
+
+## Suō records from Yamaguchi City Official Tourism chronology
+
+Yamaguchi City’s official Ōuchi-clan chronology supplies five year-precision local records suitable for an offline, context-only catalog. It dates Ōuchi Yoshioki’s succession to **1495**, his reception of former shogun Ashikaga Yoshitane at Shinkōji in Yamaguchi to **1500**, support for Yoshitane’s restoration to **1507**, Yoshioki’s return from Kyoto to Yamaguchi to **1518**, and Yoshioki’s death with Ōuchi Yoshitaka’s succession to **1528**. Each card is limited to **Suō** and its stated political-network context. The source does not authorize a province-control map, universal faction outcome, player audience, reward, or resource claim. Source: [Yamaguchi City Official Tourism, Ōuchi clan chronology](https://yamaguchi-city.jp/history/ouchi_chronology.html).
