@@ -263,3 +263,7 @@ These cards omit the source’s numeric fatalities, names beyond locality, prope
 ## CC BY disaster records: 1589 blank-year batch
 
 Page 420 of the University of Tokyo viewer supports five source-bounded 1589 cards: Sanuki hail, an attributed national hail report, Shinano water damage, Yamato drought, and Ise hail. The first two retain `year` precision; the other three preserve their displayed dates. None creates crop outcomes, tax relief, player travel constraints, or campaign-wide weather. Source: [viewer page 420](https://www.hi.u-tokyo.ac.jp/collection/digitalgallery/disaster_events/?page=420&limit=30), CC BY 4.0.
+
+## Candidate evidence retained for the next 1593 batch
+
+The audit lists **1593** as blank. Viewer page 426 was reviewed and contains source rows for a year-level national water/drought report, Kyoto rain and wind, Yamato weather reports, and several late-year epidemic reports. These are **research candidates only** until each card is selected, translated conservatively, given the source-supported precision, covered by regression, and included in a fresh audit. In particular, no candidate should turn the source’s national epidemic language into player illness, casualty totals, or universal campaign conditions. Source: [viewer page 426](https://www.hi.u-tokyo.ac.jp/collection/digitalgallery/disaster_events/?page=426&limit=30), CC BY 4.0.
