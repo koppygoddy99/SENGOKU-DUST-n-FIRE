@@ -21,6 +21,12 @@ describe("Narrative Style Contract v2", () => {
   it("flags prose that leaks game language, modern phrasing, faux archaism, or supplied private detail", () => {
     expect(narrativeQualityFlags("ทอยลูกเต๋าแล้วได้โบนัส +2", "th")).toContain("game-artifact");
     expect(narrativeQualityFlags("โอเค เดี๋ยวอัปเดตแผน", "th")).toContain("modernism");
+    expect(narrativeQualityFlags("เสียงปากกาคลิกบนกระดาษทำให้คนทั้งด่านเงียบลง", "th")).toContain("period-anachronism");
+    expect(narrativeQualityFlags("เจ้าหน้าที่ตรวจระบบแล้วเรียกตำรวจ", "th")).toContain("period-anachronism");
+    expect(narrativeQualityFlags("ผู้คุมจุ่มพู่กันลงในหมึกก่อนลากเส้นบนกระดาษ", "th")).toEqual([]);
+    expect(narrativeQualityFlags("flaw ถูกกระตุ้นจนค่า context ลดลง", "th")).toContain("game-artifact");
+    expect(narrativeQualityFlags("อ้างอิงการ์ดบรีฟก่อนตัดสินใจ", "th")).toContain("modernism");
+    expect(narrativeQualityFlags("เจ้าของขบวนยื่นคำชี้แจงเรื่องความชอบธรรม", "th")).toContain("period-anachronism");
     expect(narrativeQualityFlags("Thou shalt carry the dice.", "en")).toEqual(expect.arrayContaining(["faux-archaic", "game-artifact"]));
     expect(narrativeQualityFlags("A line from the sealed dossier.", "en", ["sealed dossier"])).toContain("private-disclosure");
   });
@@ -30,6 +36,9 @@ describe("Narrative Style Contract v2", () => {
     const englishPrompt = narrativeStylePrompt("en");
     expect(thaiPrompt).toContain("Narrative Style Contract v2");
     expect(thaiPrompt).toContain("ลูกเต๋า");
+    expect(thaiPrompt).toContain("พู่กัน");
+    expect(thaiPrompt).toContain("ภาษาไทยแบบนิยาย");
+    expect(thaiPrompt).toContain("อย่าแปลโครงประโยคอังกฤษตรงตัว");
     expect(englishPrompt).toContain("faux-archaic");
     expect(englishPrompt).toContain("private motivation");
   });

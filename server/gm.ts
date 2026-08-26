@@ -166,6 +166,17 @@ function assertNarrationQuality(narration: string[], language: "en" | "th") {
   if (flags.length) throw new Error(`AI GM narration rejected by Narrative Style Contract: ${flags.join(", ")}`);
 }
 
+function assertPlayerFacingNarrativeQuality(response: z.infer<typeof resolveResultSchema>, language: "en" | "th") {
+  assertNarrationQuality([
+    response.sceneTitle,
+    ...response.narration,
+    ...response.nextChoices,
+    response.memory.title,
+    response.memory.detail,
+    response.missionNote,
+  ], language);
+}
+
 type ContextForHistory = z.infer<typeof contextSchema>;
 
 function domainsForText(text: string): SengokuSocialFact["domains"] {
@@ -235,9 +246,13 @@ export async function analyzeWithGM(input: z.infer<typeof analyzeInputSchema>) {
 
 export async function resolveWithGM(input: z.infer<typeof resolveInputSchema>) {
   const history = historicalBrief(input.context, input.action);
-  const response = await withGMResponseTimeout((signal) => invokeLLM({
-    model: "gpt-5-mini",
-    messages: [{ role: "system", content: systemRules }, { role: "user", content: `Narrate the resolved roll. The total, outcome, and consequence are final rules output; do not alter them.
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const retryInstruction = attempt === 0 ? "" : "\n\nRETRY REQUIRED: The prior draft violated the output contract. Return exactly three Thai prose paragraphs, preserve the final game result, and remove every modern/anachronistic word or object before responding.";
+      const response = await withGMResponseTimeout((signal) => invokeLLM({
+        model: "gpt-5-mini",
+        messages: [{ role: "system", content: systemRules }, { role: "user", content: `Narrate the resolved roll. The total, outcome, and consequence are final rules output; do not alter them.
 
 ${narrativeStylePrompt(input.language)}
 
@@ -247,18 +262,24 @@ Narrative standard for this response:
 - Paragraph 2 makes the outcome visible in another person's body language, speech, or decision. Use one short, characterful line of dialogue only when it earns its place. Let rank, obligation, suspicion, debt, and public attention shape the exchange.
 - Paragraph 3 lands one tangible consequence and leaves a specific pressure or opening for the next choice. It must not ask the player a direct question; nextChoices handles choices separately.
 - Use the character's name where natural; do not repeat "เจ้า" mechanically. Keep invented people and events inside campaign fiction. Never invent precise local custom, historical offices, or legal effects beyond the Historical Brief.
-- Do not mention dice, DN, rules, stats, AI, prompts, credits, or historical labels inside narration.
-- nextChoices must be exactly 3 short, concrete actions that follow from this scene. memory must record the consequential change, not summarize the whole scene.
+- Every player-facing field—sceneTitle, narration, nextChoices, memory title/detail, and missionNote—must be Thai literary prose or a short Thai literary action. Never mention dice, DN, rules, stats, AI, prompts, credits, Flaw, Context, Stain, system labels, cards, briefs, or historical labels in any of those fields.
+- nextChoices must be exactly 3 short, concrete actions that follow from this scene. memory must record the consequential change, not summarize the whole scene. Do not use modern administrative phrasing such as official, representative, profile, or system.
+${retryInstruction}
 
 Historical Brief:
 ${history.briefing}
 
 Game Context:
 ${JSON.stringify(input)}` }],
-    outputSchema: resolveOutputSchema,
-    signal,
-  }));
-  const parsed = resolveResultSchema.parse(normalizeResolveCandidate(JSON.parse(getTextContent(response.choices[0]?.message.content ?? ""))));
-  assertNarrationQuality(parsed.narration, input.language);
-  return { ...parsed, historicalFactIds: history.factIds };
+        outputSchema: resolveOutputSchema,
+        signal,
+      }));
+      const parsed = resolveResultSchema.parse(normalizeResolveCandidate(JSON.parse(getTextContent(response.choices[0]?.message.content ?? ""))));
+      assertPlayerFacingNarrativeQuality(parsed, input.language);
+      return { ...parsed, historicalFactIds: history.factIds };
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError;
 }

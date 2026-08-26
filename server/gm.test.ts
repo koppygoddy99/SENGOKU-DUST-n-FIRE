@@ -56,6 +56,34 @@ describe("AI GM structured contracts", () => {
     expect(String(request?.messages?.[1]?.content ?? "")).toContain("Return exactly 3 substantial prose paragraphs");
   });
 
+  it("rejects Thai narration that contains a period anachronism before it reaches the player", async () => {
+    const badParagraph = "เสียงปากกาคลิกบนกระดาษทำให้คนทั้งด่านหันมามองอากิฮิสะ ผู้คุมด่านยืนนิ่งอยู่ใต้ชายคา ขณะที่คนส่งสารกอดห่อผ้าไว้แน่นและเจ้าของขบวนหลบสายตา ไม่มีใครยอมเอ่ยคำแก้ต่างก่อนรอยหมึกจะถูกลากลงบนกระดาษอีกครั้ง. ".repeat(2);
+    const badPayload = { choices: [{ message: { content: JSON.stringify({ sceneTitle: "รอยหมึกที่ด่าน", narration: [badParagraph, badParagraph, badParagraph], nextChoices: ["ยื่นเอกสาร", "หาพยาน", "ถอยไปตั้งหลัก"], memory: { title: "ชื่อที่ถูกจด", detail: "ผู้คุมจดชื่อของอากิฮิสะไว้", tone: "vermilion" }, missionNote: "ด่านเริ่มตรวจเข้มขึ้น", historicalFence: "ฉากนี้เป็น fiction ของแคมเปญ", historicalStatus: "campaign-fiction" }) } }] };
+    mocks.invokeLLM.mockResolvedValueOnce(badPayload);
+    mocks.invokeLLM.mockResolvedValueOnce(badPayload);
+    await expect(resolveWithGM({ language: "th", context, action: "ข้าจะผ่านด่าน", roll: { outcome: "failure_with_consequence", total: 8, difficulty: 20, summary: "ด่านปฏิเสธ", consequence: "ชื่อถูกจด" } })).rejects.toThrow("period-anachronism");
+  });
+
+  it("retries once when the first AI GM narration violates the three-paragraph contract", async () => {
+    const goodParagraph = "ฝนที่ค้างอยู่บนชายคาหยดลงข้างรอยเท้าของผู้เดินทาง ผู้คุมด่านกดปลายพู่กันลงในหมึกอย่างช้า ๆ ก่อนเขียนคำสั้น ๆ บนกระดาษ คนส่งสารกอดห่อผ้าไว้แน่นและเจ้าของขบวนยังไม่กล้ามองหน้าใคร ความเงียบทำให้ทุกลมหายใจมีน้ำหนักพอจะได้ยิน. ".repeat(2);
+    const payload = (narration: string[]) => ({ choices: [{ message: { content: JSON.stringify({ sceneTitle: "รอยหมึกที่ด่าน", narration, nextChoices: ["ยื่นเอกสาร", "หาพยาน", "ถอยไปตั้งหลัก"], memory: { title: "ชื่อที่ถูกจด", detail: "ผู้คุมจดชื่อของอากิฮิสะไว้", tone: "vermilion" }, missionNote: "ด่านเริ่มตรวจเข้มขึ้น", historicalFence: "ฉากนี้เป็น fiction ของแคมเปญ", historicalStatus: "campaign-fiction" }) } }] });
+    const callsBefore = mocks.invokeLLM.mock.calls.length;
+    mocks.invokeLLM.mockResolvedValueOnce(payload([goodParagraph, goodParagraph]));
+    mocks.invokeLLM.mockResolvedValueOnce(payload([goodParagraph, goodParagraph, goodParagraph]));
+    const result = await resolveWithGM({ language: "th", context, action: "ข้าจะผ่านด่าน", roll: { outcome: "failure_with_consequence", total: 8, difficulty: 20, summary: "ด่านปฏิเสธ", consequence: "ชื่อถูกจด" } });
+    expect(result.narration).toHaveLength(3);
+    expect(mocks.invokeLLM.mock.calls).toHaveLength(callsBefore + 2);
+    expect(String(mocks.invokeLLM.mock.calls[callsBefore + 1]?.[0]?.messages?.[1]?.content ?? "")).toContain("RETRY REQUIRED");
+  });
+
+  it("rejects mechanics that leak through player-facing memory and mission fields", async () => {
+    const goodParagraph = "ฝนค้างอยู่บนชายคา ผู้คุมด่านจุ่มพู่กันลงในหมึกและกดปลายพู่กันบนกระดาษ คนส่งสารกอดห่อผ้าไว้แน่นขณะที่เจ้าของขบวนหลบตา ไม่มีใครกล้าขยับก่อนคำสั้น ๆ ของผู้คุมจะตัดผ่านความเงียบ. ".repeat(2);
+    const payload = (memoryDetail: string) => ({ choices: [{ message: { content: JSON.stringify({ sceneTitle: "รอยหมึกที่ด่าน", narration: [goodParagraph, goodParagraph, goodParagraph], nextChoices: ["ยื่นเอกสาร", "หาพยาน", "ถอยไปตั้งหลัก"], memory: { title: "ชื่อที่ถูกจด", detail: memoryDetail, tone: "vermilion" }, missionNote: "ด่านเริ่มตรวจเข้มขึ้น", historicalFence: "ฉากนี้เป็น fiction ของแคมเปญ", historicalStatus: "campaign-fiction" }) } }] });
+    mocks.invokeLLM.mockResolvedValueOnce(payload("flaw ถูกกระตุ้นและทำให้การเจรจายากขึ้น"));
+    mocks.invokeLLM.mockResolvedValueOnce(payload("flaw ถูกกระตุ้นและทำให้การเจรจายากขึ้น"));
+    await expect(resolveWithGM({ language: "th", context, action: "ข้าจะผ่านด่าน", roll: { outcome: "failure_with_consequence", total: 8, difficulty: 20, summary: "ด่านปฏิเสธ", consequence: "ชื่อถูกจด" } })).rejects.toThrow("game-artifact");
+  });
+
   it("prioritizes Thai market, document, checkpoint, and war context cards", async () => {
     mocks.invokeLLM.mockResolvedValueOnce({ choices: [{ message: { content: JSON.stringify({ intentSummary: "Present the rice ledger at the checkpoint market.", stat: "mind", suggestedMastery: null, difficulty: 14, contextBonus: 0, contextReason: "The account can be checked.", risk: "The soldiers may hold the document.", confirmation: "You present the ledger.", historicalFence: "The historical context is limited to the supplied fact cards." }) } }] });
     const result = await analyzeWithGM({ action: "ข้าจะยื่นบัญชีข้าวที่ตลาดหน้าด่านให้เสมียนดู ก่อนทหารจะตรวจตรา", language: "th", context });

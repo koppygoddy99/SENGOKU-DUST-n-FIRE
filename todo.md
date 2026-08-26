@@ -324,3 +324,5 @@
 - [x] เปลี่ยนเมนูย่อย Chronicle เป็น Story Records / บันทึกเรื่องราว พร้อมเก็บร้อยแก้วเต็มหนึ่ง record ต่อฉากโดยไม่ปนผลทอยหรือค่าสกิล
 - [x] ทำ playtest โรนินด้วย Character Creator, deterministic engine และ AI GM prompt ใน repository แบบโปร่งใส
 - [x] แก้ JSON schema ของ AI GM analysis ที่ upstream ปฏิเสธ enum ตัวเลขใน `flawBonus` และเพิ่ม regression
+- [x] รีไฟน์ร้อยแก้ว AI GM ภาษาไทยตาม sengoku-novelizer และเพิ่มตัวกรองคำ/วัตถุ/จังหวะสมัยใหม่ก่อนแสดงผล
+- [x] เพิ่ม retry จำกัดครั้งเมื่อ AI GM คืน narration ไม่ครบสามย่อหน้าหรือไม่ผ่าน quality gate
