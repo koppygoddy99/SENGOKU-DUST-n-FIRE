@@ -107,7 +107,7 @@ Context และ Mastery ไม่ลด DN แบบลบล้างเด�
 
 Manual Save, Auto Save, Load Game และ Chronicle ต้องอ้างอิงแคมเปญที่เลือกอยู่ ไม่ปนประวัติของแคมเปญอื่น การเล่น Local Trial จึงดำเนินต่อได้แม้บริการ AI หรือเซิร์ฟเวอร์ไม่ตอบ
 
-ชุดอาชีพเริ่มต้น 10 แบบ, ภารกิจแรก, Mastery, สัมภาระ, สถานะเริ่มต้น และภูมิหลังตัวละครสองข้อที่ไม่เพิ่มแต้ม อ่านได้ที่ [`docs/game-design/starter-occupations-th.md`](docs/game-design/starter-occupations-th.md). ผังเทคนิคตั้งแต่กดทอยจน Local Save บันทึกผล อ่านได้ที่ [`docs/technical/one-turn-backend-flow-th.md`](docs/technical/one-turn-backend-flow-th.md). Contract ของ Main Thread/Side Leads, canon consistency, offline yearly catalog และ historical date gate อ่านได้ที่ [`docs/technical/gm-canon-mission-timeline-contract-th.md`](docs/technical/gm-canon-mission-timeline-contract-th.md).
+ชุดอาชีพเริ่มต้น 10 แบบ, ภารกิจแรก, Mastery, สัมภาระ, สถานะเริ่มต้น และภูมิหลังตัวละครสองข้อที่ไม่เพิ่มแต้ม อ่านได้ที่ [`docs/game-design/starter-occupations-th.md`](docs/game-design/starter-occupations-th.md). ผังเทคนิคตั้งแต่กดทอยจน Local Save บันทึกผล อ่านได้ที่ [`docs/technical/one-turn-backend-flow-th.md`](docs/technical/one-turn-backend-flow-th.md). Contract ของ Main Thread/Side Leads, canon consistency, offline yearly catalog และ historical date gate อ่านได้ที่ [`docs/technical/gm-canon-mission-timeline-contract-th.md`](docs/technical/gm-canon-mission-timeline-contract-th.md). รายงาน coverage, source hierarchy และช่องว่างที่ catalog ไม่ยอมแต่งเติม อ่านได้ที่ [`docs/research/sengoku-timeline-coverage-audit-th.md`](docs/research/sengoku-timeline-coverage-audit-th.md).
 
 ## AI GM และ historical guardrails
 
@@ -207,6 +207,7 @@ Repository นี้ใช้ `main` เป็น branch หลัก และ 
 | [`docs/team-work-status-2026-08-21-th.md`](docs/team-work-status-2026-08-21-th.md) | ต้องการสถานะตาม workflow ทีมผลิตเกม |
 | [`docs/team-handbooks/09-backend-systems-handbook-th.md`](docs/team-handbooks/09-backend-systems-handbook-th.md) | ต้องการขอบเขต server contracts, persistence, AI GM integration, asset delivery และ observability ของ Team 8 |
 | [`docs/technical/gm-canon-mission-timeline-contract-th.md`](docs/technical/gm-canon-mission-timeline-contract-th.md) | ต้องการข้อจำกัด Main Thread/Side Leads, canon consistency, offline historical catalog และ date gate ของ GM AI |
+| [`docs/research/sengoku-timeline-coverage-audit-th.md`](docs/research/sengoku-timeline-coverage-audit-th.md) | ต้องการตัวเลข coverage, source audit, date precision และช่องว่างที่ยังห้าม GM AI สร้างข้อมูลขึ้นเอง |
 
 ## สถานะปัจจุบันและงานที่ยังไม่ปิด
 

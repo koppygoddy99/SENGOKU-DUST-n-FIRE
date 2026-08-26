@@ -40,4 +40,11 @@ describe("historical timeline boundary", () => {
     expect(confirmed.dateGate.kind).toBe("player-confirmed");
     expect(confirmed.exactRecords.map((entry) => entry.id)).toContain("1570-anegawa");
   });
+
+  it("covers every canonical province and island with a cited record while preserving exact-date requirements", () => {
+    const canonicalKeys = [...SENGOKU_66_PROVINCE_IDS, ...SENGOKU_ISLAND_PROVINCE_IDS];
+    expect(canonicalKeys.every((key) => HISTORICAL_TIMELINE.some((record) => record.regionKeys.includes(key)))).toBe(true);
+    expect(HISTORICAL_TIMELINE.every((record) => record.source.label.length > 0 && record.source.url.startsWith("https://"))).toBe(true);
+    expect(HISTORICAL_TIMELINE.filter((record) => record.precision === "exact-date").every((record) => record.month && record.day)).toBe(true);
+  });
 });

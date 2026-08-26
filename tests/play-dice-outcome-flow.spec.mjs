@@ -26,26 +26,17 @@ test("Play Scene retains the visible two-dice rolling stage even when reduced mo
     await expect(page.getByText(/how this result was built/i)).toBeVisible();
     await expect(page.getByRole("button", { name: /record this result/i })).toBeVisible();
 
-    const firstDieBeforeMomentum = await page.getByTestId("dice-one").innerText();
-    const secondDieBeforeMomentum = await page.getByTestId("dice-two").innerText();
-    const totalBeforeMomentum = Number(await page.locator(".play-dice-result__formula-verdict strong").innerText());
-    await expect(page.getByLabel(/momentum source/i)).toBeVisible();
-    await expect(page.getByLabel(/momentum source/i)).toContainText(/focus|ใจมั่น/i);
-    await page.getByRole("button", { name: /spend momentum/i }).click();
+    // Momentum was deliberately removed from the current ruleset. The decision
+    // window must therefore expose the settled formula and record action without
+    // offering a post-roll modifier that could alter the inspected result.
     await expect(page.getByTestId("roll-formula")).toBeVisible();
-    await expect(page.getByTestId("dice-one")).toHaveText(firstDieBeforeMomentum);
-    await expect(page.getByTestId("dice-two")).toHaveText(secondDieBeforeMomentum);
-    await expect(page.getByText(/momentum/i).last()).toBeVisible();
-    await expect(page.getByTestId("roll-formula")).toContainText(/focus|ใจมั่น/i);
-    await expect(page.locator(".play-dice-result__formula-verdict strong")).toHaveText(String(totalBeforeMomentum + 2));
+    await expect(page.getByRole("button", { name: /spend momentum/i })).toHaveCount(0);
 
     await page.getByRole("button", { name: /record this result/i }).click();
     await expect(page.getByTestId("narrative-outcome-draft")).toBeVisible();
-    await expect(page.getByRole("button", { name: /view full outcome/i })).toBeVisible({ timeout: 5_000 });
-    await page.getByRole("button", { name: /view full outcome/i }).click();
-    await expect(page.getByTestId("narrative-outcome")).toBeVisible();
-    await expect(page.getByTestId("outcome-roll-breakdown")).toBeVisible();
-    await expect(page.getByText(/possible next approaches/i)).toBeVisible();
+    await expect(page.getByText(/story result/i)).toBeVisible();
+    await expect(page.getByRole("button", { name: /continue playing/i })).toBeVisible({ timeout: 5_000 });
+    await page.getByRole("button", { name: /continue playing/i }).click();
     await expect(page.locator("#play-intent-field")).toBeVisible();
     await page.locator("#play-intent-field").fill("I will carry the reply into the night.");
     await expect(page.getByRole("button", { name: /set this intention/i })).toBeEnabled();

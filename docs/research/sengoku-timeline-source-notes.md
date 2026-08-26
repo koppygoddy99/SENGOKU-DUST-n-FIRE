@@ -163,3 +163,25 @@ The open dataset is credited as **藤木久志 編『日本中世気象災害史
 | 1578-07 / month | harima + hoki | Tottori archive dates the fall of Kōzuki Castle in July 1578 and records Hino figures among the Amago force there. | Kōzuki is in Harima; Hōki is an actor-origin connection, not the battle location. |
 
 The Tottori material is published by the **Tottori Prefectural Archives** and cites underlying documents and editions. The Yasugi article is a local tourism overview and forbids copying its prose, so catalog text must be independently paraphrased and source-labelled.
+
+## Nagato record from Yamaguchi Prefectural cultural-property timeline
+
+Yamaguchi Prefecture’s cultural-property timeline provides a province-specific annual entry for **1586**, recording a land survey in Nagato. It separately lists a Suō survey in 1588, Mōri participation in the Kyūshū campaign in 1587, Korean dispatches in 1592 and 1597, and later domain events after 1600. The 1586 Nagato survey is the cleanest provincial card: it is year-precise, administrative rather than speculative, and does not require a player-facing political outcome. Source: [Yamaguchi Prefecture cultural property, Chōshū domain chronology](https://bunkazai.pref.yamaguchi.lg.jp/support/theme/tyousyuu/tnen.html).
+
+## Hida and Sado municipal records
+
+* **Hida, 1585:** Takayama City’s town museum states that after the 1585 Hida invasion, Kanamori Nagachika became daimyō of Hida. Its castle-history entry adds that Miki Yoshitsuna held Hirosé Castle during that invasion and fled to Kyoto after the castle fell. This supports a year-precision political/castle card, not a detailed battle reconstruction. Source: [Takayama City, Kanamori Nagachika sites](https://www.city.takayama.lg.jp/machihaku/1005305/1020397.html).
+* **Sado, mid-sixteenth century:** Sado City’s World Heritage page states that gold-and-silver mine development on the island became full-scale from the middle of the sixteenth century. The page does **not** give a campaign-year date, so the catalog must retain `year` precision only and must not claim an exact opening day or player access to mine wealth. Source: [Sado City, Sado Island Gold Mines](https://www.city.sado.niigata.jp/site/mine/).
+
+## Awaji and Shima municipal records
+
+* **Awaji, 1519 / 1581:** Sumoto City’s Awaji Cultural History Museum states that the Awaji Hosokawa guardian was destroyed by the Miyoshi in 1519, after which local warrior groups rose. It also dates a Hashiba invasion of Awaji to 1581, notes broad capitulation, and frames the claim that the island was pacified in three days as a traditional account now supplemented by evidence of preparations beginning about half a year earlier. Catalog copy must preserve the difference between the museum’s documented date and the traditional-duration claim. Source: [Awaji Cultural History Museum, Shirasu Castle](https://awajishimamuseum.com/shirasujo/).
+* **Shima, 1600:** Toba City dates Kuki Yoshitaka (born in Shima) to 1542–1600, identifies him as a naval leader for Oda Nobunaga and Toyotomi Hideyoshi who rose to rule Shima, and records his alignment with the western side at Sekigahara and death after its defeat. This is year-level provincial context; it does not justify a player naval command. Source: [Toba City, Kuki Yoshitaka and the Kuki navy](https://www.city.toba.mie.jp/isan/7686.html).
+
+## Tango record from Maizuru and Miyazu local-history pages
+
+Maizuru City’s school historical material dates the fall of Tatebe Castle, the base of the Isshiki line in Tango, to **Tenshō 6 (1578)** after defeat by Hosokawa and Akechi forces. A Miyazu city-led historical promotion page independently records the Hosokawa entry into Tango in **1580** and construction/urban development of Miyazu Castle. Either is suitable as a year-precision provincial card; the catalog uses the 1578 castle fall because it is a direct conflict transition and avoids claims about how all of Tango was governed afterward. Sources: [Maizuru Municipal Yuragawa Elementary School](https://yuragawa-maizuru.edumap.jp/tiiki) and [Miyazu City-led Garasha promotion council](https://www.amanohashidate.jp/garasha/).
+
+## Iki record from Nagasaki Prefectural cultural-property database
+
+Nagasaki Prefecture’s cultural-property database dates the completion of Katsumoto Castle on Iki to **1591**. It identifies the castle as a logistics base built for Hideyoshi’s Korea campaigns, reports that construction took about four months, and states that the site was dismantled after the campaign period. The catalog may use the 1591 completion as provincial infrastructure context, but must never turn that fact into a player command role, a ship, or a supply reward. Source: [Nagasaki Prefecture Cultural Property Database, Katsumoto Castle ruins](https://www.pref.nagasaki.jp/bunkadb/index.php/view/532).

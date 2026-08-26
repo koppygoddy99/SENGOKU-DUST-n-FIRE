@@ -345,3 +345,4 @@
 - [x] เพิ่ม validator/regression สำหรับ 66 แคว้น ความครบถ้วนของปี, citations, date precision, player boundary และ runtime offline lookup
 - [x] ถอด portrait NPC ขนาดใหญ่ทั้งสี่ออกจาก repository ตามอนุญาต และคงหน้า Relationships ในโหมดไอคอน/การ์ด
 - [x] ตรวจ regression หลังถอด portrait แล้วบันทึก checkpoint และซิงก์ GitHub ของ GM canon/timeline milestone
+- [x] ขยาย offline timeline เป็น yearly ledger 1467–1615 พร้อม cited record ครบ 68 province/island keys, audit ที่ทำซ้ำได้ และรายงานข้อจำกัด coverage โดยไม่อ้างว่าเป็นข้อมูลละเอียดครบทุกปี/แคว้น
