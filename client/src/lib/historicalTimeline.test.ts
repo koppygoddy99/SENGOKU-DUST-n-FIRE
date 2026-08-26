@@ -30,6 +30,13 @@ describe("historical timeline boundary", () => {
     const mutsuTsunami = HISTORICAL_TIMELINE.find((record) => record.id === "1585-mutsu-tsunami-famine-report");
     expect(mutsuTsunami).toMatchObject({ kind: "disaster", year: 1585, precision: "exact-date", month: 10, day: 21, regionKeys: ["mutsu"] });
     expect(mutsuTsunami?.source.url).toContain("hi.u-tokyo.ac.jp");
+
+    const hitachiFamine = HISTORICAL_TIMELINE.find((record) => record.id === "1566-hitachi-famine");
+    expect(hitachiFamine).toMatchObject({ kind: "disaster", year: 1566, precision: "month", month: 8, regionKeys: ["hitachi"] });
+    expect(hitachiFamine?.day).toBeUndefined();
+
+    const nationalFrost = HISTORICAL_TIMELINE.find((record) => record.id === "1566-national-frost-famine-chronicle");
+    expect(nationalFrost).toMatchObject({ kind: "disaster", precision: "exact-date", month: 7, day: 5, regionKeys: [] });
   });
 
   it("maps the Saika/Sakai campaign context to Izumi without fabricating a territorial rule", () => {

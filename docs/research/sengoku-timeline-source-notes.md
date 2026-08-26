@@ -212,3 +212,17 @@ The University of Tokyo viewer’s page 415 exposes row-level Gregorian conversi
 | 1585-10-21 | mutsu | Tsunami and severe famine are listed in the same entry. | 陸奥; 加納家年代記; 石巻の歴史1 |
 
 These cards do not state a player route, named castle, loss, famine causation, or region-wide impact beyond their individual row. Source: [University of Tokyo Historiographical Institute, *Japanese Medieval Weather and Disaster History Chronology*, viewer page 415](https://www.hi.u-tokyo.ac.jp/collection/digitalgallery/disaster_events/?page=415&limit=30), CC BY 4.0.
+
+## CC BY disaster records: 1566 year-coverage batch
+
+The University of Tokyo viewer’s page 390 supplies a previously blank ledger year, **1566**, with row-level Gregorian conversion and regional metadata. The selected cards remain context-only and use the exact date only where the source row itself identifies a day. The Hitachi famine row identifies its Japanese date only to the eighth month, so its catalog card remains `month` precision rather than converting the viewer’s normalized Gregorian date into a civil day claim.
+
+| Catalog key | Source-bounded paraphrase | Original-source metadata shown by viewer |
+|---|---|---|
+| yamashiro-storm-flood | Rain, thunder, and major flooding in Yamashiro on 1566-07-04. | 山城; 永禄九年＜丙寅＞記; 続群書類従29下 |
+| national-frost-famine-chronicle | A chronicle reports frost, severe famine, and a mortality formula; catalog preserves this only as an attributed report. | 天下; 享禄以来年代記; 続群書類従29下 |
+| hitachi-famine | Famine is recorded at month precision. | 常陸; 東州雑記; 佐竹家旧記6 |
+| musashi-flooded-routes | Continuing rain and flood are associated with obstructed routes in the source letter. | 武蔵; 北条氏照書状; 群馬県史2322 |
+| yamato-water-damage | Several days of rain and water damage. | 大和; 多聞院日記1; 日本凶荒史考 |
+
+No card imports troop movement, an attributed death total, player travel, a named site, or an economic loss. Source: [University of Tokyo Historiographical Institute, *Japanese Medieval Weather and Disaster History Chronology*, viewer page 390](https://www.hi.u-tokyo.ac.jp/collection/digitalgallery/disaster_events/?page=390&limit=30), CC BY 4.0.
