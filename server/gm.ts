@@ -1,7 +1,8 @@
 import { z } from "zod";
 import { invokeLLM } from "./_core/llm";
 import { sengokuSocialFacts, type SengokuSocialFact } from "../shared/sengokuSocialFacts";
-import { narrativeQualityFlags, narrativeStylePrompt } from "../shared/narrativeStyle";
+import { narrativeStylePrompt } from "../shared/narrativeStyle";
+import { buildNarrativePromptPacket, evaluatePlayerFacingNarrative } from "../shared/narrativeRuntime";
 import { historicalBriefForCampaign } from "../client/src/lib/historicalTimeline";
 
 const languageSchema = z.enum(["en", "th"]);
@@ -187,20 +188,9 @@ function normalizeResolveCandidate(value: unknown) {
   };
 }
 
-function assertNarrationQuality(narration: string[], language: "en" | "th") {
-  const flags = narrativeQualityFlags(narration.join("\n"), language);
-  if (flags.length) throw new Error(`AI GM narration rejected by Narrative Style Contract: ${flags.join(", ")}`);
-}
-
 function assertPlayerFacingNarrativeQuality(response: z.infer<typeof resolveResultSchema>, language: "en" | "th") {
-  assertNarrationQuality([
-    response.sceneTitle,
-    ...response.narration,
-    ...response.nextChoices,
-    response.memory.title,
-    response.memory.detail,
-    response.missionNote,
-  ], language);
+  const evaluation = evaluatePlayerFacingNarrative(response, language);
+  if (evaluation.hardFail) throw new Error(`AI GM narration rejected by Narrative Style Contract: ${[...evaluation.flags, ...evaluation.issues].join(", ")}`);
 }
 
 type ContextForHistory = z.infer<typeof contextSchema>;
@@ -278,6 +268,7 @@ export async function analyzeWithGM(input: z.infer<typeof analyzeInputSchema>) {
 
 export async function resolveWithGM(input: z.infer<typeof resolveInputSchema>) {
   const history = historicalBrief(input.context, input.action);
+  const stylePacket = buildNarrativePromptPacket(input.language, `${input.action}\n${input.context.currentScene.title}\n${input.context.currentScene.summary}\n${input.context.currentScene.pressure}`);
   let lastError: unknown;
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
@@ -287,6 +278,8 @@ export async function resolveWithGM(input: z.infer<typeof resolveInputSchema>) {
         messages: [{ role: "system", content: systemRules }, { role: "user", content: `Narrate the resolved roll. The total, outcome, and consequence are final rules output; do not alter them.
 
 ${narrativeStylePrompt(input.language)}
+
+${stylePacket.prompt}
 
 Narrative standard for this response:
 - Return exactly 3 substantial prose paragraphs in narration. Each paragraph must be 120–1100 characters. Write roughly 500–1,800 Thai characters in total: vivid enough to read as a scene, but not a chapter.

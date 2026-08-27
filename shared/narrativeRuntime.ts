@@ -1,0 +1,165 @@
+import { narrativeQualityFlags, type NarrativeLanguage } from "./narrativeStyle";
+import { USER_APPROVED_NARRATIVE_GOLDEN_EXAMPLES } from "./narrativeGoldenExamples";
+
+/**
+ * Layer 1 — The stable, model-independent writing rules.  Golden examples may
+ * refine the voice, but never replace these disclosure and period boundaries.
+ */
+export const NARRATIVE_STYLE_BIBLE_V1 = {
+  version: "v1",
+  thai: [
+    "เขียนไทยกลางแบบนิยายในบุรุษที่สามใกล้ชิด; ให้ร่างกาย วัตถุ และการกระทำมาก่อนคำอธิบายนามธรรม",
+    "บทสนทนาสั้นและมีผู้พูดชัดเจน; น้ำเสียงแสดงฐานะ หน้าที่ ความระวัง หรือความคุ้นเคย",
+    "วัตถุและกริยาต้องร่วมสมัยกับฉาก; สิ่งไร้ชีวิตไม่คิด ตัดสิน หรือสั่งการแทนคน",
+    "ฉากหนึ่งต้องเห็นผลลัพธ์ที่จับต้องได้และแรงกดดันถัดไป โดยไม่สรุปสอนหรือบอกผู้เล่นว่าควรคิดอย่างไร",
+    "ให้ความเจ็บ ความเหนื่อย กลิ่น และรอยสกปรกมีผลต่อท่าทาง การตัดสินใจ และสายตาคนอื่นเมื่อ state ฉากรองรับ; อย่าใช้เป็นเครื่องประดับซ้ำ ๆ",
+    "ความขัดแย้งเกิดจากฐานะ หน้าที่ สิทธิ์ในการพูด และพยานที่ได้ยิน ไม่ใช่การตะโกนหรือคำขู่พร่ำเพรื่อ",
+    "เมื่อตัวละครระวังความลับ ให้แสดงผ่านการมองประตู ลดเสียง วางมือ หรือหลบสายตา มากกว่าบอกความคิดลับของคนอื่นตรง ๆ",
+  ],
+  english: [
+    "Use literary historical English with material detail and controlled cadence.",
+    "Let dialogue reveal rank, obligation, trade, or suspicion without faux archaism.",
+    "Keep the viewpoint limited to visible, heard, learned, or reasonably inferred facts.",
+    "Use modern literary English, never synthetic Elizabethan speech or Japanese honorifics not supplied by the scene.",
+    "Let injury, labor, public witness, and material objects change conduct when the supplied state supports them.",
+  ],
+  invariants: [
+    "Preserve the resolved event exactly; do not add a state change.",
+    "Never disclose rules, dice, stats, AI, prompts, private dossiers, or unsupported history.",
+    "Examples teach cadence and handling only. Never copy their names, facts, or plot into the scene.",
+  ],
+} as const;
+
+export type NarrativeExampleTag = "authority" | "merchant" | "commoner" | "ronin" | "artisan" | "document" | "travel" | "market" | "war" | "pressure" | "consequence" | "craft" | "water" | "injury" | "secrecy";
+
+export type NarrativeGoldenExample = {
+  id: string;
+  language: NarrativeLanguage;
+  tags: NarrativeExampleTag[];
+  text: string;
+  source: "foundation" | "user-approved";
+};
+
+/**
+ * Layer 2 — Foundation examples only. They are deliberately tagged as
+ * foundation so user-approved work can outrank them without a migration.
+ */
+export const NARRATIVE_GOLDEN_EXAMPLES: NarrativeGoldenExample[] = [
+  { id: "foundation-authority-mud", language: "th", tags: ["authority", "pressure", "consequence"], source: "foundation", text: "กันทาโร่มองรอยโคลนที่ชายเสื้ออยู่ครู่หนึ่งก่อนเอ่ยสั้น ๆ ว่า “แก้เรื่องที่ก่อไว้ แล้วค่อยมาพูดถึงคำขอโทษ” เขาไม่ได้ขยับเข้าใกล้ แต่คนฟังรู้จากน้ำหนักเสียงว่าทางเดิมจะไม่เปิดให้เดินซ้ำง่าย ๆ" },
+  { id: "foundation-merchant-cup", language: "th", tags: ["merchant", "market", "pressure"], source: "foundation", text: "โทคิจิขยับหอกพ้นเงาเสาแล้วหัวเราะเบา ๆ “เรื่องเงียบได้ ถ้าถ้วยเหล้าไม่เงียบก่อน” เขาไม่ได้ยื่นมือมารับคำ แต่ปล่อยให้ถ้วยสาเกค้างอยู่กลางเสื่อราวกับเงื่อนไขที่ยังไม่มีใครกล้าแตะ" },
+  { id: "foundation-craft-damp", language: "th", tags: ["craft", "war", "consequence"], source: "foundation", text: "มาซาคิจิใช้นิ้วลูบรอยร้าวที่ไม้พานท้าย “อย่าฝืนจุดชนวนตอนความชื้นยังติดอยู่ มันไม่ฟังความกล้าของใคร” เขาวางอาวุธลงบนผ้าแห้งและหันหลังให้คนที่ยังอยากเร่งมือ" },
+  { id: "foundation-guard-document", language: "th", tags: ["authority", "document", "ronin", "pressure"], source: "foundation", text: "ผู้คุมด่านจุ่มพู่กันลงในหมึกก่อนลากเส้นบนกระดาษ เขาไม่เงยหน้าขณะกล่าวว่า “ชื่อที่ลงไว้ ย่อมมีคนมาทวงคำรับรอง” โรนินตรงหน้าได้ยินเสียงปลายพู่กันครูดผ่านเส้นใยกระดาษชัดกว่าลมหายใจของตน" },
+  { id: "foundation-water-witness", language: "th", tags: ["water", "travel", "commoner", "pressure"], source: "foundation", text: "เรือท้องแบนเบียดตลิ่งจนไม้ด้านข้างครูดกับก้อนกรวด หญิงชราเก็บชายแขนเสื้อพ้นน้ำแล้วพึมพำว่า “คนเห็นเรือยามเช้า จำหน้าเจ้าของได้ง่ายกว่ารอยพาย” คำเตือนของนางเบา แต่คนพายกลับชะงักมือ" },
+];
+
+function tagScore(example: NarrativeGoldenExample, tags: NarrativeExampleTag[]): number {
+  const overlap = example.tags.filter((tag) => tags.includes(tag)).length;
+  const approved = example.source === "user-approved" ? 100 : 0;
+  return approved + overlap * 10;
+}
+
+/** Layer 3 — local, deterministic retrieval. It is intentionally fast and makes no model call. */
+export function selectNarrativeGoldenExamples(language: NarrativeLanguage, tags: NarrativeExampleTag[], limit = 2): NarrativeGoldenExample[] {
+  return [...USER_APPROVED_NARRATIVE_GOLDEN_EXAMPLES, ...NARRATIVE_GOLDEN_EXAMPLES]
+    .filter((example) => example.language === language)
+    .sort((left, right) => tagScore(right, tags) - tagScore(left, tags) || left.id.localeCompare(right.id))
+    .slice(0, Math.max(0, Math.min(limit, 2)));
+}
+
+export function narrativeTagsForScene(text: string): NarrativeExampleTag[] {
+  const value = text.toLowerCase();
+  const tags = new Set<NarrativeExampleTag>(["pressure", "consequence"]);
+  if (/(ผู้คุม|ด่าน|guard|checkpoint|เฝ้า|คำสั่ง)/.test(value)) tags.add("authority");
+  if (/(พ่อค้า|สินค้า|ตลาด|merchant|trade|coin|เหรียญ)/.test(value)) tags.add("merchant");
+  if (/(ชาวบ้าน|เด็ก|หญิงชรา|commoner|villager|farmer)/.test(value)) tags.add("commoner");
+  if (/(โรนิน|ronin|ไร้นาย)/.test(value)) tags.add("ronin");
+  if (/(เอกสาร|ตรา|จดหมาย|พู่กัน|หมึก|document|seal|letter|witness)/.test(value)) tags.add("document");
+  if (/(เรือ|น้ำ|สะพาน|ท่าเรือ|river|boat|port|sea)/.test(value)) tags.add("water");
+  if (/(เดินทาง|ถนน|ทางผ่าน|travel|road|route)/.test(value)) tags.add("travel");
+  if (/(อาวุธ|หอก|ปืน|กองทัพ|war|soldier|battle)/.test(value)) tags.add("war");
+  if (/(ช่าง|ไม้|เหล็ก|craft|workshop)/.test(value)) { tags.add("craft"); tags.add("artisan"); }
+  if (/(แผล|เจ็บ|เลือด|ผ้าพันแผล|injury|wound|blood|hurt)/.test(value)) tags.add("injury");
+  if (/(ลับ|ซ่อน|รอยสัก|ตราเก่า|ความลับ|secret|hide|rumor)/.test(value)) tags.add("secrecy");
+  return Array.from(tags);
+}
+
+export type NarrativePromptPacket = { tags: NarrativeExampleTag[]; exampleIds: string[]; prompt: string };
+
+/** Layer 4 — a provider-neutral prompt packet. The same string can be sent to GPT, Claude, or Gemini. */
+export function buildNarrativePromptPacket(language: NarrativeLanguage, sceneText: string): NarrativePromptPacket {
+  const tags = narrativeTagsForScene(sceneText);
+  const examples = selectNarrativeGoldenExamples(language, tags);
+  const rules = language === "th" ? NARRATIVE_STYLE_BIBLE_V1.thai : NARRATIVE_STYLE_BIBLE_V1.english;
+  const exampleBlock = examples.map((example, index) => `ตัวอย่างจังหวะ ${index + 1} (${example.id}): ${example.text}`).join("\n");
+  return {
+    tags,
+    exampleIds: examples.map((example) => example.id),
+    prompt: [
+      "MODEL-NEUTRAL NARRATIVE PACKET. These instructions outrank stylistic preference.",
+      "STYLE BIBLE:",
+      ...rules.map((rule) => `- ${rule}`),
+      "INVARIANTS:",
+      ...NARRATIVE_STYLE_BIBLE_V1.invariants.map((rule) => `- ${rule}`),
+      "GOLDEN EXAMPLES: demonstrate rhythm and handling only. Do not reuse their names, facts, dialogue, or plot.",
+      exampleBlock || "No example is available; follow the Style Bible without inventing a reference.",
+    ].join("\n"),
+  };
+}
+
+export type PlayerFacingNarrative = {
+  sceneTitle: string;
+  narration: string[];
+  nextChoices: string[];
+  memory: { title: string; detail: string };
+  missionNote: string;
+};
+
+export type NarrativeEvaluation = {
+  score: number;
+  hardFail: boolean;
+  flags: string[];
+  issues: string[];
+  dimensions: { prose: number; period: number; structure: number; choiceContinuity: number };
+};
+
+export type NarrativePromotionDecision = { promote: boolean; reason: string };
+
+/** Layer 7 — deterministic promotion rule for offline QA or a future AI judge. */
+export function decideNarrativePromotion(baseline: NarrativeEvaluation, candidate: NarrativeEvaluation): NarrativePromotionDecision {
+  if (candidate.hardFail) return { promote: false, reason: "candidate has a hard-fail quality violation" };
+  if (candidate.score <= baseline.score) return { promote: false, reason: "candidate does not exceed the approved baseline score" };
+  return { promote: true, reason: "candidate exceeds the approved baseline without a hard-fail" };
+}
+
+/**
+ * Layers 5 and 7 — synchronous acceptance gate and a repeatable lightweight
+ * rubric. It catches objective faults at runtime; subjective scoring remains a
+ * QA concern and is deliberately not a second model call during player turns.
+ */
+export function evaluatePlayerFacingNarrative(response: PlayerFacingNarrative, language: NarrativeLanguage): NarrativeEvaluation {
+  const playerText = [response.sceneTitle, ...response.narration, ...response.nextChoices, response.memory.title, response.memory.detail, response.missionNote].join("\n");
+  const flags = narrativeQualityFlags(playerText, language);
+  const issues: string[] = [];
+  if (response.narration.length !== 3) issues.push("narration must contain exactly three paragraphs");
+  if (response.narration.some((paragraph) => paragraph.trim().length < 120)) issues.push("each narration paragraph must have at least 120 characters");
+  if (response.nextChoices.length !== 3) issues.push("next choices must contain exactly three actions");
+  if (response.nextChoices.some((choice) => choice.trim().length < 2)) issues.push("every next choice must be actionable");
+  if (language === "th") {
+    const letters = playerText.replace(/[^A-Za-zก-๙]/g, "");
+    const thaiLetters = (letters.match(/[ก-๙]/g) ?? []).length;
+    if (letters.length > 0 && thaiLetters / letters.length < 0.55) issues.push("Thai player-facing prose contains too little Thai text");
+  }
+  const hardFail = flags.length > 0 || issues.length > 0;
+  const structure = Math.max(0, 25 - (issues.filter((issue) => issue.includes("narration") || issue.includes("choice")).length * 12));
+  const period = flags.includes("period-anachronism") || flags.includes("modernism") ? 0 : 25;
+  const prose = flags.includes("game-artifact") || flags.includes("faux-archaic") ? 0 : 25;
+  const choiceContinuity = response.nextChoices.length === 3 && response.nextChoices.every((choice) => choice.trim().length >= 2) ? 25 : 0;
+  return { score: Math.max(0, prose + period + structure + choiceContinuity), hardFail, flags, issues, dimensions: { prose, period, structure, choiceContinuity } };
+}
+
+/** Layer 6 — safe fallback policy. The client retains its deterministic local prose writer as the actual fallback. */
+export const NARRATIVE_SAFE_FALLBACK_POLICY = {
+  retries: 1,
+  runtime: "local deterministic prose only",
+  neverDo: ["invent state changes", "reveal private dossier", "render rejected AI prose"],
+} as const;
