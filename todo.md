@@ -332,6 +332,7 @@
 - [ ] ทำสิบรอบการรีไฟน์ร้อยแก้ว AI GM ตาม sengoku-novelizer พร้อม rubric, corpus และรายงานก่อน–หลัง
 - [ ] รันสิบรอบผ่าน server-side LLM helper หลัง direct proxy ตอบ 412 โดยไม่แก้ผลประเมินเอง
 - [x] พักการรีไฟน์สิบรอบไว้ และ push เฉพาะ Narrative Contract/quality gate ที่ทำเสร็จแล้วขึ้น GitHub
+<<<<<<< Updated upstream
 - [x] กำหนด GM AI ให้สร้างหรือยกเลิกภารกิจตามบริบทได้ โดย active ได้เพียงภารกิจหลักหนึ่งรายการและภารกิจเสริมไม่เกินสองรายการ
 - [x] ออกแบบ UI ภารกิจที่แยก Main Thread กับ Side Leads ชัดเจน แสดง capacity และไม่สร้างความรู้สึกว่าเป็น quest list แบบเกมทั่วไป
 - [x] คุม GM AI ให้อ้างเหตุการณ์จริงตามวันใน timeline อย่างเคร่งครัด โดยไม่บังคับให้กระทบผู้เล่นโดยตรง
@@ -362,3 +363,8 @@
 - [x] ปรับ New Campaign ให้เลือก era และอาชีพที่เข้ากับยุคเท่านั้น แล้วซ่อน freeform occupation, เมือง, ปีแคมเปญ และปีเกิดแบบ manual
 - [x] เพิ่ม seeded selection สำหรับ era, ปี, เมือง, อายุ และ opening-profile ID โดยคง legacy saves เดิมผ่าน optional campaign metadata
 - [x] เพิ่ม regression และ browser verification ของ era selection, hidden controls, save/load, Main Thread และ historical boundaries
+- [x] สร้าง Narrative Style Bible, Golden Examples, retrieval, model-neutral contract, validator, fallback และ evaluation harness โดยเก็บไว้ local ไม่ push
+- [x] อ่าน corpus นิยายที่ผู้ใช้แนบทั้งหกบท รีเซิทหลักภาษา/บทประพันธ์เซนโกคุ และเพิ่ม Golden Examples แบบ local-only
+- [x] ขยายเอกสารรีเซิทเชิงลึก ผูก Narrative Style pipeline เข้า AI GM อย่างเป็นทางการ และสร้าง log review สองชุดก่อน publish
+- [x] ปรับ local fallback ให้เป็นร้อยแก้วสามย่อหน้าที่ผ่าน Narrative Style gate ก่อนใช้เป็นทางสำรอง
+- [x] รวม commit Narrative pipeline เข้ากับ GitHub main ที่ขยับระหว่างทำงาน แล้วตรวจและ push ใหม่

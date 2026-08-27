@@ -54,6 +54,8 @@ describe("AI GM structured contracts", () => {
     expect(result.memory.tone).toBe("ochre");
     const request = mocks.invokeLLM.mock.calls.at(-1)?.[0];
     expect(String(request?.messages?.[1]?.content ?? "")).toContain("Return exactly 3 substantial prose paragraphs");
+    expect(String(request?.messages?.[1]?.content ?? "")).toContain("MODEL-NEUTRAL NARRATIVE PACKET");
+    expect(String(request?.messages?.[1]?.content ?? "")).toContain("GOLDEN EXAMPLES: demonstrate rhythm and handling only");
     expect(request?.outputSchema?.schema.properties.narration).toMatchObject({ type: "array", minItems: 3, maxItems: 3 });
   });
 

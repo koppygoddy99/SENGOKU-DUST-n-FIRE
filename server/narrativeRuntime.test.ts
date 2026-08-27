@@ -1,0 +1,28 @@
+import { describe, expect, it } from "vitest";
+import { buildNarrativePromptPacket, decideNarrativePromotion, evaluatePlayerFacingNarrative, selectNarrativeGoldenExamples } from "../shared/narrativeRuntime";
+
+const paragraph = (ending: string) => `อากิฮิสะยืนนิ่งอยู่ใต้ชายคาไม้ ฝนจากปลายฟางยังหยดลงบนดินชื้นข้างเท้าของเขา ผู้คุมเก็บกระดาษที่มีรอยหมึกเข้มไว้ในมือ ก่อนมองผ่านไหล่ของโรนินไปยังทางที่คนส่งสารเพิ่งเดินลับหาย ${ending}`;
+
+describe("Narrative runtime layers", () => {
+  it("retrieves at most two relevant user-approved examples and tells a model not to copy them", () => {
+    const examples = selectNarrativeGoldenExamples("th", ["authority", "document", "pressure"]);
+    expect(examples).toHaveLength(2);
+    expect(examples.map((example) => example.id)).toContain("user-daimyo-audience");
+    const packet = buildNarrativePromptPacket("th", "โรนินยื่นเอกสารให้ผู้คุมด่าน");
+    expect(packet.exampleIds).toContain("user-daimyo-audience");
+    expect(packet.prompt).toContain("Do not reuse their names, facts, dialogue, or plot");
+  });
+
+  it("accepts structured Thai prose and rejects anachronistic player-facing text", () => {
+    const valid = { sceneTitle: "รอยหมึกที่ด่าน", narration: [paragraph("ลมหายใจของคนข้างหลังจึงเบาลงโดยไม่ต้องมีผู้ใดเอ่ยคำ."), paragraph("ผู้คุมเอ่ยเพียงว่า “เดินต่อไปได้” แล้วปล่อยมือจากขอบโต๊ะช้า ๆ."), paragraph("หนังสือผ่านทางยังอยู่กับเขา และชื่อของอากิฮิสะย่อมไม่เงียบเหมือนก่อน.")], nextChoices: ["ตามพ่อค้าไปยังโรงเก็บสินค้า", "ขอพบผู้คุมอีกครั้ง", "หาคนที่เห็นการจดชื่อ"], memory: { title: "ชื่อถูกจดไว้ที่ด่าน", detail: "ผู้คุมเก็บหนังสือผ่านทางไว้และอนุญาตให้คนส่งสารเดินต่อ" }, missionNote: "ต้องหาหลักฐานหรือคนรับรองก่อนกลับมาทวงเอกสาร" };
+    expect(evaluatePlayerFacingNarrative(valid, "th").hardFail).toBe(false);
+    expect(evaluatePlayerFacingNarrative({ ...valid, narration: [paragraph("เสียงปากกาคลิกบนโต๊ะไม้"), ...valid.narration.slice(1)] }, "th").flags).toContain("period-anachronism");
+  });
+
+  it("promotes only a clean candidate that improves on the approved baseline", () => {
+    const baseline = { score: 78, hardFail: false, flags: [], issues: [], dimensions: { prose: 20, period: 20, structure: 20, choiceContinuity: 18 } };
+    expect(decideNarrativePromotion(baseline, { ...baseline, score: 84 }).promote).toBe(true);
+    expect(decideNarrativePromotion(baseline, { ...baseline, score: 84, hardFail: true }).promote).toBe(false);
+    expect(decideNarrativePromotion(baseline, { ...baseline, score: 78 }).promote).toBe(false);
+  });
+});
