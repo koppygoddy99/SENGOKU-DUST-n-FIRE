@@ -9,6 +9,7 @@ import { systemRouter } from "./_core/systemRouter";
 import { adminProcedure, protectedProcedure, publicProcedure, router } from "./_core/trpc";
 import { buildHistoricalTimeline, buildTimelineOperationsFacts } from "./timeline";
 import { analyzeRelationshipDay, relationshipAnalyzeInputSchema } from "./relationshipAnalyzer";
+import { isStarterProfileSelectionValid, selectServerStarterProfile } from "./starterProfiles";
 
 async function requireGMTrialCredit(userId: number) {
   const credits = await getUserTrialCredits(userId);
@@ -54,6 +55,9 @@ export const appRouter = router({
   }),
   timeline: router({
     forCampaign: publicProcedure.input(z.object({ year: z.number().int().min(1467).max(1615), region: z.string().min(1).max(80) })).query(({ input }) => buildHistoricalTimeline(input.year, input.region)),
+  }),
+  starter: router({
+    selectProfile: publicProcedure.input(z.object({ eraId: z.string().min(1).max(80), templateId: z.string().min(1).max(80), seed: z.number().int().min(1).max(2_147_483_647) }).refine((input) => isStarterProfileSelectionValid(input.eraId, input.templateId), { message: "Unknown or incompatible starter era and path" })).query(({ input }) => selectServerStarterProfile(input)),
   }),
   admin: router({
     overview: adminProcedure.query(() => buildAdminOverview()),

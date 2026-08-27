@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { SengokuIcon } from "@/components/SengokuIcon";
 import { localized } from "@/lib/localization";
 import { trpc } from "@/lib/trpc";
-import { STATS, activeMainMission, applyMissionDirective, applyRoll, canonicalDifficulty, masteryLevelDetails, parseAction, resolveRoll, traitLevelDetails, traitProgressNeededForLevel, traitValueForRoll, visibleSideLeads, xpNeededForMasteryLevel, type GameState, type RollPreview } from "@/lib/game";
+import * as game from "@/lib/game";
 import "./playScene.css";
 import "./playSceneIntent.css";
 import "./playSceneProgression.css";
@@ -12,6 +12,9 @@ import "./playSceneTwoColumn.css";
 
 type Language = "en" | "th";
 type PlayDestination = "home" | "log" | "save" | "load";
+type GameState = game.GameState;
+type RollPreview = game.RollPreview;
+const { STATS, activeMainMission, applyMissionDirective, applyRoll, canonicalDifficulty, masteryLevelDetails, parseAction, resolveRoll, traitLevelDetails, traitProgressNeededForLevel, traitValueForRoll, visibleSideLeads, xpNeededForMasteryLevel } = game;
 type OutcomeRecord = ReturnType<typeof resolveRoll>;
 export const ROLL_ANIMATION_MS = 4000;
 export const OUTCOME_WORD_CADENCE_MS = 44;

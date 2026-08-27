@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   creditsQuery: vi.fn(() => ({ data: undefined, refetch: vi.fn() })),
+  starterSelectProfile: vi.fn((): { data: unknown; isLoading?: boolean } => ({ data: undefined, isLoading: false })),
   gmAnalyzeMutate: vi.fn(),
   gmResolveMutate: vi.fn(),
   spendCreditMutate: vi.fn(),
@@ -22,7 +23,7 @@ mocks.relationshipAnalyze.mockReturnValue({ mutateAsync: mocks.relationshipAnaly
 
 vi.mock("@/_core/hooks/useAuth", () => ({ useAuth: () => ({ user: { name: "UI Tester" }, loading: false, isAuthenticated: true }) }));
 vi.mock("@/const", () => ({ startLogin: vi.fn() }));
-vi.mock("@/lib/trpc", () => ({ trpc: { profile: { credits: { useQuery: mocks.creditsQuery }, spendCredit: { useMutation: mocks.spendCredit } }, gm: { analyze: { useMutation: mocks.gmAnalyze }, resolve: { useMutation: mocks.gmResolve } }, relationships: { analyzeDay: { useMutation: mocks.relationshipAnalyze } } } }));
+vi.mock("@/lib/trpc", () => ({ trpc: { profile: { credits: { useQuery: mocks.creditsQuery }, spendCredit: { useMutation: mocks.spendCredit } }, starter: { selectProfile: { useQuery: mocks.starterSelectProfile } }, gm: { analyze: { useMutation: mocks.gmAnalyze }, resolve: { useMutation: mocks.gmResolve } }, relationships: { analyzeDay: { useMutation: mocks.relationshipAnalyze } } } }));
 
 import Home from "./Home";
 import { createSaikaSafehouseDemo } from "../lib/game";
@@ -55,6 +56,7 @@ describe("UI Preview click flow", () => {
     window.localStorage.clear();
     window.history.replaceState({}, "", "/");
     vi.clearAllMocks();
+    mocks.starterSelectProfile.mockReturnValue({ data: undefined, isLoading: false });
     await act(async () => {
       await Promise.all([
         import("@/pages/CampaignsView"),
@@ -151,15 +153,20 @@ describe("UI Preview click flow", () => {
 
   it("shows the full character confirmation dossier before a Local Save begins", () => {
     window.history.replaceState({}, "", "/?review=start");
+    mocks.starterSelectProfile.mockReturnValue({ data: { id: "unification-campaigns-daimyo_attendant-2", year: 1569, region: "Omi", location: "อะซุจิ แคว้นโอมิ", origin: "อะซุจิ แคว้นโอมิ · เส้นทางงานของครอบครัว", variation: 2 }, isLoading: false });
     render(<Home />);
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+    expect(screen.queryByLabelText("Origin")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
     expect(screen.getByText("WHO YOU ARE")).toBeTruthy();
     expect(screen.getByText("FIRST MISSION")).toBeTruthy();
     expect(screen.getByText("ALL STARTING MASTERIES")).toBeTruthy();
     expect(screen.getByText("CARRIED GEAR")).toBeTruthy();
     expect(screen.getByText("CHARACTER BACKGROUND")).toBeTruthy();
+    expect(screen.getByText(/อะซุจิ แคว้นโอมิ · เส้นทางงานของครอบครัว/)).toBeTruthy();
+    expect(screen.getAllByText("1569").length).toBeGreaterThan(0);
+    expect(mocks.starterSelectProfile).toHaveBeenCalled();
   });
 
   it("lists campaign records from Chronicle and restores the selected campaign into the Story group", async () => {

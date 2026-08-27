@@ -71,6 +71,17 @@ describe("starter occupation templates", () => {
     expect(first.missions[0]?.request).not.toEqual(second.missions[0]?.request);
   });
 
+  it("gives every starter path three distinct hidden fictional opening profiles", () => {
+    for (const template of STARTER_TEMPLATES) {
+      const openings = [0, 1, 2].map((selectionSeed) => createGameState(
+        { id: `${template.id}-${selectionSeed}`, title: "Opening profiles", year: 1578, season: "Summer" as const, region: template.compatibleRegions[0], location: template.start, selectionSeed, warShadow: 3, day: 1 },
+        draftFor(template.id),
+      ).missions[0]!);
+      expect(new Set(openings.map((mission) => mission.title)).size).toBe(3);
+      expect(openings.every((mission) => mission.request.length > 300 && mission.request.includes("เรื่องสมมติของแคมเปญ"))).toBe(true);
+    }
+  });
+
   it("keeps two answered character-background records without changing occupation base stats", () => {
     const template = STARTER_TEMPLATES.find((entry) => entry.id === "village_scribe")!;
     const draft = draftFor("village_scribe", {
@@ -89,6 +100,7 @@ describe("starter occupation templates", () => {
     expect(state.character.social).toEqual(template.social);
     expect(state.character.resources).toEqual(template.resources);
     expect(state.character.inventory.map((item) => item.id)).toEqual(template.inventory.map((item) => item.id));
-    expect(state.missions[0]?.title).toBe(template.mission.title);
+    expect(state.missions[0]?.title).toEqual(expect.any(String));
+    expect(state.missions[0]?.title.length).toBeGreaterThan(0);
   });
 });

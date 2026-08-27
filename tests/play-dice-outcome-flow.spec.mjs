@@ -44,3 +44,37 @@ test("Play Scene retains the visible two-dice rolling stage even when reduced mo
     await browser.close();
   }
 });
+
+test("New Campaign assigns a hidden era profile and begins with one fictional Main Thread", async () => {
+  const browser = await chromium.launch({ executablePath: "/usr/bin/chromium", headless: true });
+  const page = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+
+  try {
+    await page.goto(`${baseUrl}/?review=start`, { waitUntil: "networkidle" });
+    await expect(page.getByText(/choose an era/i)).toBeVisible();
+    await page.getByRole("button", { name: /late unification/i }).click();
+    await page.getByRole("button", { name: "Continue" }).click();
+
+    await expect(page.getByText(/pick a starting path/i)).toBeVisible();
+    await expect(page.getByRole("button", { name: /village scribe/i })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /ลูกน้องคนเรือเมืองซาไก/ })).toBeVisible();
+    await page.getByRole("button", { name: /ลูกน้องคนเรือเมืองซาไก/ }).click();
+    await page.getByRole("button", { name: "Continue" }).click();
+
+    await expect(page.getByText(/give the character a stake/i)).toBeVisible();
+    await expect(page.getByLabel("Origin")).toHaveCount(0);
+    await page.getByLabel("Character name").fill("Hana");
+    await page.getByRole("button", { name: "Continue" }).click();
+
+    await expect(page.getByText("WHO YOU ARE")).toBeVisible();
+    await expect(page.getByText("CAMPAIGN START RECORD")).toBeVisible();
+    await expect(page.getByText(/assigning your opening/i)).toHaveCount(0);
+    await page.getByRole("button", { name: /begin with 50 credits/i }).click();
+
+    await expect(page.getByText(/campaign command/i)).toBeVisible();
+    await expect(page.getByText(/เรื่องสมมติของแคมเปญ/)).toBeVisible();
+    await expect(page.getByText(/side leads/i)).toHaveCount(0);
+  } finally {
+    await browser.close();
+  }
+});
