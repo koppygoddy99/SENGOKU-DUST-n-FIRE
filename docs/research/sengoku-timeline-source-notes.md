@@ -277,3 +277,7 @@ Viewer page 427 supports five bounded cards: Aizu flood, Echigo flood/water dama
 ## CC BY disaster records: 1595 blank-year batch
 
 Viewer page 428 supports four date-specific local cards: Yamashiro flood, Settsu flood-related dike damage, Mutsu flood, and Awa windstorm. The catalog excludes named infrastructure, repair, crop, and damage detail beyond the bounded weather/environment context. Source: [viewer page 428](https://www.hi.u-tokyo.ac.jp/collection/digitalgallery/disaster_events/?page=428&limit=30), CC BY 4.0.
+
+## Candidate evidence retained for the next 1599 batch
+
+The audit lists **1599** as blank. Viewer page 430 provides candidate year-level national famine/food-shortage rows, an exact-date Yamato rain report, and source rows for a late-March Kyoto storm. Selection must preserve the displayed Gregorian year, exclude food price/economic effects, and not infer a campaign-wide shortage or player hardship. Source: [viewer page 430](https://www.hi.u-tokyo.ac.jp/collection/digitalgallery/disaster_events/?page=430&limit=30), CC BY 4.0.
