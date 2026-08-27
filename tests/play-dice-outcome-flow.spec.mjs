@@ -34,8 +34,10 @@ test("Play Scene retains the visible two-dice rolling stage even when reduced mo
 
     await page.getByRole("button", { name: /record this result/i }).click();
     await expect(page.getByTestId("narrative-outcome-draft")).toBeVisible();
-    await expect(page.getByText(/story result/i)).toBeVisible();
-    await expect(page.getByRole("button", { name: /continue playing/i })).toBeVisible({ timeout: 5_000 });
+    await expect(page.getByText("STORY RESULT", { exact: true })).toBeVisible();
+    await expect(page.getByTestId("outcome-composer")).toBeVisible();
+    await expect(page.getByTestId("outcome-composer")).not.toBeVisible({ timeout: 6_000 });
+    await expect(page.getByRole("button", { name: /continue playing/i })).toBeVisible({ timeout: 15_000 });
     await page.getByRole("button", { name: /continue playing/i }).click();
     await expect(page.locator("#play-intent-field")).toBeVisible();
     await page.locator("#play-intent-field").fill("I will carry the reply into the night.");

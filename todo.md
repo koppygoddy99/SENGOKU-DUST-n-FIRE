@@ -362,3 +362,6 @@
 - [x] ปรับ New Campaign ให้เลือก era และอาชีพที่เข้ากับยุคเท่านั้น แล้วซ่อน freeform occupation, เมือง, ปีแคมเปญ และปีเกิดแบบ manual
 - [x] เพิ่ม seeded selection สำหรับ era, ปี, เมือง, อายุ และ opening-profile ID โดยคง legacy saves เดิมผ่าน optional campaign metadata
 - [x] เพิ่ม regression และ browser verification ของ era selection, hidden controls, save/load, Main Thread และ historical boundaries
+- [x] เพิ่มสถานะกำลังเรียบเรียงบน Narrative Outcome ด้วยสัญลักษณ์ขนาดใหญ่ราว 4–5 วินาที โดยซ่อนร้อยแก้วก่อนแสดงผล
+- [x] ให้ร้อยแก้ว Narrative Outcome ปรากฏแบบพิมพ์ทีละตัวหลังสถานะเรียบเรียง โดยคงผลทอยและ Local Save เดิม
+- [x] เพิ่ม regression และ browser verification สำหรับ animation/typing flow ของ Narrative Outcome แล้ว checkpoint และ sync GitHub main

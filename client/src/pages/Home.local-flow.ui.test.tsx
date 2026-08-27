@@ -27,7 +27,7 @@ vi.mock("@/lib/trpc", () => ({ trpc: { profile: { credits: { useQuery: mocks.cre
 
 import Home from "./Home";
 import { createSaikaSafehouseDemo } from "../lib/game";
-import { OUTCOME_WORD_CADENCE_MS, ROLL_ANIMATION_MS } from "../features/play/PlayScene";
+import { OUTCOME_CHARACTER_CADENCE_MS, OUTCOME_COMPOSING_MS, ROLL_ANIMATION_MS } from "../features/play/PlayScene";
 
 function openChronicle(child: "Story Records" | "Relationships") {
   const group = screen.getAllByRole("button", { name: "Chronicle" }).find((button) => button.hasAttribute("aria-expanded"));
@@ -48,7 +48,7 @@ function settleDiceStage() {
 }
 
 function finishNarrativeDraft() {
-  act(() => vi.advanceTimersByTime(OUTCOME_WORD_CADENCE_MS * 600));
+  act(() => vi.advanceTimersByTime(OUTCOME_COMPOSING_MS + OUTCOME_CHARACTER_CADENCE_MS * 1_200));
 }
 
 describe("UI Preview click flow", () => {
@@ -269,6 +269,15 @@ describe("UI Preview click flow", () => {
       expect(screen.getByTestId("narrative-outcome-draft")).toBeTruthy();
       expect(screen.getByTestId("play-outcome-scroll")).toBeTruthy();
       expect(screen.queryByTestId("narrative-outcome")).toBeNull();
+      expect(OUTCOME_COMPOSING_MS).toBe(4500);
+      expect(screen.getByTestId("outcome-composer")).toBeTruthy();
+      expect(screen.queryByText(/the ink is gathering/i)).toBeTruthy();
+      expect(screen.queryByText("กันทาโร่เดินนำ")).toBeNull();
+      act(() => vi.advanceTimersByTime(OUTCOME_COMPOSING_MS - 1));
+      expect(screen.getByTestId("outcome-composer")).toBeTruthy();
+      act(() => vi.advanceTimersByTime(1));
+      expect(screen.queryByTestId("outcome-composer")).toBeNull();
+      expect(screen.getByText(/▌/)).toBeTruthy();
       finishNarrativeDraft();
       expect(screen.getByRole("button", { name: /continue playing/i })).toBeTruthy();
       expect(screen.queryByText("SKILL LEDGER")).toBeNull();

@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, ChevronDown, FileText, Map, Save } from "lucide-react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { ArrowLeft, ArrowRight, Check, ChevronDown, FileText, LoaderCircle, Map, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SengokuIcon } from "@/components/SengokuIcon";
 import { localized } from "@/lib/localization";
@@ -17,7 +17,8 @@ type RollPreview = game.RollPreview;
 const { STATS, activeMainMission, applyMissionDirective, applyRoll, canonicalDifficulty, masteryLevelDetails, parseAction, resolveRoll, traitLevelDetails, traitProgressNeededForLevel, traitValueForRoll, visibleSideLeads, xpNeededForMasteryLevel } = game;
 type OutcomeRecord = ReturnType<typeof resolveRoll>;
 export const ROLL_ANIMATION_MS = 4000;
-export const OUTCOME_WORD_CADENCE_MS = 44;
+export const OUTCOME_COMPOSING_MS = 4500;
+export const OUTCOME_CHARACTER_CADENCE_MS = 14;
 
 function copy(language: Language, en: string, th: string) { return language === "en" ? en : th; }
 function localRules(uiPreviewMode: boolean, isAuthenticated: boolean) { return uiPreviewMode || !isAuthenticated; }
@@ -86,32 +87,40 @@ function DiceResult({ record, game, language, onAccept, onEdit, rolling, rollPha
 
 function TypewriterProse({ text, onComplete }: { text: string; onComplete?: () => void }) {
   const reduced = typeof window === "undefined" || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-  const words = text.match(/\S+\s*/g) ?? [text];
-  const [visibleWordCount, setVisibleWordCount] = useState(reduced ? words.length : 0);
+  const [visibleCharacterCount, setVisibleCharacterCount] = useState(reduced ? text.length : 0);
   useEffect(() => {
     if (reduced) {
-      setVisibleWordCount(words.length);
+      setVisibleCharacterCount(text.length);
       const readyTimer = window.setTimeout(() => onComplete?.(), 0);
       return () => window.clearTimeout(readyTimer);
     }
-    setVisibleWordCount(0);
+    setVisibleCharacterCount(0);
     let cursor = 0;
     const timer = window.setInterval(() => {
-      cursor = Math.min(words.length, cursor + 3);
-      setVisibleWordCount(cursor);
-      if (cursor >= words.length) { window.clearInterval(timer); onComplete?.(); }
-    }, OUTCOME_WORD_CADENCE_MS);
+      cursor = Math.min(text.length, cursor + 1);
+      setVisibleCharacterCount(cursor);
+      if (cursor >= text.length) { window.clearInterval(timer); onComplete?.(); }
+    }, OUTCOME_CHARACTER_CADENCE_MS);
     return () => window.clearInterval(timer);
-  }, [reduced, text]);
-  const visible = words.slice(0, visibleWordCount).join("");
-  return <p className="play-outcome-card__typed" aria-live="polite" aria-busy={visibleWordCount < words.length}>{visible}{visibleWordCount < words.length && <span aria-hidden="true">▌</span>}</p>;
+  }, [reduced, text, onComplete]);
+  const visible = text.slice(0, visibleCharacterCount);
+  return <p className="play-outcome-card__typed" aria-live="off" aria-busy={visibleCharacterCount < text.length}>{visible}{visibleCharacterCount < text.length && <span aria-hidden="true">▌</span>}</p>;
 }
 
 function OutcomeDraft({ record, language, pending, notice, onContinue }: { record: OutcomeRecord; language: Language; pending: boolean; notice: string; onContinue: () => void }) {
   const [complete, setComplete] = useState(false);
-  useEffect(() => setComplete(false), [record.narrative, pending]);
+  const [revealWindowOpen, setRevealWindowOpen] = useState(false);
+  const handleTypeComplete = useCallback(() => setComplete(true), []);
+  useEffect(() => {
+    setComplete(false);
+    setRevealWindowOpen(false);
+    const timer = window.setTimeout(() => setRevealWindowOpen(true), OUTCOME_COMPOSING_MS);
+    return () => window.clearTimeout(timer);
+  }, [record.id]);
+  useEffect(() => setComplete(false), [record.narrative]);
+  const isComposing = pending || !revealWindowOpen;
   const canContinue = !pending && complete;
-  return <section data-testid="narrative-outcome-draft" className="play-outcome-draft" aria-live="polite"><header><div><p className="play-scene__eyebrow">{copy(language, "THE PRICE OF THE ANSWER", "ราคาของคำตอบ")}</p><h2>{outcomeLabel(record.outcome)}</h2></div><span>{pending ? copy(language, "WRITING THE AFTERMATH", "กำลังร้อยเรียงผลที่ตามมา") : copy(language, "THE ACCOUNT IS READY", "บันทึกพร้อมแล้ว")}</span></header>{notice && <p className="play-scene__notice play-outcome-draft__notice">{notice}</p>}<div className="play-outcome-draft__status"><span>{pending ? copy(language, "STORY RESULT IN PROGRESS", "ผลเชิงเรื่องเล่า · กำลังร้อยเรียง") : copy(language, "THE INK HAS SETTLED", "หมึกในบันทึกหยุดนิ่งแล้ว")}</span><small>{pending ? copy(language, "The scene is being written before play returns to the next page.", "ฉากกำลังถูกเขียน ก่อนกลับไปเล่นในหน้าถัดไป") : copy(language, "Continue when you are ready; the next scene replaces the page you just resolved.", "เมื่อพร้อมให้เล่นต่อ ฉากใหม่จะเข้ามาแทนหน้าที่เพิ่งจบ")}</small></div><article className="play-outcome-draft__prose"><small>{copy(language, "STORY RESULT", "ผลเชิงเรื่องเล่า")}</small><TypewriterProse text={record.narrative} onComplete={() => setComplete(true)} /></article>{canContinue ? <div className="play-outcome-draft__action"><Button className="df-button df-button--primary" onClick={onContinue}>{copy(language, "CONTINUE PLAYING", "เล่นต่อ")} <ArrowRight size={17} /></Button></div> : <p className="play-outcome-draft__wait">{copy(language, "Continue becomes available after the last line is written.", "ปุ่มเล่นต่อจะพร้อมเมื่อเขียนบรรทัดสุดท้ายแล้ว")}</p>}</section>;
+  return <section data-testid="narrative-outcome-draft" className="play-outcome-draft" aria-live="polite"><header><div><p className="play-scene__eyebrow">{copy(language, "THE PRICE OF THE ANSWER", "ราคาของคำตอบ")}</p><h2>{outcomeLabel(record.outcome)}</h2></div><span>{isComposing ? copy(language, "WRITING THE AFTERMATH", "กำลังร้อยเรียงผลที่ตามมา") : copy(language, "THE ACCOUNT IS READY", "บันทึกพร้อมแล้ว")}</span></header>{notice && <p className="play-scene__notice play-outcome-draft__notice">{notice}</p>}<div className="play-outcome-draft__status"><span>{isComposing ? copy(language, "STORY RESULT IN PROGRESS", "ผลเชิงเรื่องเล่า · กำลังร้อยเรียง") : copy(language, "THE INK HAS SETTLED", "หมึกในบันทึกหยุดนิ่งแล้ว")}</span><small>{isComposing ? copy(language, "The account is arranging the consequence before the first line appears.", "บันทึกกำลังเรียบเรียงผลที่ตามมาก่อนอักษรบรรทัดแรกจะปรากฏ") : copy(language, "Continue when you are ready; the next scene replaces the page you just resolved.", "เมื่อพร้อมให้เล่นต่อ ฉากใหม่จะเข้ามาแทนหน้าที่เพิ่งจบ")}</small></div><article className="play-outcome-draft__prose" aria-busy={isComposing}><small>{copy(language, "STORY RESULT", "ผลเชิงเรื่องเล่า")}</small>{isComposing ? <div data-testid="outcome-composer" className="play-outcome-draft__composer" role="status"><LoaderCircle aria-hidden="true" /><strong>{copy(language, "The ink is gathering", "หมึกกำลังรวมถ้อยคำ")}</strong><span>{copy(language, "The story will appear one character at a time.", "เรื่องจะปรากฏทีละอักขระเมื่อพร้อม")}</span></div> : <TypewriterProse text={record.narrative} onComplete={handleTypeComplete} />}</article>{canContinue ? <div className="play-outcome-draft__action"><Button className="df-button df-button--primary" onClick={onContinue}>{copy(language, "CONTINUE PLAYING", "เล่นต่อ")} <ArrowRight size={17} /></Button></div> : <p className="play-outcome-draft__wait">{isComposing ? copy(language, "The record is still being composed.", "บันทึกยังอยู่ระหว่างการเรียบเรียง") : copy(language, "Continue becomes available after the last line is written.", "ปุ่มเล่นต่อจะพร้อมเมื่อเขียนบรรทัดสุดท้ายแล้ว")}</p>}</section>;
 }
 
 function OutcomeCard({ record, game, language, notice, onContinue, onMap, onChronicle, onUseSuggestion }: { record: OutcomeRecord; game: GameState; language: Language; notice: string; onContinue: () => void; onMap: () => void; onChronicle: () => void; onUseSuggestion: (suggestion: string) => void }) {
