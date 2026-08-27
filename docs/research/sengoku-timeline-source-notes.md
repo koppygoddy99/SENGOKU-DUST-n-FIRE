@@ -273,3 +273,7 @@ Three date-specific entries were selected: 3 September national water/drought re
 ## CC BY disaster records: 1594 blank-year batch
 
 Viewer page 427 supports five bounded cards: Aizu flood, Echigo flood/water damage, Kii windstorm, an attributed national windstorm report, and Edo rain/wind (mapped to Musashi). The Aizu row spans two dates; the catalog retains the first displayed date only as the safe exact-date anchor. The Echigo row is month-level. All casualty, crop, property, and campaign-effect detail is excluded. Source: [viewer page 427](https://www.hi.u-tokyo.ac.jp/collection/digitalgallery/disaster_events/?page=427&limit=30), CC BY 4.0.
+
+## CC BY disaster records: 1595 blank-year batch
+
+Viewer page 428 supports four date-specific local cards: Yamashiro flood, Settsu flood-related dike damage, Mutsu flood, and Awa windstorm. The catalog excludes named infrastructure, repair, crop, and damage detail beyond the bounded weather/environment context. Source: [viewer page 428](https://www.hi.u-tokyo.ac.jp/collection/digitalgallery/disaster_events/?page=428&limit=30), CC BY 4.0.
