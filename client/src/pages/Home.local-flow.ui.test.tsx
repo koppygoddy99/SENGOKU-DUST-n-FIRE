@@ -185,7 +185,7 @@ describe("UI Preview click flow", () => {
     openChronicle("Story Records");
     expect((await screen.findAllByText("เงาที่ท่าเรือคิอิ")).length).toBeGreaterThan(0);
     expect(screen.getByTestId("chronicle-campaign-scope").textContent).toContain("Ashes at the river gate");
-    fireEvent.click(screen.getByRole("button", { name: "Prepare" }));
+    fireEvent.click(screen.getByRole("button", { name: "Muster" }));
     fireEvent.click(screen.getByRole("button", { name: "This Market" }));
     expect((await screen.findByTestId("prepare-campaign-context")).textContent).toContain("Ashes at the river gate");
     expect(screen.getByTestId("prepare-campaign-context").textContent).toContain("1568");
@@ -309,9 +309,9 @@ describe("UI Preview click flow", () => {
     expect(records.every((record) => record.tagName === "ARTICLE")).toBe(true);
   });
 
-  it("routes the Prepare group through gear, market, services, obligations, and exchange history", async () => {
+  it("routes the Muster group through gear, market, services, obligations, and exchange history", async () => {
     render(<Home />);
-    fireEvent.click(screen.getByRole("button", { name: "Prepare" }));
+    fireEvent.click(screen.getByRole("button", { name: "Muster" }));
     ["Carried Gear", "This Market", "Services & Hands", "Leverage", "Bonds"].forEach((item) => expect(screen.getByRole("button", { name: item })).toBeTruthy());
     fireEvent.click(screen.getByRole("button", { name: "Carried Gear" }));
     expect(await screen.findByText("Carried slots")).toBeTruthy();
@@ -335,7 +335,7 @@ describe("UI Preview click flow", () => {
     expect(screen.getByText("OPEN AGREEMENTS")).toBeTruthy();
     expect(screen.getByTestId("campaign-reward-context")).toBeTruthy();
 
-    fireEvent.click(screen.getByRole("button", { name: "Prepare" }));
+    fireEvent.click(screen.getByRole("button", { name: "Muster" }));
     fireEvent.click(screen.getByRole("button", { name: "This Market" }));
     expect(screen.getByText("NEXT PROGRESS")).toBeTruthy();
     expect(screen.getByText(/: \d+\/\d+ Progress$/)).toBeTruthy();

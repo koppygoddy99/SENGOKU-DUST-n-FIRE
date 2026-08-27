@@ -12,21 +12,27 @@ describe("Campaign 1 navigation", () => {
     expect(html).not.toContain(">Campaign Command<");
   });
 
-  it("opens the Prepare group with its remaining campaign ledgers and marks the active child", () => {
+  it("opens the Muster group with its remaining campaign ledgers and marks the active child", () => {
     const html = renderToStaticMarkup(<CampaignNavigation campaignTitle="Ash over Kinokawa" language="en" page="localmarket" expanded onToggle={() => undefined} onOpen={() => undefined} />);
     expect(html).toContain('aria-expanded="true"');
-    ["Prepare", "Carried Gear", "This Market", "Services &amp; Hands", "Leverage", "Bonds"].forEach((item) => expect(html).toContain(`>${item}<`));
+    ["Muster", "Carried Gear", "This Market", "Services &amp; Hands", "Leverage", "Bonds"].forEach((item) => expect(html).toContain(`>${item}<`));
     expect(html).toContain("campaign-nav__items");
     expect(html).toContain("nav-item--child nav-item--active");
     expect(html).not.toContain(">Campaign Command<");
     expect(html).not.toContain(">Character Dossier<");
   });
 
+  it("uses ทรัพยากร as the Thai label for the Muster group", () => {
+    const html = renderToStaticMarkup(<CampaignNavigation campaignTitle="ขี้เถ้าเหนือคิโนกาวะ" language="th" page="market" expanded onToggle={() => undefined} onOpen={() => undefined} />);
+    expect(html).toContain(">ทรัพยากร<");
+    expect(html).not.toContain(">เตรียมตัว<");
+  });
+
   it("opens the Story group for the Character Dossier", () => {
     const html = renderToStaticMarkup(<CampaignNavigation campaignTitle="Ash over Kinokawa" language="en" page="character" expanded onToggle={() => undefined} onOpen={() => undefined} />);
     ["Story", "Campaign Command", "Play Scene", "Missions", "Character Dossier"].forEach((item) => expect(html).toContain(`>${item}<`));
     expect(html).toContain("nav-item--child nav-item--active");
-    expect(html).toContain(">Prepare<");
+    expect(html).toContain(">Muster<");
     expect(html).not.toContain(">Carried Gear<");
   });
 

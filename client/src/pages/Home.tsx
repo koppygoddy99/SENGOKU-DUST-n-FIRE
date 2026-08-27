@@ -141,7 +141,7 @@ const campaignNavGroups: CampaignNavGroup[] = [
     { id: "missions", en: "Missions", th: "ภารกิจ", icon: "compass" },
     { id: "character", en: "Character Dossier", th: "แฟ้มตัวละคร", icon: "character" },
   ] },
-  { id: "prepare", en: "Prepare", th: "เตรียมตัว", icon: "credit", items: [
+  { id: "prepare", en: "Muster", th: "ทรัพยากร", icon: "credit", items: [
     { id: "gear", en: "Carried Gear", th: "สัมภาระที่พก", icon: "character" },
     { id: "market", en: "This Market", th: "ตลาดพื้นที่นี้", icon: "credit" },
     { id: "services", en: "Services & Hands", th: "บริการและคนรับจ้าง", icon: "relation" },
