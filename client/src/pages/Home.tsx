@@ -113,10 +113,11 @@ function toGMContext(game: GameState) {
       title: game.currentScene.title,
       location: game.currentScene.location,
       summary: game.currentScene.body.join("\n\n"),
+      speaker: game.currentScene.speaker,
       pressure: game.currentScene.pressure,
       declaredChoices: game.currentScene.suggestedActions,
     },
-    activeMission: mission ? { title: mission.title, giver: mission.issuer, objective: mission.request, deadline: mission.deadline, reward: mission.reward } : undefined,
+    activeMission: mission ? { title: mission.title, giver: mission.issuer, issuerType: mission.issuerType, objective: mission.request, deadline: mission.deadline, reward: mission.reward } : undefined,
     mainThread: mission ? { id: mission.id, title: mission.title, giver: mission.issuer, objective: mission.request, pressure: mission.pressure, deadline: mission.deadline, reward: mission.reward, risk: mission.risk, canonTerms: mission.canon?.protectedTerms ?? [mission.issuer], challenge: mission.challenge ?? "ordinary" } : undefined,
     sideLeads: visibleSideLeads(game).map((entry) => ({ id: entry.id, title: entry.title, objective: entry.request, pressure: entry.pressure, deadline: entry.deadline })),
     socialState: {

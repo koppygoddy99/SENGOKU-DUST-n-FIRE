@@ -8,9 +8,15 @@ describe("Narrative runtime layers", () => {
     const examples = selectNarrativeGoldenExamples("th", ["authority", "document", "pressure"]);
     expect(examples).toHaveLength(2);
     expect(examples.map((example) => example.id)).toContain("user-daimyo-audience");
-    const packet = buildNarrativePromptPacket("th", "โรนินยื่นเอกสารให้ผู้คุมด่าน");
-    expect(packet.exampleIds).toContain("user-daimyo-audience");
+    const packet = buildNarrativePromptPacket("th", "พ่อค้ายืนบนเรือขณะเชือกขาดและหีบสินค้าเกือบตกน้ำ", { speaker: "เจ้าของขบวนสินค้า", speakerRole: "merchant", playerOccupation: "โรนิน" });
+    expect(packet.exampleIds).toContain("user-lived-in-action-ship");
+    expect(packet.exampleIds).toHaveLength(2);
     expect(packet.prompt).toContain("Do not reuse their names, facts, dialogue, or plot");
+    expect(packet.prompt).toContain("CHARACTER VOICE CONTRACT");
+    expect(packet.prompt).toContain("พ่อค้าพูดถึงของ เวลา เงิน หรือคนรับผิดที่กำลังอยู่ตรงหน้า");
+    expect(packet.prompt).toContain("โรนินเป็นผู้ตอบ");
+    expect(packet.prompt).toContain("อย่าทวนภาพที่ผู้บรรยายเพิ่งบอก");
+    expect(packet.prompt).toContain("หนึ่งหรือสองประโยคสั้น");
   });
 
   it("accepts structured Thai prose and rejects anachronistic player-facing text", () => {

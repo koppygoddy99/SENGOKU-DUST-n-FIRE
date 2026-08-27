@@ -28,9 +28,9 @@ export function withGMResponseTimeout<T>(operation: (signal: AbortSignal) => Pro
 const contextSchema = z.object({
   campaign: z.object({ title: z.string().max(120), year: z.number().int().min(1454).max(1616), season: z.string().max(20), region: z.string().max(80), location: z.string().max(160), warShadow: z.number().int().min(0).max(6), day: z.number().int().min(1).max(366), historicalDate: z.object({ month: z.number().int().min(1).max(12), day: z.number().int().min(1).max(31), source: z.literal("player-confirmed") }).optional() }),
   character: z.object({ name: z.string().max(100), occupation: z.string().max(120), origin: z.string().max(240), strengths: z.string().max(240), weakness: z.string().max(240), flaws: z.array(z.string().trim().min(2).max(240)).max(2).default([]), attributes: z.record(statSchema, z.number().int().min(1).max(10)), masteries: z.array(z.object({ name: z.string().max(100), level: z.number().int().min(0).max(5), source: z.string().max(180) })).max(10), background: z.array(z.object({ question: z.string().max(240), answer: z.string().max(500), tags: z.array(z.string().max(60)).max(6) })).max(2).optional() }),
-  currentScene: z.object({ title: z.string().max(160), location: z.string().max(160), summary: z.string().max(4000), pressure: z.string().max(300), declaredChoices: z.array(z.string().max(180)).max(6) }),
+  currentScene: z.object({ title: z.string().max(160), location: z.string().max(160), summary: z.string().max(4000), speaker: z.string().max(120).optional(), pressure: z.string().max(300), declaredChoices: z.array(z.string().max(180)).max(6) }),
   /** Retained only so Local Save/client versions from before thread migration still validate. */
-  activeMission: z.object({ title: z.string().max(160), giver: z.string().max(120), objective: z.string().max(500), deadline: z.string().max(160), reward: z.string().max(300) }).optional(),
+  activeMission: z.object({ title: z.string().max(160), giver: z.string().max(120), issuerType: z.enum(["commoner", "samurai", "merchant", "temple", "ruler"]).optional(), objective: z.string().max(500), deadline: z.string().max(160), reward: z.string().max(300) }).optional(),
   mainThread: z.object({ id: z.string().max(160), title: z.string().max(160), giver: z.string().max(120), objective: z.string().max(500), pressure: z.string().max(300), deadline: z.string().max(160), reward: z.string().max(300), risk: z.string().max(300), canonTerms: z.array(z.string().max(100)).max(8), challenge: z.enum(["ordinary", "elevated"]) }).optional(),
   sideLeads: z.array(z.object({ id: z.string().max(160), title: z.string().max(160), objective: z.string().max(500), pressure: z.string().max(300), deadline: z.string().max(160) })).max(2).default([]),
   socialState: z.object({ honor: z.number().int().min(0).max(6), influence: z.number().int().min(0).max(6), stain: z.number().int().min(0).max(6), rumors: z.array(z.string().max(200)).max(5), oaths: z.array(z.string().max(200)).max(5), debts: z.array(z.string().max(200)).max(5) }),
@@ -268,7 +268,11 @@ export async function analyzeWithGM(input: z.infer<typeof analyzeInputSchema>) {
 
 export async function resolveWithGM(input: z.infer<typeof resolveInputSchema>) {
   const history = historicalBrief(input.context, input.action);
-  const stylePacket = buildNarrativePromptPacket(input.language, `${input.action}\n${input.context.currentScene.title}\n${input.context.currentScene.summary}\n${input.context.currentScene.pressure}`);
+  const stylePacket = buildNarrativePromptPacket(
+    input.language,
+    `${input.action}\n${input.context.currentScene.title}\n${input.context.currentScene.summary}\n${input.context.currentScene.pressure}`,
+    { speaker: input.context.currentScene.speaker ?? input.context.activeMission?.giver, speakerRole: input.context.activeMission?.issuerType, playerOccupation: input.context.character.occupation },
+  );
   let lastError: unknown;
   for (let attempt = 0; attempt < 2; attempt += 1) {
     try {

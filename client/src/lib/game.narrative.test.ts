@@ -32,6 +32,18 @@ describe("narrative baseline", () => {
     expect(narrativeQualityFlags(result.narrative, "th")).toEqual([]);
   });
 
+  it("gives local fallback speakers a role-specific voice instead of one generic rebuke", () => {
+    const merchantGame = createGameState(campaign, { ...draft, templateId: "ronin" });
+    const samuraiGame = createGameState(campaign, { ...draft, templateId: "arms_craftsworker" });
+    vi.spyOn(Math, "random").mockReturnValue(0.1);
+    const merchant = resolveRoll(parseAction("ข้าจะยื่นเอกสาร", merchantGame), merchantGame, false);
+    const samurai = resolveRoll(parseAction("ข้าจะตรวจรอยบิ่น", samuraiGame), samuraiGame, false);
+    vi.restoreAllMocks();
+    expect(merchant.narrative).toContain("ของเสียไปเท่าใด");
+    expect(samurai.narrative).toContain("รอยนี้ต้องมีคนตรวจอีกครั้ง");
+    expect(merchant.narrative).not.toBe(samurai.narrative);
+  });
+
   it("keeps Reader Mode paragraphs separate", () => {
     expect(splitStoryParagraphs("ย่อหน้าเรื่องแรก\n\nย่อหน้าที่สอง\n\nย่อหน้าที่สาม")).toEqual(["ย่อหน้าเรื่องแรก", "ย่อหน้าที่สอง", "ย่อหน้าที่สาม"]);
   });

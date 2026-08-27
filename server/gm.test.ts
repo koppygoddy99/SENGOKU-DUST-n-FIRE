@@ -9,7 +9,7 @@ const context = {
   campaign: { title: "Test record", year: 1578, season: "Summer", region: "Mikawa", location: "River gate", warShadow: 3, day: 1 },
   character: { name: "Sato", occupation: "Ashigaru", origin: "River village", strengths: "Reads danger", weakness: "Owes a boatman", attributes: { body: 2, hand: 2, wit: 3, mind: 2, heart: 2 }, masteries: [{ name: "Watchful eye", level: 2, source: "Border service" }] },
   currentScene: { title: "Price of an answer", location: "River gate", summary: "A clerk holds the ledger.", pressure: "A witness is listening.", declaredChoices: ["Ask for time", "Offer a document"] },
-  activeMission: { title: "River passage", giver: "Boatman", objective: "Secure a safe passage", deadline: "Before dusk", reward: "A hidden route" },
+  activeMission: { title: "River passage", giver: "Boatman", issuerType: "merchant", objective: "Secure a safe passage", deadline: "Before dusk", reward: "A hidden route" },
   socialState: { honor: 2, influence: 1, stain: 0, rumors: [], oaths: [], debts: ["Boatman"] },
   recentMemories: [],
 };
@@ -56,6 +56,7 @@ describe("AI GM structured contracts", () => {
     expect(String(request?.messages?.[1]?.content ?? "")).toContain("Return exactly 3 substantial prose paragraphs");
     expect(String(request?.messages?.[1]?.content ?? "")).toContain("MODEL-NEUTRAL NARRATIVE PACKET");
     expect(String(request?.messages?.[1]?.content ?? "")).toContain("GOLDEN EXAMPLES: demonstrate rhythm and handling only");
+    expect(String(request?.messages?.[1]?.content ?? "")).toContain("CHARACTER VOICE CONTRACT");
     expect(request?.outputSchema?.schema.properties.narration).toMatchObject({ type: "array", minItems: 3, maxItems: 3 });
   });
 

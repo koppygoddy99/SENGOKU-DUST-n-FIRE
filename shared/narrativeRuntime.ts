@@ -30,7 +30,8 @@ export const NARRATIVE_STYLE_BIBLE_V1 = {
   ],
 } as const;
 
-export type NarrativeExampleTag = "authority" | "merchant" | "commoner" | "ronin" | "artisan" | "document" | "travel" | "market" | "war" | "pressure" | "consequence" | "craft" | "water" | "injury" | "secrecy";
+export type NarrativeExampleTag = "authority" | "merchant" | "commoner" | "ronin" | "artisan" | "document" | "travel" | "market" | "war" | "pressure" | "consequence" | "craft" | "water" | "injury" | "secrecy" | "dialogue";
+export type NarrativeSpeakerRole = "commoner" | "samurai" | "merchant" | "temple" | "ruler" | "unknown";
 
 export type NarrativeGoldenExample = {
   id: string;
@@ -53,7 +54,7 @@ export const NARRATIVE_GOLDEN_EXAMPLES: NarrativeGoldenExample[] = [
 ];
 
 function tagScore(example: NarrativeGoldenExample, tags: NarrativeExampleTag[]): number {
-  const overlap = example.tags.filter((tag) => tags.includes(tag)).length;
+  const overlap = example.tags.reduce((score, tag) => score + (tags.includes(tag) ? (tag === "authority" || tag === "merchant" || tag === "commoner" || tag === "ronin" || tag === "artisan" ? 24 : 10) : 0), 0);
   const approved = example.source === "user-approved" ? 100 : 0;
   return approved + overlap * 10;
 }
@@ -83,11 +84,42 @@ export function narrativeTagsForScene(text: string): NarrativeExampleTag[] {
   return Array.from(tags);
 }
 
+export type NarrativeVoiceContext = { speaker?: string; speakerRole?: NarrativeSpeakerRole; playerOccupation?: string };
 export type NarrativePromptPacket = { tags: NarrativeExampleTag[]; exampleIds: string[]; prompt: string };
 
+function voiceRuleForSpeaker(context: NarrativeVoiceContext): string[] {
+  const name = context.speaker?.trim() || "ผู้พูดในฉาก";
+  const role = context.speakerRole ?? "unknown";
+  const shared = [
+    `${name} ต้องมีน้ำเสียงของตนเอง ไม่ใช่เพียงผู้บรรยายที่สลับชื่อ: ให้บทพูดบอกสิ่งที่ผู้นั้นต้องการ ขอ ปฏิเสธ เตือน หรือยอมรับในฉากนี้อย่างตรงไปตรงมา`,
+    "หนึ่งช่วงบทพูดให้มีหนึ่งหรือสองประโยคสั้นที่คนฟังเข้าใจได้ในครั้งเดียว ผูกกับมือ สายตา หรืองานตรงหน้า; อย่าทวนภาพที่ผู้บรรยายเพิ่งบอก และอย่าอธิบายความหมายของฉากแทนคนอ่าน",
+    "ให้บุคลิกออกจากสิ่งที่ผู้พูดเลือกถาม ยอม หรือเก็บไว้ ไม่ใช่จากถ้อยคำเกินจริง; อย่าให้ทุกคนพูดเป็นคำขู่ คติชีวิต หรือประโยคสรุปที่ฟังเหมือนผู้บรรยาย",
+  ];
+  const roleRule: Record<NarrativeSpeakerRole, string> = {
+    ruler: "ผู้มีอำนาจชั้นสูงเลือกคำสั่งสั้นและเฉพาะงาน เช่น ให้นำคนมา ให้รอ หรือให้เอาหลักฐานมา; เขาไม่ต้องประกาศอำนาจหรือพูดเป็นคำสอน",
+    samurai: "ซามูไรพูดเรื่องหน้าที่ งาน และสิ่งที่ต้องทำต่อจากนี้ ใช้คำสั้น ไม่ตวาด และพูดเรื่องเกียรติหรือความภักดีต่อเมื่อฉากบังคับเท่านั้น",
+    merchant: "พ่อค้าพูดถึงของ เวลา เงิน หรือคนรับผิดที่กำลังอยู่ตรงหน้า เช่น ต้องย้ายของกี่หีบ ส่งเมื่อไร หรือใครลงเรือ; เขาไม่พูดเป็นปริศนาหรือคำขู่กว้าง ๆ",
+    commoner: "ชาวบ้านพูดจากปากท้อง ครอบครัว งาน และความปลอดภัย ใช้คำธรรมดา; ความระวังให้เห็นจากการลดเสียง เลือกคำ หรือมองหาคนฟัง",
+    temple: "ผู้เกี่ยวข้องวัดหรือศาสนสถานพูดด้วยความยับยั้ง แต่ยังต้องบอกงานหรือความเสี่ยงให้ชัด; อย่าเขียนเป็นคำเทศนาหรือทำให้รู้ความลับเกินสิ่งที่เห็น",
+    unknown: "กำหนดเสียงจากสิ่งที่ผู้พูดถืออยู่ สถานที่ และแรงกดดันที่เห็นได้; ให้บทพูดบอกเรื่องที่จับต้องได้หนึ่งเรื่อง ห้ามยัดบุคลิกเฉพาะที่ไม่มีใน scene brief",
+  };
+  const playerRule = context.playerOccupation?.includes("โรนิน") || context.playerOccupation?.toLowerCase().includes("ronin")
+    ? "เมื่อโรนินเป็นผู้ตอบ ให้เขาพูดตรงและประหยัดคำ บอกว่าจะทำอะไรหรือไม่ทำอะไรโดยไม่อวดเกียรติที่ไม่มีตราบ้านค้ำ; ความลังเลให้เห็นจากการเว้นคำหรือการเลือกไม่ตอบ"
+    : "ผู้เล่นตอบด้วยภาษาที่เหมาะกับอาชีพและฐานะตาม scene brief โดยไม่อวดรู้เกินข้อมูลที่เข้าถึง";
+  return [...shared, roleRule[role], playerRule];
+}
+
 /** Layer 4 — a provider-neutral prompt packet. The same string can be sent to GPT, Claude, or Gemini. */
-export function buildNarrativePromptPacket(language: NarrativeLanguage, sceneText: string): NarrativePromptPacket {
-  const tags = narrativeTagsForScene(sceneText);
+export function buildNarrativePromptPacket(language: NarrativeLanguage, sceneText: string, voiceContext: NarrativeVoiceContext = {}): NarrativePromptPacket {
+  const roleTags: Partial<Record<NarrativeSpeakerRole, NarrativeExampleTag[]>> = {
+    ruler: ["authority", "dialogue"],
+    samurai: ["authority", "dialogue"],
+    merchant: ["merchant", "dialogue"],
+    commoner: ["commoner", "dialogue"],
+    temple: ["authority", "dialogue"],
+    unknown: ["dialogue"],
+  };
+  const tags = Array.from(new Set([...narrativeTagsForScene(sceneText), ...(roleTags[voiceContext.speakerRole ?? "unknown"] ?? [])]));
   const examples = selectNarrativeGoldenExamples(language, tags);
   const rules = language === "th" ? NARRATIVE_STYLE_BIBLE_V1.thai : NARRATIVE_STYLE_BIBLE_V1.english;
   const exampleBlock = examples.map((example, index) => `ตัวอย่างจังหวะ ${index + 1} (${example.id}): ${example.text}`).join("\n");
@@ -100,6 +132,8 @@ export function buildNarrativePromptPacket(language: NarrativeLanguage, sceneTex
       ...rules.map((rule) => `- ${rule}`),
       "INVARIANTS:",
       ...NARRATIVE_STYLE_BIBLE_V1.invariants.map((rule) => `- ${rule}`),
+      "CHARACTER VOICE CONTRACT:",
+      ...voiceRuleForSpeaker(voiceContext).map((rule) => `- ${rule}`),
       "GOLDEN EXAMPLES: demonstrate rhythm and handling only. Do not reuse their names, facts, dialogue, or plot.",
       exampleBlock || "No example is available; follow the Style Bible without inventing a reference.",
     ].join("\n"),

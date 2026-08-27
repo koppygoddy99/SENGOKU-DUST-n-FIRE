@@ -374,3 +374,9 @@
 - [x] ขยายเอกสารรีเซิทเชิงลึก ผูก Narrative Style pipeline เข้า AI GM อย่างเป็นทางการ และสร้าง log review สองชุดก่อน publish
 - [x] ปรับ local fallback ให้เป็นร้อยแก้วสามย่อหน้าที่ผ่าน Narrative Style gate ก่อนใช้เป็นทางสำรอง
 - [x] รวม commit Narrative pipeline เข้ากับ GitHub main ที่ขยับระหว่างทำงาน แล้วตรวจและ push ใหม่
+- [x] รีไฟน์ character voice ของบทสนทนาให้ต่างตามฐานะ แรงจูงใจ และอารมณ์ พร้อมส่ง log review ก่อน push เพิ่ม
+- [x] สร้าง log สุ่มฉากแอ็กชันและต่อคารมตาม Narrative Contract เพื่อรับ feedback ก่อน push เพิ่ม
+- [x] ลดบทสนทนาโอ้อวด/เข้าใจยาก ให้ character voice มาจากเป้าหมายและภาษาธรรมชาติก่อนสร้าง log review ใหม่
+- [x] เกลาบทสนทนาให้รายละเอียดเฉพาะตัวอยู่ในปฏิกิริยาและการเลือกคำอย่างพอดี ก่อนส่ง log review รอบใหม่
+- [x] ขยายบทสนทนาให้มีการรับส่ง ชะงัก และปฏิกิริยาแบบภาพยนตร์ โดยคงใจความชัดและไม่ใช้คำคมโอ้อวด
+- [x] เก็บ character-voice log ที่ผู้ใช้อนุมัติเป็น source-of-truth ถาวร ผูกกับ retrieval/prompt และ push ขึ้น GitHub
