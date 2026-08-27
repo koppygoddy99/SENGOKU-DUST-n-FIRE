@@ -901,6 +901,14 @@ export function createCharacter(draft: CharacterDraft): Character {
   };
 }
 
+function openingRequestFor(template: StarterTemplate, context: CampaignContext, character: Character) {
+  const variant = (context.selectionSeed ?? 0) % 2;
+  const beginning = variant === 0
+    ? `${character.name} เติบโตมากับ ${character.origin} และรู้ดีว่างานของ ${template.label} ไม่เคยแยกออกจากคนที่ต้องพึ่งพากัน. `
+    : `ก่อนมาถึง ${context.location} ชื่อของ ${character.name} เป็นเพียงชื่อหนึ่งในคนทำงานของ ${template.label} แต่ร่องรอยจาก ${character.origin} ทำให้ไม่มีใครมองเจ้าเป็นคนแปลกหน้าเสียทีเดียว. `;
+  return `${beginning}วันนี้ ${template.mission.issuer} ไม่ได้ยื่นงานสั้น ๆ ให้ทำ หากแต่ขอให้เจ้า ${template.mission.request} ${template.mission.pressure} เส้นตายคือ ${template.mission.deadline}; หากเลือกผิด ไม่เพียงรางวัล ${template.mission.reward} จะหายไป แต่ ${template.mission.risk} นี่คือ Main Thread แรกของเจ้า—เรื่องสมมติของแคมเปญที่ก่อตัวขึ้นภายใน ${context.region} ค.ศ. ${context.year} โดยไม่อ้างว่าเหตุการณ์หรือบุคคลนี้มีอยู่จริง.`;
+}
+
 function openingScene(character: Character, campaign: CampaignContext, mission: Mission): Scene {
   const seasonDetail: Record<Season, string> = {
     Spring: "ไอชื้นจากฝนต้นปีเกาะอยู่ตามขอบผ้าและร่องไม้",
@@ -923,7 +931,7 @@ function openingScene(character: Character, campaign: CampaignContext, mission: 
 export function createGameState(context: CampaignContext, draft: CharacterDraft): GameState {
   const character = createCharacter(draft);
   const template = templateById(draft.templateId);
-  const mission: Mission = { ...template.mission, id: `mission-${Date.now()}`, state: "offered" as MissionState, role: "main", visibility: "visible", progress: { current: 0, required: 2, triggerPhrases: template.mission.options } };
+  const mission: Mission = { ...template.mission, request: openingRequestFor(template, context, character), id: `mission-${Date.now()}`, state: "offered" as MissionState, role: "main", visibility: "visible", progress: { current: 0, required: 2, triggerPhrases: template.mission.options } };
   const opening = openingScene(character, context, mission);
   return {
     schemaVersion: 8,

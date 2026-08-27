@@ -62,6 +62,15 @@ describe("starter occupation templates", () => {
     expect(first.age).toBe(template.age);
   });
 
+  it("writes a seeded paragraph-length fictional Main Thread without claiming historical NPCs or events", () => {
+    const context = { id: "opening-profile", title: "จุดเริ่ม", year: 1588, season: "Summer" as const, region: "Sakai", location: "ซาไก แคว้นอิซุมิ", eraId: "late-unification", selectionSeed: 2, warShadow: 3, day: 1 };
+    const first = createGameState(context, draftFor("sakai_boat_crew"));
+    const second = createGameState({ ...context, selectionSeed: 3 }, draftFor("sakai_boat_crew"));
+    expect(first.missions[0]?.request.length).toBeGreaterThan(300);
+    expect(first.missions[0]?.request).toContain("เรื่องสมมติของแคมเปญ");
+    expect(first.missions[0]?.request).not.toEqual(second.missions[0]?.request);
+  });
+
   it("keeps two answered character-background records without changing occupation base stats", () => {
     const template = STARTER_TEMPLATES.find((entry) => entry.id === "village_scribe")!;
     const draft = draftFor("village_scribe", {
