@@ -185,6 +185,11 @@ describe("UI Preview click flow", () => {
     openChronicle("Story Records");
     expect((await screen.findAllByText("เงาที่ท่าเรือคิอิ")).length).toBeGreaterThan(0);
     expect(screen.getByTestId("chronicle-campaign-scope").textContent).toContain("Ashes at the river gate");
+    fireEvent.click(screen.getByRole("button", { name: "Prepare" }));
+    fireEvent.click(screen.getByRole("button", { name: "This Market" }));
+    expect((await screen.findByTestId("prepare-campaign-context")).textContent).toContain("Ashes at the river gate");
+    expect(screen.getByTestId("prepare-campaign-context").textContent).toContain("1568");
+    expect(screen.getByTestId("prepare-campaign-context").textContent).toContain("ท่าเรือคิอิ");
   });
 
   it("plays a Local Trial, records an outcome, saves it, and restores it without GM or credit mutations", () => {

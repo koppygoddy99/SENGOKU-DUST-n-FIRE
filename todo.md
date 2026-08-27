@@ -365,6 +365,8 @@
 - [x] เพิ่มสถานะกำลังเรียบเรียงบน Narrative Outcome ด้วยสัญลักษณ์ขนาดใหญ่ราว 4–5 วินาที โดยซ่อนร้อยแก้วก่อนแสดงผล
 - [x] ให้ร้อยแก้ว Narrative Outcome ปรากฏแบบพิมพ์ทีละตัวหลังสถานะเรียบเรียง โดยคงผลทอยและ Local Save เดิม
 - [x] เพิ่ม regression และ browser verification สำหรับ animation/typing flow ของ Narrative Outcome แล้ว checkpoint และ sync GitHub main
+- [x] ตรวจและผูกเมนู Prepare ทั้งหมดกับ GameState ของแคมเปญปัจจุบัน เพื่อไม่แสดงข้อมูลข้าม Local Save
+- [x] ทำให้การสร้างหรือโหลดแคมเปญใหม่เปลี่ยนข้อมูล Prepare ตาม campaign ID และเพิ่ม regression/browser verification
 - [x] สร้าง Narrative Style Bible, Golden Examples, retrieval, model-neutral contract, validator, fallback และ evaluation harness โดยเก็บไว้ local ไม่ push
 - [x] อ่าน corpus นิยายที่ผู้ใช้แนบทั้งหกบท รีเซิทหลักภาษา/บทประพันธ์เซนโกคุ และเพิ่ม Golden Examples แบบ local-only
 - [x] ขยายเอกสารรีเซิทเชิงลึก ผูก Narrative Style pipeline เข้า AI GM อย่างเป็นทางการ และสร้าง log review สองชุดก่อน publish

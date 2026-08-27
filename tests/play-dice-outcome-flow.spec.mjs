@@ -76,6 +76,13 @@ test("New Campaign assigns a hidden era profile and begins with one fictional Ma
     await expect(page.getByText(/campaign command/i)).toBeVisible();
     await expect(page.getByText(/เรื่องสมมติของแคมเปญ/)).toBeVisible();
     await expect(page.getByText(/side leads/i)).toHaveCount(0);
+    const activeYear = await page.locator(".topbar__context > span").first().innerText();
+    await page.getByRole("button", { name: "Prepare" }).click();
+    await page.getByRole("button", { name: "This Market" }).click();
+    const prepareContext = page.getByTestId("prepare-campaign-context");
+    await expect(prepareContext).toBeVisible();
+    await expect(prepareContext).toContainText(activeYear);
+    await expect(prepareContext).not.toContainText("Smoke Beneath Sakai");
   } finally {
     await browser.close();
   }

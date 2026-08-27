@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { buyMarketOffer, createSaikaSafehouseDemo } from "@/lib/game";
 import { MarketHub } from "./MarketHub";
@@ -45,6 +45,24 @@ describe("Market and gear hub", () => {
     expect(next.character.inventory.some((item: { label: string }) => item.label === "ข้าวตากและเต้าเจี้ยว")).toBe(true);
     expect(next.market.find((item: { id: string }) => item.id === "saika-rations").available).toBe(false);
     expect(next.economy.transactions.some((entry: { title: string }) => entry.title.includes("ข้าวตากและเต้าเจี้ยว"))).toBe(true);
+  });
+
+  it("replaces every Prepare ledger context when the active campaign changes", () => {
+    const first = createSaikaSafehouseDemo();
+    const second = createSaikaSafehouseDemo();
+    second.campaign = { ...second.campaign, id: "camp-prepare-second", title: "Second campaign record", year: 1578, region: "Iga", location: "หมู่บ้านชายป่าอิงะ" };
+    second.economy = { ...second.economy, marketTitle: "ตลาดเล็กชายป่าอิงะ", marketContext: "เสบียงและข่าวที่พบได้ในแคมเปญที่สองเท่านั้น" };
+    second.market = [{ ...second.market[0], id: "iga-rations", label: "เสบียงอิงะ", note: "รายการเฉพาะแคมเปญที่สอง" }];
+    const view = render(<MarketHub game={first} language="en" onUpdate={vi.fn()} />);
+    const scoped = within(view.container);
+    expect(scoped.getByTestId("prepare-campaign-context").textContent).toContain("Smoke Beneath Sakai");
+
+    view.rerender(<MarketHub game={second} language="en" onUpdate={vi.fn()} />);
+    expect(scoped.getByTestId("prepare-campaign-context").textContent).toContain("Second campaign record");
+    expect(scoped.getByTestId("prepare-campaign-context").textContent).toContain("Iga");
+    expect(scoped.getByText("ตลาดเล็กชายป่าอิงะ")).toBeTruthy();
+    expect(scoped.getByText("เสบียงอิงะ")).toBeTruthy();
+    expect(scoped.queryByText("ตลาดท่าเรือซาไก — เช้าหลังคืนวุ่นวาย")).toBeNull();
   });
 
   it("records a safehouse-guaranteed medicine exchange against the existing debt", () => {
