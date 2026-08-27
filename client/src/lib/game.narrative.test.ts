@@ -28,7 +28,10 @@ describe("narrative baseline", () => {
     expect(paragraphs.every((paragraph) => paragraph.length >= 120)).toBe(true);
     expect(paragraphs[0]).toContain("เงียบลงชั่วขณะ");
     expect(paragraphs[1]).toContain("“");
-    expect(paragraphs[2]).toContain("รอยเท้าบนดินชื้น");
+    expect(paragraphs[1]).toContain("เรื่องนี้ผ่านไปก่อน");
+    expect(paragraphs[1]).toContain("แต่บอกข้าที");
+    expect(paragraphs[1]).not.toContain("ย่อม");
+    expect(paragraphs[2]).not.toContain("ทว่า");
     expect(narrativeQualityFlags(result.narrative, "th")).toEqual([]);
   });
 
@@ -39,6 +42,7 @@ describe("narrative baseline", () => {
     const merchant = resolveRoll(parseAction("ข้าจะยื่นเอกสาร", merchantGame), merchantGame, false);
     const samurai = resolveRoll(parseAction("ข้าจะตรวจรอยบิ่น", samuraiGame), samuraiGame, false);
     vi.restoreAllMocks();
+    expect(merchant.narrative).toContain("เดี๋ยว");
     expect(merchant.narrative).toContain("ของเสียไปเท่าใด");
     expect(samurai.narrative).toContain("รอยนี้ต้องมีคนตรวจอีกครั้ง");
     expect(merchant.narrative).not.toBe(samurai.narrative);

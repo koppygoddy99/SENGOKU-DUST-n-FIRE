@@ -8,7 +8,7 @@ export type LanguageRegister = {
 };
 
 export type NarrativeStyleContract = {
-  version: "v2";
+  version: "v3";
   thaiRules: string[];
   englishRules: string[];
   sharedRules: string[];
@@ -17,11 +17,13 @@ export type NarrativeStyleContract = {
   forbiddenEnglish: string[];
 };
 
-export const NARRATIVE_STYLE_CONTRACT_V2: NarrativeStyleContract = {
-  version: "v2",
+export const NARRATIVE_STYLE_CONTRACT_V3: NarrativeStyleContract = {
+  version: "v3",
   thaiRules: [
     "ภาษาไทยคือมาตรฐานการเล่าเรื่องหลัก: เขียนไทยกลางแบบนิยาย ใช้บุรุษที่สามใกล้ชิด และวางสัมผัสทางกายภาพก่อนคำอธิบายนามธรรม",
-    "ให้บทสนทนาติดกับท่าทางหรือการกระทำ และรักษาระยะอำนาจตามฐานะของผู้พูด",
+    "ให้บทสนทนาติดกับท่าทางหรือการกระทำ และรักษาระยะอำนาจตามฐานะของผู้พูด; คนที่พูดต้องตอบสิ่งที่เพิ่งได้ยินหรือเห็นก่อนขอ เตือน ปฏิเสธ หรือเปลี่ยนเรื่อง ไม่ปล่อยให้ทุกคนพูดลอย ๆ เหมือนรู้บทอยู่แล้ว",
+    "ใช้คำไทยกลางที่คนอ่านเข้าใจได้ในครั้งเดียว เลือกคำธรรมดาและเป็นรูปธรรมก่อนคำหรู คำราชการ หรือคำโบราณที่ไม่ได้จำเป็นต่อความหมาย; ห้ามสร้างประโยคให้ดูเก่าเพียงเพื่อให้เหมือนพีเรียด",
+    "ให้แต่ละช่วงสนทนามีเป้าหมายเฉพาะหน้าหนึ่งอย่าง และมีแรงฝืดของคนจริงได้หนึ่งจุดเมื่อฉากรองรับ เช่น หยุดคิด แก้คำ มองหาคนฟัง หรือถูกขัดจังหวะ แต่ห้ามยัดทุกอาการลงทุกประโยค",
     "หลีกเลี่ยงภาษาบทละคร ภาษาแชต คำสแลงร่วมสมัย และคำยกยศที่เกินฐานะ",
     "บรรยายเฉพาะสิ่งที่ผู้เล่นเห็น ได้ยิน สืบพบ หรืออนุมานได้อย่างมีขอบเขต",
     "ตรวจทุกวัตถุ กริยา และอุปมาก่อนส่ง: ฉากญี่ปุ่นยุคเซนโกคุต้องใช้พู่กัน หมึก กระดาษ ตรา ไม้ เชือก เสียงเท้า หอก หรือของร่วมสมัยกับฉาก ห้ามปากกา ปากกาลูกลื่น เสียงคลิก ระบบหรือภาษาราชการสมัยใหม่",
@@ -38,7 +40,7 @@ export const NARRATIVE_STYLE_CONTRACT_V2: NarrativeStyleContract = {
     "Preserve the deterministic event, outcome, and player-visible facts. Never add a state change.",
     "Keep dice, DN, Traits, Mastery, bonuses, GM/AI language, and system tags out of prose and relationship summaries.",
     "Do not reveal private motivation, secret direction, or facts that are not in the supplied public evidence.",
-    "Dialogue must shift pressure, conditions, information, or character texture; it must not end in a meta question waiting for player input.",
+    "Dialogue must answer the immediate spoken or visible situation, then shift pressure, conditions, information, or character texture; it must not end in a meta question waiting for player input.",
     "Thai and English may differ in phrasing but must preserve the same visible event, power relation, and disclosure boundary.",
   ],
   registers: {
@@ -50,11 +52,14 @@ export const NARRATIVE_STYLE_CONTRACT_V2: NarrativeStyleContract = {
     artisan: { role: "artisan", thai: "สนใจวัสดุ เครื่องมือ รอยสึก และวิธีทำ มากกว่าคำโอ้อวด", english: "Attention settles on material, fit, wear, and craft before abstract praise." },
     adversary: { role: "adversary", thai: "กดดันด้วยการกระทำและข้อเท็จจริง ไม่ใช้ความคลุ้มคลั่งหรือคำขู่พร่ำเพรื่อ", english: "Pressure comes through restraint, action, and stated consequence rather than theatrical rage." },
   },
-  forbiddenThai: ["โอเค", "อัปเดต", "เทรนด์", "ชิล", "สตรีมมิ่ง", "ปากกา", "ปากกาลูกลื่น", "คลิก", "โทรศัพท์", "รถยนต์", "ไฟฟ้า", "แบตเตอรี่", "นาฬิกาข้อมือ", "เจ้าหน้าที่", "ตำรวจ", "ออฟฟิศ", "โปรไฟล์", "ระบบ", "ชี้แจง", "ความชอบธรรม", "ผู้เกี่ยวข้อง", "ตัวแทน", "เส้นขอบการ", "คำนวณ", "บรีฟ", "การ์ด", "คอนเท็กซ์", "context", "flaw", "stain", "ลูกเต๋า", "DN", "2d12", "Trait", "Mastery", "โบนัส", "GM", "AI", "prompt", "success", "failure"],
+  forbiddenThai: ["โอเค", "อัปเดต", "เทรนด์", "ชิล", "สตรีมมิ่ง", "ปากกา", "ปากกาลูกลื่น", "คลิก", "โทรศัพท์", "รถยนต์", "ไฟฟ้า", "แบตเตอรี่", "นาฬิกาข้อมือ", "เจ้าหน้าที่", "ตำรวจ", "ออฟฟิศ", "โปรไฟล์", "ระบบ", "ชี้แจง", "ความชอบธรรม", "ผู้เกี่ยวข้อง", "ตัวแทน", "เส้นขอบการ", "คำนวณ", "บรีฟ", "การ์ด", "คอนเท็กซ์", "context", "flaw", "stain", "ด้วยประการฉะนี้", "กอปรด้วย", "มิบังควร", "จงอย่าได้", "หาได้ไม่", "บัดนั้น", "ลูกเต๋า", "DN", "2d12", "Trait", "Mastery", "โบนัส", "GM", "AI", "prompt", "success", "failure"],
   forbiddenEnglish: ["thee", "thou", "thy", "thine", "okay", "update", "trending", "streaming", "dice", "DN", "Trait", "Mastery", "bonus", "GM", "AI", "prompt", "success", "failure"],
 };
 
-export type NarrativeQualityFlag = "game-artifact" | "modernism" | "period-anachronism" | "faux-archaic" | "private-disclosure";
+/** Compatibility alias for existing consumers; the contract content now follows v3. */
+export const NARRATIVE_STYLE_CONTRACT_V2 = NARRATIVE_STYLE_CONTRACT_V3;
+
+export type NarrativeQualityFlag = "game-artifact" | "modernism" | "period-anachronism" | "faux-archaic" | "unnecessarily-formal-thai" | "private-disclosure";
 
 function containsForbiddenTerm(text: string, term: string, language: NarrativeLanguage): boolean {
   if (language === "th") return text.includes(term.toLowerCase());
@@ -64,23 +69,26 @@ function containsForbiddenTerm(text: string, term: string, language: NarrativeLa
 
 export function narrativeQualityFlags(text: string, language: NarrativeLanguage, privateTerms: string[] = []): NarrativeQualityFlag[] {
   const normalized = text.toLowerCase();
-  const forbidden = language === "th" ? NARRATIVE_STYLE_CONTRACT_V2.forbiddenThai : NARRATIVE_STYLE_CONTRACT_V2.forbiddenEnglish;
+  const forbidden = language === "th" ? NARRATIVE_STYLE_CONTRACT_V3.forbiddenThai : NARRATIVE_STYLE_CONTRACT_V3.forbiddenEnglish;
   const flags = new Set<NarrativeQualityFlag>();
   const gameArtifacts = ["dice", "dn", "2d12", "trait", "mastery", "bonus", "gm", "ai", "prompt", "success", "failure", "flaw", "stain", "context", "คอนเท็กซ์", "ลูกเต๋า", "โบนัส"];
   const thaiPeriodAnachronisms = ["ปากกา", "ปากกาลูกลื่น", "คลิก", "โทรศัพท์", "รถยนต์", "ไฟฟ้า", "แบตเตอรี่", "นาฬิกาข้อมือ", "เจ้าหน้าที่", "ตำรวจ", "ออฟฟิศ", "โปรไฟล์", "ระบบ", "ชี้แจง", "ความชอบธรรม", "ผู้เกี่ยวข้อง", "ตัวแทน", "เส้นขอบการ", "คำนวณ"];
+  const thaiNeedlesslyFormalPhrases = ["ด้วยประการฉะนี้", "กอปรด้วย", "มิบังควร", "จงอย่าได้", "หาได้ไม่", "บัดนั้น"];
   const fauxArchaic = ["thee", "thou", "thy", "thine"];
+  const containsNeedlesslyFormalThai = language === "th" && thaiNeedlesslyFormalPhrases.some((term) => containsForbiddenTerm(normalized, term, language));
   if (forbidden.some((term) => containsForbiddenTerm(normalized, term, language))) {
     if (gameArtifacts.some((term) => containsForbiddenTerm(normalized, term, language))) flags.add("game-artifact");
     if (language === "en" && fauxArchaic.some((term) => containsForbiddenTerm(normalized, term, language))) flags.add("faux-archaic");
+    if (containsNeedlesslyFormalThai) flags.add("unnecessarily-formal-thai");
     if (language === "th" && thaiPeriodAnachronisms.some((term) => containsForbiddenTerm(normalized, term, language))) flags.add("period-anachronism");
-    if (forbidden.some((term) => !gameArtifacts.includes(term.toLowerCase()) && !fauxArchaic.includes(term.toLowerCase()) && !(language === "th" && thaiPeriodAnachronisms.includes(term)) && containsForbiddenTerm(normalized, term, language))) flags.add("modernism");
+    if (forbidden.some((term) => !gameArtifacts.includes(term.toLowerCase()) && !fauxArchaic.includes(term.toLowerCase()) && !(language === "th" && (thaiPeriodAnachronisms.includes(term) || thaiNeedlesslyFormalPhrases.includes(term))) && containsForbiddenTerm(normalized, term, language))) flags.add("modernism");
   }
   if (privateTerms.some((term) => term.trim().length > 2 && normalized.includes(term.toLowerCase()))) flags.add("private-disclosure");
   return Array.from(flags);
 }
 
 export function narrativeStylePrompt(language: NarrativeLanguage): string {
-  const rules = language === "th" ? NARRATIVE_STYLE_CONTRACT_V2.thaiRules : NARRATIVE_STYLE_CONTRACT_V2.englishRules;
+  const rules = language === "th" ? NARRATIVE_STYLE_CONTRACT_V3.thaiRules : NARRATIVE_STYLE_CONTRACT_V3.englishRules;
   const sharedRules = language === "th" ? [
     "รักษาเหตุการณ์ ผลลัพธ์ และข้อเท็จจริงที่ผู้เล่นมองเห็นได้ ห้ามสร้าง state change เพิ่มเอง",
     "ห้ามใส่ลูกเต๋า DN Trait Mastery โบนัส GM/AI หรือ system tag ในร้อยแก้วและบันทึกความสัมพันธ์",
@@ -90,9 +98,9 @@ export function narrativeStylePrompt(language: NarrativeLanguage): string {
     "ร่างเป็นภาษาไทยแบบนิยายก่อนตรวจคำ: ใช้จังหวะของร่างกาย วัตถุ และการกระทำ ไม่เขียนเหมือนรายงานระบบหรือคำแปลตรงจากอังกฤษ; อย่าให้โคม แสง เวลา หรือวัตถุไร้ชีวิตคิด คำนวณ หรือสั่งการแทนคน. ใช้แบบนิยายไทย: บรรยายท่าทางและบริบทสั้นก่อนหรือหลังบทพูด, ให้ผู้พูดเป็นผู้กระทำ, และให้ทุกประโยคมีภาพที่มองเห็นหรือสัมผัสได้",
     "ถ้า state รองรับบาดแผล งานช่าง ความลับ หรือพยาน ให้ผลของสิ่งนั้นปรากฏผ่านการเคลื่อนไหว วัสดุ การลดเสียง หรือปฏิกิริยาของคนอื่น ไม่เขียนสรุปความคิดลับหรืออารมณ์ลอย ๆ",
     "ห้ามคำหรือวัตถุหลุดยุค เช่น ปากกา ปากกาลูกลื่น คลิก โทรศัพท์ รถยนต์ ไฟฟ้า แบตเตอรี่ นาฬิกาข้อมือ เจ้าหน้าที่ ตำรวจ ออฟฟิศ โปรไฟล์ หรือระบบ; เมื่อมีการเขียนให้ใช้พู่กัน หมึก กระดาษ ตรา หรือรอยหมึกตามบริบทแทน",
-  ] : NARRATIVE_STYLE_CONTRACT_V2.sharedRules;
+  ] : NARRATIVE_STYLE_CONTRACT_V3.sharedRules;
   return [
-    `Narrative Style Contract ${NARRATIVE_STYLE_CONTRACT_V2.version}.`,
+    `Narrative Style Contract ${NARRATIVE_STYLE_CONTRACT_V3.version}.`,
     ...rules.map((rule) => `- ${rule}`),
     ...sharedRules.map((rule) => `- ${rule}`),
   ].join("\n");
