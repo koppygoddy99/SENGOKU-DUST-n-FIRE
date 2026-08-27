@@ -673,6 +673,33 @@ export function starterTemplatesForEra(eraId: string | undefined) {
   return STARTER_TEMPLATES.filter((template) => eligible.has(template.id));
 }
 
+export type StarterOriginSelection = {
+  id: string;
+  year: number;
+  region: string;
+  location: string;
+  origin: string;
+  age: number;
+};
+
+/** Deterministic campaign-start selection; callers persist the returned id/seed in Local Save. */
+export function selectStarterOrigin(eraId: string | undefined, templateId: string, seed: number): StarterOriginSelection {
+  const era = starterEraById(eraId);
+  const template = templateById(templateId);
+  const normalizedSeed = Math.abs(Math.trunc(seed)) || 1;
+  const year = era.years[normalizedSeed % era.years.length] ?? era.years[0];
+  const region = template.compatibleRegions[normalizedSeed % template.compatibleRegions.length] ?? template.compatibleRegions[0] ?? "Japan";
+  const variant = normalizedSeed % 2;
+  return {
+    id: `${era.id}-${template.id}-${variant + 1}`,
+    year,
+    region,
+    location: template.start,
+    origin: variant === 0 ? template.start : `${template.start} · เส้นทางงานของครอบครัว`,
+    age: template.age,
+  };
+}
+
 const item = (id: string, label: string, kind: ItemKind, description: string, slots: number, functions: InventoryItem["functions"], bonus?: InventoryItem["bonus"], special?: InventoryItem["special"]): InventoryItem => ({ id, label, kind, description, slots, functions, bonus, special, condition: "usable" });
 export const MAX_MASTERY_LEVEL = 5;
 export const MASTERY_PROGRESS_PER_LEVEL = 5;

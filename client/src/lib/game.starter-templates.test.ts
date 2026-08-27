@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { RELATIONSHIP_QUESTIONS, STARTER_ERAS, STARTER_TEMPLATES, createGameState, starterTemplatesForEra, startingAttributesForTemplate, type CharacterDraft } from "./game";
+import { RELATIONSHIP_QUESTIONS, STARTER_ERAS, STARTER_TEMPLATES, createGameState, selectStarterOrigin, starterTemplatesForEra, startingAttributesForTemplate, type CharacterDraft } from "./game";
 
 function draftFor(templateId: string, overrides: Partial<CharacterDraft> = {}): CharacterDraft {
   return {
@@ -49,6 +49,17 @@ describe("starter occupation templates", () => {
       expect(new Set(eligible.map((template) => template.id))).toEqual(new Set(era.templateIds));
       expect(era.years.every((year) => year >= 1467 && year <= 1615)).toBe(true);
     });
+  });
+
+  it("selects an era-compatible opening year and place deterministically from a stored seed", () => {
+    const first = selectStarterOrigin("late-unification", "sakai_boat_crew", 1588);
+    const second = selectStarterOrigin("late-unification", "sakai_boat_crew", 1588);
+    const era = STARTER_ERAS.find((entry) => entry.id === "late-unification")!;
+    const template = STARTER_TEMPLATES.find((entry) => entry.id === "sakai_boat_crew")!;
+    expect(first).toEqual(second);
+    expect(era.years).toContain(first.year);
+    expect(template.compatibleRegions).toContain(first.region);
+    expect(first.age).toBe(template.age);
   });
 
   it("keeps two answered character-background records without changing occupation base stats", () => {
