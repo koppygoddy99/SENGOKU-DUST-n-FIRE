@@ -357,3 +357,8 @@
 - [x] เติมปีว่าง ค.ศ. 1593 จาก viewer ข้อมูลเปิดมหาวิทยาลัยโตเกียว 3 record พร้อม calendar-boundary guardrail และ audit ที่ยืนยัน 70 reviewed years / 79 blank years
 - [x] เติมปีว่าง ค.ศ. 1594 จาก viewer ข้อมูลเปิดมหาวิทยาลัยโตเกียว 5 record พร้อม date/region guardrails และ audit ที่ยืนยัน 71 reviewed years / 78 blank years
 - [x] เติมปีว่าง ค.ศ. 1595 จาก viewer ข้อมูลเปิดมหาวิทยาลัยโตเกียว 4 record พร้อม source/date guardrails และ audit ที่ยืนยัน 72 reviewed years / 77 blank years
+- [x] สร้าง era catalog และ policy จับคู่อาชีพตามบริบทประวัติศาสตร์โดยลดการทับซ้อนข้ามยุค
+- [ ] สร้าง origin/opening profile 2–3 แบบต่ออาชีพ-ยุค พร้อมจุดเริ่มในแคว้น ปี อายุ และ Main Thread แบบย่อหน้า
+- [ ] ปรับ New Campaign ให้เลือก era และหนึ่งในสิบอาชีพเท่านั้น แล้วซ่อน freeform occupation, เมือง, ปีแคมเปญ และปีเกิดแบบ manual
+- [ ] เพิ่ม migration/seeded selection สำหรับ era, ปี เมือง อายุ ปีเกิด และ opening profile โดยคง legacy saves เดิม
+- [ ] เพิ่ม regression และ browser verification ของ era selection, hidden controls, save/load, Main Thread และ historical boundaries

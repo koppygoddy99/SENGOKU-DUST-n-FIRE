@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { RELATIONSHIP_QUESTIONS, STARTER_TEMPLATES, createGameState, startingAttributesForTemplate, type CharacterDraft } from "./game";
+import { RELATIONSHIP_QUESTIONS, STARTER_ERAS, STARTER_TEMPLATES, createGameState, starterTemplatesForEra, startingAttributesForTemplate, type CharacterDraft } from "./game";
 
 function draftFor(templateId: string, overrides: Partial<CharacterDraft> = {}): CharacterDraft {
   return {
@@ -38,6 +38,17 @@ describe("starter occupation templates", () => {
     const ids = STARTER_TEMPLATES.map((template) => template.id);
     expect(ids).toEqual(expect.arrayContaining(["sakai_boat_crew", "shinobi", "warrior_monk", "mounted_samurai"]));
     expect(ids).not.toEqual(expect.arrayContaining(["sakai_merchant", "shinobi_network_runner", "temple_protector", "rear_castle_keeper"]));
+  });
+
+  it("limits each historical era to a distinct, non-exhaustive set of compatible starter paths", () => {
+    expect(STARTER_ERAS).toHaveLength(7);
+    STARTER_ERAS.forEach((era) => {
+      const eligible = starterTemplatesForEra(era.id);
+      expect(eligible.length).toBeGreaterThanOrEqual(3);
+      expect(eligible.length).toBeLessThan(STARTER_TEMPLATES.length);
+      expect(new Set(eligible.map((template) => template.id))).toEqual(new Set(era.templateIds));
+      expect(era.years.every((year) => year >= 1467 && year <= 1615)).toBe(true);
+    });
   });
 
   it("keeps two answered character-background records without changing occupation base stats", () => {

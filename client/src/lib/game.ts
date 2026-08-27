@@ -130,6 +130,10 @@ export type CampaignContext = {
   season: Season;
   region: string;
   location: string;
+  /** Era/profile are created at campaign start; legacy saves remain valid without them. */
+  eraId?: string;
+  openingProfileId?: string;
+  selectionSeed?: number;
   warShadow: number;
   day: number;
   /** A real civil date is optional; synthetic scene days must never be treated as a historical calendar date. */
@@ -618,6 +622,7 @@ export type CharacterDraft = {
   skills?: string[];
   flaws?: string[];
   answers: Record<string, string>;
+  eraId?: string;
 };
 
 export type StarterTemplate = {
@@ -635,6 +640,38 @@ export type StarterTemplate = {
   inventory: InventoryItem[];
   mission: Omit<Mission, "id" | "state">;
 };
+
+export type StarterEra = {
+  id: string;
+  label: string;
+  summary: string;
+  years: readonly number[];
+  templateIds: readonly string[];
+};
+
+/**
+ * Player-facing eras constrain starting paths before any campaign is made.
+ * Exact place/year eligibility remains an origin-profile concern and will not
+ * be inferred from this display policy alone.
+ */
+export const STARTER_ERAS: StarterEra[] = [
+  { id: "fractured-realm", label: "Fractured Realm · แผ่นดินแตกร้าว", summary: "ชุมชน วัด และบ้านเล็ก ๆ กำลังประคองตัวหลังความแตกแยก", years: [1467, 1477, 1488], templateIds: ["village_scribe", "jizamurai", "warrior_monk", "ronin"] },
+  { id: "rival-houses", label: "Rival Houses · บ้านใหญ่ชิงอำนาจ", summary: "ข่าว ด่าน เอกสาร และผู้ค้ำเริ่มมีน้ำหนักพอ ๆ กับคมดาบ", years: [1493, 1507, 1511], templateIds: ["jizamurai", "ronin", "village_scribe", "shinobi"] },
+  { id: "rising-warlords", label: "Rising Warlords · ขุนศึกผงาด", summary: "การรวมกำลังระดับแคว้นกดทับชุมชน วัด และผู้รับใช้บ้านใหญ่", years: [1531, 1543, 1548], templateIds: ["jizamurai", "warrior_monk", "shinobi", "daimyo_attendant"] },
+  { id: "shifting-frontiers", label: "Shifting Frontiers · พรมแดนที่เปลี่ยน", summary: "งานช่าง ท่าเรือ ข่าว และกำลังเคลื่อนที่เริ่มเปลี่ยนรูปของสงคราม", years: [1549, 1555, 1561], templateIds: ["arms_craftsworker", "sakai_boat_crew", "shinobi", "mounted_samurai", "ronin"] },
+  { id: "unification-campaigns", label: "Unification Campaigns · ศึกสู่การรวมแผ่นดิน", summary: "คำสั่ง เสบียง โรงช่าง และการเคลื่อนทัพกดดันทุกคน", years: [1565, 1569, 1575, 1580], templateIds: ["daimyo_attendant", "mounted_samurai", "arms_craftsworker", "sakai_boat_crew", "warrior_monk"] },
+  { id: "late-unification", label: "Late Unification · ปลายยุครวมแผ่นดิน", summary: "เครือข่ายเมืองท่า การเดินเรือ และคำสั่งจากบ้านใหญ่ขยายตัว", years: [1583, 1588, 1590, 1595], templateIds: ["daimyo_attendant", "sakai_boat_crew", "coastal_sailor", "arms_craftsworker", "ronin"] },
+  { id: "new-order", label: "A New Order · ระเบียบใหม่", summary: "เอกสาร ที่ดิน การเดินทาง และคนหลุดจากสังกัดกำหนดชีวิตในระเบียบใหม่", years: [1600, 1604, 1610, 1615], templateIds: ["daimyo_attendant", "ronin", "village_scribe", "coastal_sailor"] },
+];
+
+export function starterEraById(id: string | undefined) {
+  return STARTER_ERAS.find((era) => era.id === id) ?? STARTER_ERAS[4];
+}
+
+export function starterTemplatesForEra(eraId: string | undefined) {
+  const eligible = new Set(starterEraById(eraId).templateIds);
+  return STARTER_TEMPLATES.filter((template) => eligible.has(template.id));
+}
 
 const item = (id: string, label: string, kind: ItemKind, description: string, slots: number, functions: InventoryItem["functions"], bonus?: InventoryItem["bonus"], special?: InventoryItem["special"]): InventoryItem => ({ id, label, kind, description, slots, functions, bonus, special, condition: "usable" });
 export const MAX_MASTERY_LEVEL = 5;
