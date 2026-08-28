@@ -10,6 +10,9 @@ export type MissionState = "offered" | "active" | "resolved" | "failed" | "retir
 export type MissionRole = "main" | "side";
 export type MissionVisibility = "visible" | "hidden";
 export type ItemKind = "immediate" | "reserve" | "equipment" | "document" | "status" | "bond";
+export type CurrencyUnit = "mon";
+export type InventoryCategory = "weapon" | "food" | "medicine" | "story" | "tool" | "status";
+export type Currency = { unit: CurrencyUnit; amount: number };
 export type MemoryKind = "news" | "witness" | "debt" | "favor" | "oath" | "stain" | "injury" | "market_change" | "community_change" | "actor_relation";
 
 export const STATS: { id: StatId; en: string; th: string; hint: string }[] = [
@@ -85,6 +88,8 @@ export type InventoryItem = {
   id: string;
   label: string;
   kind: ItemKind;
+  /** Player-facing category; legacy saves may omit it and are classified during normalization. */
+  category?: InventoryCategory;
   slots: number;
   description: string;
   functions: ("unlock" | "bonus" | "exchange")[];
@@ -118,7 +123,8 @@ export type Character = {
   masteries: Mastery[];
   vitals: { wounds: number; focus: number };
   social: { rank: number; honor: number; influence: number; information: number; stain: number };
-  resources: { property: number; supplies: number; credit: number };
+  resources: { property: number; supplies: number; credit: number; currency?: Currency };
+  /** `property` and `credit` remain as legacy compatibility aliases; UI must use currency/obligations. */
   inventory: InventoryItem[];
   pulls: RelationshipPull[];
 };
@@ -192,6 +198,8 @@ export type MarketOffer = {
   id: string;
   label: string;
   price: number;
+  priceUnit?: CurrencyUnit;
+  debtAllowed?: boolean;
   kind: "goods" | "service" | "information";
   slots?: number;
   note: string;
@@ -215,6 +223,7 @@ export type MarketService = {
 export type Obligation = {
   id: string;
   kind: "credit" | "debt" | "favor";
+  /** Human-readable obligation; never a numeric player credit balance. */
   holder: string;
   subject: string;
   due: string;
@@ -1026,7 +1035,22 @@ export function createSaikaSafehouseDemo(): GameState {
     ],
     speaker: "กันทาโร่", prompt: "ซาเนฟุยุจะตอบกันทาโร่ว่าอย่างไร?", pressure: mission.pressure, suggestedActions: mission.options,
   };
-  return { schemaVersion: 8, credits: 50, campaign, character, community: { food: 2, labor: 2, voice: 1, safety: 1, cohesion: 2, lastChange: "เมืองซาไกเพิ่มเวรยามและตรวจเรือ" }, currentScene: opening, missions: [{ ...mission, role: "main", visibility: "visible" }], market: buildSaikaMarket(), economy: buildSaikaEconomy(), memories: [{ id: "memory-saika-opening", kind: "stain", title: "คืนที่เมืองซาไกตื่น", detail: opening.body.join("\n\n"), tick: 1, tone: "vermilion" }, ...saikaRelationshipFoundationMemories()], rolls: [], storyRecords: [{ id: "story-saika-opening", tick: 1, inGameDay: 1, title: opening.title, prose: opening.body.join("\n\n"), location: opening.location }], relationships: saikaPublicRelationships(), progression: defaultProgression(campaign, 13, "Spring"), tick: 1 };
+  return { schemaVersion: 9, credits: 50, campaign, character, community: { food: 2, labor: 2, voice: 1, safety: 1, cohesion: 2, lastChange: "เมืองซาไกเพิ่มเวรยามและตรวจเรือ" }, currentScene: opening, missions: [{ ...mission, role: "main", visibility: "visible" }], market: buildSaikaMarket(), economy: buildSaikaEconomy(), memories: [{ id: "memory-saika-opening", kind: "stain", title: "คืนที่เมืองซาไกตื่น", detail: opening.body.join("\n\n"), tick: 1, tone: "vermilion" }, ...saikaRelationshipFoundationMemories()], rolls: [], storyRecords: [{ id: "story-saika-opening", tick: 1, inGameDay: 1, title: opening.title, prose: opening.body.join("\n\n"), location: opening.location }], relationships: saikaPublicRelationships(), progression: defaultProgression(campaign, 13, "Spring"), tick: 1 };
+}
+
+export function formatMoney(amount: number, language: "th" | "en" = "th"): string {
+  return language === "en" ? `${amount} mon` : `${amount} 文`;
+}
+
+export function inventoryCategory(item: Pick<InventoryItem, "id" | "label" | "kind" | "category">): InventoryCategory {
+  if (item.category) return item.category;
+  const text = `${item.id} ${item.label}`.toLowerCase();
+  if (item.kind === "document" || item.kind === "bond" || /จดหมาย|สัญญา|ตั๋ว|เอกสาร|letter|contract|document/.test(text)) return "story";
+  if (/ยา|สมุนไพร|แผล|medicine|herb|bandage/.test(text)) return "medicine";
+  if (/ข้าว|อาหาร|เสบียง|ration|food|น้ำ|water/.test(text) || item.kind === "reserve") return "food";
+  if (/ปืน|ดาบ|หอก|อาวุธ|weapon|sword|gun/.test(text) || item.kind === "equipment") return "weapon";
+  if (item.kind === "status") return "status";
+  return "tool";
 }
 
 export function normalizeGameState(state: GameState): GameState {
@@ -1040,7 +1064,13 @@ export function normalizeGameState(state: GameState): GameState {
     const { axis, momentumSpent: _momentumSpent, momentumSource: _momentumSource, canUseMomentum: _canUseMomentum, ...cleanRoll } = roll;
     return { ...cleanRoll, stat: roll.stat ?? axis ?? "wit", difficulty: roll.difficulty === 0 ? 0 : canonicalDifficulty(roll.difficulty) };
   });
-  const inventory = legacyInventory.map((item) => item.bonus?.stat ? item : item.bonus?.axis ? { ...item, bonus: { ...item.bonus, stat: item.bonus.axis } } : item);
+  const inventory = legacyInventory.map((item) => {
+    const normalized = item.bonus?.stat ? item : item.bonus?.axis ? { ...item, bonus: { ...item.bonus, stat: item.bonus.axis } } : item;
+    return { ...normalized, category: inventoryCategory(normalized) };
+  });
+  const legacyProperty = Math.max(0, Math.round(state.character.resources.property ?? 0));
+  const currency = state.character.resources.currency ?? { unit: "mon" as const, amount: legacyProperty };
+  const resources = { ...state.character.resources, currency, property: currency.amount, credit: 0 };
   const legacyAttributeValue = (value: number) => [1, 2, 3, 5, 7, 9, 10][Math.max(0, Math.min(6, Math.round(value)))] ?? 1;
   const attributes = Object.fromEntries(STATS.map(({ id }) => [id, legacyState ? legacyAttributeValue(state.character.attributes[id]) : normalizeStatValue(state.character.attributes[id])])) as Attributes;
   const storedStatXp = state.character.statXp as Partial<StatXp> | undefined;
@@ -1062,8 +1092,8 @@ export function normalizeGameState(state: GameState): GameState {
       : [{ id: `story-opening-${campaign.id}`, tick: 1, inGameDay: campaign.day, title: state.currentScene.title, prose: state.currentScene.body.join("\n\n"), location: state.currentScene.location }];
   return {
     ...state,
-    schemaVersion: 8,
-    character: { ...state.character, weakness: flaws[0] ?? "มีหนี้ที่ยังไม่กล้าพูดถึง", flaws: flaws.length ? flaws : ["มีหนี้ที่ยังไม่กล้าพูดถึง"], attributes, statXp, inventory, masteries: state.character.masteries.map((entry) => normalizeMasteryProgress(entry, legacyState)), vitals: { wounds: vitals.wounds, focus: vitals.focus } },
+    schemaVersion: 9,
+    character: { ...state.character, weakness: flaws[0] ?? "มีหนี้ที่ยังไม่กล้าพูดถึง", flaws: flaws.length ? flaws : ["มีหนี้ที่ยังไม่กล้าพูดถึง"], attributes, statXp, inventory, masteries: state.character.masteries.map((entry) => normalizeMasteryProgress(entry, legacyState)), vitals: { wounds: vitals.wounds, focus: vitals.focus }, resources },
     missions,
     rolls,
     memories,
@@ -1075,36 +1105,36 @@ export function normalizeGameState(state: GameState): GameState {
 }
 
 function buildCampaignEconomy(context: CampaignContext): EconomyState {
-  return { marketTitle: `ตลาดใกล้ ${context.location}`, marketContext: `ข้อเสนอใน ${context.season} ผูกกับเส้นทางและแรงกดดันของแคมเปญ ไม่ใช่รายการสินค้าสากล`, routeStatus: "เส้นทางยังเปิด แต่ผู้เดินทางถูกซักถาม", sellerNetwork: "พ่อค้าท้องถิ่น คนงานขนของ และคนกลางของชุมชน", services: [{ id: "local-messenger", provider: "คนส่งสารท้องถิ่น", role: "ข่าวสารและเอกสาร", affiliation: "เครือข่ายตลาด", request: "นำห่อเล็กไปยังจุดนัดหมาย", price: "ทรัพย์สิน 2 หรือคำรับรอง", timeCost: "หนึ่งวัน", requirement: "ไม่เปิดเผยชื่อผู้รับต่อหน้าคนแปลกหน้า", witnessRisk: "คนส่งสารจำชื่อผู้ว่าจ้างได้", availability: "available" }], obligations: [], transactions: [] };
+  return { marketTitle: `ตลาดใกล้ ${context.location}`, marketContext: `ข้อเสนอใน ${context.season} ผูกกับเส้นทางและแรงกดดันของแคมเปญ ไม่ใช่รายการสินค้าสากล`, routeStatus: "เส้นทางยังเปิด แต่ผู้เดินทางถูกซักถาม", sellerNetwork: "พ่อค้าท้องถิ่น คนงานขนของ และคนกลางของชุมชน", services: [{ id: "local-messenger", provider: "คนส่งสารท้องถิ่น", role: "ข่าวสารและเอกสาร", affiliation: "เครือข่ายตลาด", request: "นำห่อเล็กไปยังจุดนัดหมาย", price: "2 文 หรือคำรับรอง", timeCost: "หนึ่งวัน", requirement: "ไม่เปิดเผยชื่อผู้รับต่อหน้าคนแปลกหน้า", witnessRisk: "คนส่งสารจำชื่อผู้ว่าจ้างได้", availability: "available" }], obligations: [], transactions: [] };
 }
 
 function buildSaikaMarket(): MarketOffer[] {
   return [
-    { id: "saika-rations", label: "ข้าวตากและเต้าเจี้ยว", price: 1, kind: "goods", slots: 1, note: "เสบียงแห้งจากแผงใกล้ท่าเรือ", priceReason: "กองกำลังตรวจเส้นทางเสบียง", available: true },
-    { id: "saika-medicine", label: "ยาสมุนไพรห่อเล็ก", price: 2, kind: "goods", slots: 0, note: "ผู้ขายยอมให้รับไปก่อนหากมีคนของไซกะรับรอง", priceReason: "สมุนไพรมีจำกัดและคนเจ็บเพิ่มขึ้น", available: true },
-    { id: "saika-rope-cloth", label: "เชือกปอและผ้าหยาบ", price: 2, kind: "goods", slots: 1, note: "ใช้ซ่อมของหรือห่อของให้ไม่สะดุดตา", priceReason: "เรือสินค้าล่าช้า", available: true },
-    { id: "saika-messenger", label: "คนส่งสารท่าเรือ", price: 2, kind: "service", note: "ออกจากท่าเรือหลังยามค่ำ รับเฉพาะห่อเล็ก", priceReason: "ด่านตรวจเรือเข้าออก", available: true },
-    { id: "saika-scribe", label: "เสมียนอ่านเอกสาร", price: 2, kind: "information", note: "อ่านบัญชีและตั๋วสัญญา แต่ไม่แตะตราไซกะที่เปิดเผย", priceReason: "งานเสี่ยงต่อเครือข่ายร้านค้า", available: true },
+    { id: "saika-rations", label: "ข้าวตากและเต้าเจี้ยว", price: 1, priceUnit: "mon", debtAllowed: false, kind: "goods", slots: 1, note: "เสบียงแห้งจากแผงใกล้ท่าเรือ", priceReason: "กองกำลังตรวจเส้นทางเสบียง", available: true },
+    { id: "saika-medicine", label: "ยาสมุนไพรห่อเล็ก", price: 2, priceUnit: "mon", debtAllowed: true, kind: "goods", slots: 0, note: "ผู้ขายยอมให้รับไปก่อนหากมีคนของไซกะรับรอง", priceReason: "สมุนไพรมีจำกัดและคนเจ็บเพิ่มขึ้น", available: true },
+    { id: "saika-rope-cloth", label: "เชือกปอและผ้าหยาบ", price: 2, priceUnit: "mon", debtAllowed: false, kind: "goods", slots: 1, note: "ใช้ซ่อมของหรือห่อของให้ไม่สะดุดตา", priceReason: "เรือสินค้าล่าช้า", available: true },
+    { id: "saika-messenger", label: "คนส่งสารท่าเรือ", price: 2, priceUnit: "mon", debtAllowed: false, kind: "service", note: "ออกจากท่าเรือหลังยามค่ำ รับเฉพาะห่อเล็ก", priceReason: "ด่านตรวจเรือเข้าออก", available: true },
+    { id: "saika-scribe", label: "เสมียนอ่านเอกสาร", price: 2, priceUnit: "mon", debtAllowed: false, kind: "information", note: "อ่านบัญชีและตั๋วสัญญา แต่ไม่แตะตราไซกะที่เปิดเผย", priceReason: "งานเสี่ยงต่อเครือข่ายร้านค้า", available: true },
   ];
 }
 
 function buildSaikaEconomy(): EconomyState {
-  return { marketTitle: "ตลาดท่าเรือซาไก — เช้าหลังคืนวุ่นวาย", marketContext: "สินค้าและบริการเป็น fictional play content ในบริบทเมืองท่า ค.ศ. 1569 ราคาเปลี่ยนเพราะการตรวจเรือ เสบียง และเครือข่ายผู้ขาย", routeStatus: "เอโกะชูเพิ่มเวรยาม ปิดประตูบางช่วง และตรวจเรือเข้าออก", sellerNetwork: "แผงยา คนงานท่าเรือ เสมียนบ้านพ่อค้า และคนกลางที่รู้จักชื่อกันทาโร่", services: [{ id: "harbor-messenger", provider: "คนส่งสารท่าเรือ", role: "ข่าวสารและเอกสาร", affiliation: "คนงานท่าเรือ", request: "ส่งห่อเล็กไปยังตลาดฝั่งตะวันออก", price: "ทรัพย์สิน 2 หรือชื่อคนคุมท่าเรือรับรอง", timeCost: "หนึ่งวัน", requirement: "ห่อต้องไม่เผยตราไซกะ", witnessRisk: "ผู้ส่งสารอาจถูกค้นและจำชื่อผู้ว่าจ้างได้", availability: "limited" }, { id: "harbor-scribe", provider: "เสมียนอ่านเอกสาร", role: "ข่าวสารและเอกสาร", affiliation: "บ้านพ่อค้าท่าเรือ", request: "อ่านบัญชีหรือเทียบข้อความในตั๋วสัญญา", price: "ทรัพย์สิน 2 หรือข้อมูลที่พอแลกได้", timeCost: "ก่อนตะวันตก", requirement: "ไม่รับเอกสารที่มีตราไซกะเปิดเผย", witnessRisk: "เสมียนอาจรู้ว่าผู้เล่นกำลังตามหาของใด", availability: "available" }, { id: "herb-seller", provider: "เจ้าของแผงยา", role: "รักษาและดูแลคนเจ็บ", affiliation: "เครือข่ายแผงยา", request: "ให้ยาสมุนไพรและเปลี่ยนผ้าพันแผล", price: "ทรัพย์สิน 2 หรือรับของไปก่อนสามวันพร้อมคนค้ำ", timeCost: "ครึ่งชั่วยาม", requirement: "บอกว่าแผลเกิดจากอะไรเท่าที่ผู้ขายยอมรับ", witnessRisk: "คนในแผงอาจรู้ว่าซาเนฟุยุยังบาดเจ็บ", availability: "limited" }], obligations: [{ id: "favor-gantaro-life", kind: "favor", holder: "กันทาโร่", subject: "หนี้ชีวิตจากการลากซาเนฟุยุขึ้นจากน้ำ", due: "ยังไม่กำหนด", witness: "คนในเซฟเฮาส์", status: "open", note: "ใช้ขอความช่วยเหลือได้เฉพาะเรื่องที่ไม่ทำลายผลประโยชน์ไซกะ" }, { id: "debt-safehouse-rations", kind: "debt", holder: "เซฟเฮาส์ของไซกะ", subject: "ข้าวตากและยาที่ใช้รักษาแผล", due: "ก่อนออกจากที่ซ่อน", witness: "กันทาโร่", status: "open", note: "ชำระได้ด้วยของ ค่าปืน หรือแรงงาน ไม่ใช่เหรียญอย่างเดียว" }], transactions: [{ id: "tx-saika-rescue", kind: "favor", title: "กันทาโร่ลากซาเนฟุยุขึ้นจากน้ำ", counterpart: "กันทาโร่", payment: "บุญคุณที่ยังไม่กำหนดราคา", witness: "คนในเซฟเฮาส์", consequence: "ซาเนฟุยุมีที่ซ่อนชั่วคราว แต่ถูกผูกกับผลประโยชน์ไซกะ", tick: 1 }, { id: "tx-saika-rations", kind: "debt", title: "รับข้าวตากและยาพันแผล", counterpart: "เซฟเฮาส์ของไซกะ", payment: "ค้างแรงงานหรือส่วนแบ่งค่าปืน", witness: "กันทาโร่", consequence: "ของอยู่กับตัว แต่หนี้ถูกบันทึก", tick: 1 }] };
+  return { marketTitle: "ตลาดท่าเรือซาไก — เช้าหลังคืนวุ่นวาย", marketContext: "สินค้าและบริการเป็น fictional play content ในบริบทเมืองท่า ค.ศ. 1569 ราคาเปลี่ยนเพราะการตรวจเรือ เสบียง และเครือข่ายผู้ขาย", routeStatus: "เอโกะชูเพิ่มเวรยาม ปิดประตูบางช่วง และตรวจเรือเข้าออก", sellerNetwork: "แผงยา คนงานท่าเรือ เสมียนบ้านพ่อค้า และคนกลางที่รู้จักชื่อกันทาโร่", services: [{ id: "harbor-messenger", provider: "คนส่งสารท่าเรือ", role: "ข่าวสารและเอกสาร", affiliation: "คนงานท่าเรือ", request: "ส่งห่อเล็กไปยังตลาดฝั่งตะวันออก", price: "2 文 หรือชื่อคนคุมท่าเรือรับรอง", timeCost: "หนึ่งวัน", requirement: "ห่อต้องไม่เผยตราไซกะ", witnessRisk: "ผู้ส่งสารอาจถูกค้นและจำชื่อผู้ว่าจ้างได้", availability: "limited" }, { id: "harbor-scribe", provider: "เสมียนอ่านเอกสาร", role: "ข่าวสารและเอกสาร", affiliation: "บ้านพ่อค้าท่าเรือ", request: "อ่านบัญชีหรือเทียบข้อความในตั๋วสัญญา", price: "2 文 หรือข้อมูลที่พอแลกได้", timeCost: "ก่อนตะวันตก", requirement: "ไม่รับเอกสารที่มีตราไซกะเปิดเผย", witnessRisk: "เสมียนอาจรู้ว่าผู้เล่นกำลังตามหาของใด", availability: "available" }, { id: "herb-seller", provider: "เจ้าของแผงยา", role: "รักษาและดูแลคนเจ็บ", affiliation: "เครือข่ายแผงยา", request: "ให้ยาสมุนไพรและเปลี่ยนผ้าพันแผล", price: "2 文 หรือรับของไปก่อนสามวันพร้อมคนค้ำ", timeCost: "ครึ่งชั่วยาม", requirement: "บอกว่าแผลเกิดจากอะไรเท่าที่ผู้ขายยอมรับ", witnessRisk: "คนในแผงอาจรู้ว่าซาเนฟุยุยังบาดเจ็บ", availability: "limited" }], obligations: [{ id: "favor-gantaro-life", kind: "favor", holder: "กันทาโร่", subject: "หนี้ชีวิตจากการลากซาเนฟุยุขึ้นจากน้ำ", due: "ยังไม่กำหนด", witness: "คนในเซฟเฮาส์", status: "open", note: "ใช้ขอความช่วยเหลือได้เฉพาะเรื่องที่ไม่ทำลายผลประโยชน์ไซกะ" }, { id: "debt-safehouse-rations", kind: "debt", holder: "เซฟเฮาส์ของไซกะ", subject: "ข้าวตากและยาที่ใช้รักษาแผล", due: "ก่อนออกจากที่ซ่อน", witness: "กันทาโร่", status: "open", note: "ชำระได้ด้วยของ ค่าปืน หรือแรงงาน ไม่ใช่เหรียญอย่างเดียว" }], transactions: [{ id: "tx-saika-rescue", kind: "favor", title: "กันทาโร่ลากซาเนฟุยุขึ้นจากน้ำ", counterpart: "กันทาโร่", payment: "บุญคุณที่ยังไม่กำหนดราคา", witness: "คนในเซฟเฮาส์", consequence: "ซาเนฟุยุมีที่ซ่อนชั่วคราว แต่ถูกผูกกับผลประโยชน์ไซกะ", tick: 1 }, { id: "tx-saika-rations", kind: "debt", title: "รับข้าวตากและยาพันแผล", counterpart: "เซฟเฮาส์ของไซกะ", payment: "ค้างแรงงานหรือส่วนแบ่งค่าปืน", witness: "กันทาโร่", consequence: "ของอยู่กับตัว แต่หนี้ถูกบันทึก", tick: 1 }] };
 }
 
 export function buildMarket(season: Season): MarketOffer[] {
   const seasonGoods: Record<Season, MarketOffer> = {
-    Spring: { id: "rain-cloak", label: "เสื้อคลุมกันฝน", price: 2, kind: "goods", slots: 1, note: "ช่วยเดินทางในเส้นทางเปียก", available: true },
-    Summer: { id: "water-skin", label: "ถุงน้ำและยาสมุนไพร", price: 2, kind: "goods", slots: 1, note: "ของจำเป็นเมื่อเดินทางกลางร้อน", available: true },
-    Autumn: { id: "rice-bundle", label: "ข้าวตากหนึ่งห่อ", price: 2, kind: "goods", slots: 1, note: "เสบียงพกพาช่วงเก็บเกี่ยว", available: true },
-    Winter: { id: "charcoal-brazier", label: "ถ่านและผ้าห่มบาง", price: 3, kind: "goods", slots: 2, note: "คุ้มกันความหนาว แต่กินสัมภาระ", available: true },
+    Spring: { id: "rain-cloak", label: "เสื้อคลุมกันฝน", price: 2, priceUnit: "mon", kind: "goods", slots: 1, note: "ช่วยเดินทางในเส้นทางเปียก", available: true },
+    Summer: { id: "water-skin", label: "ถุงน้ำและยาสมุนไพร", price: 2, priceUnit: "mon", kind: "goods", slots: 1, note: "ของจำเป็นเมื่อเดินทางกลางร้อน", available: true },
+    Autumn: { id: "rice-bundle", label: "ข้าวตากหนึ่งห่อ", price: 2, priceUnit: "mon", kind: "goods", slots: 1, note: "เสบียงพกพาช่วงเก็บเกี่ยว", available: true },
+    Winter: { id: "charcoal-brazier", label: "ถ่านและผ้าห่มบาง", price: 3, priceUnit: "mon", kind: "goods", slots: 2, note: "คุ้มกันความหนาว แต่กินสัมภาระ", available: true },
   };
   return [
     seasonGoods[season],
-    { id: "rope", label: "เชือกปอ", price: 1, kind: "goods", slots: 1, note: "เปิดทางเลือกปีน ผูก หรือซ่อม", available: true },
-    { id: "porter", label: "จ้างลูกหาบ", price: 2, kind: "service", note: "ลดภาระสัมภาระหนึ่งฉาก", available: true },
-    { id: "scribe", label: "จ้างคนอ่านเอกสาร", price: 3, kind: "service", note: "เปิดวิธีใช้เอกสารที่ไม่เข้าใจ", available: true },
-    { id: "rumor", label: "ข่าวด่านวันนี้", price: 1, kind: "information", note: "บอกแรงกดดันในฉากถัดไป", available: true },
+    { id: "rope", label: "เชือกปอ", price: 1, priceUnit: "mon", kind: "goods", slots: 1, note: "เปิดทางเลือกปีน ผูก หรือซ่อม", available: true },
+    { id: "porter", label: "จ้างลูกหาบ", price: 2, priceUnit: "mon", kind: "service", note: "ลดภาระสัมภาระหนึ่งฉาก", available: true },
+    { id: "scribe", label: "จ้างคนอ่านเอกสาร", price: 3, priceUnit: "mon", kind: "service", note: "เปิดวิธีใช้เอกสารที่ไม่เข้าใจ", available: true },
+    { id: "rumor", label: "ข่าวด่านวันนี้", price: 1, priceUnit: "mon", kind: "information", note: "บอกแรงกดดันในฉากถัดไป", available: true },
   ];
 }
 
@@ -1423,14 +1453,15 @@ export function applyRoll(state: GameState, record: RollRecord): GameState {
 export function buyMarketOffer(state: GameState, offerId: string): { state: GameState; message: string } {
   const offer = state.market.find((entry) => entry.id === offerId);
   if (!offer || !offer.available) return { state, message: "รายการนี้ไม่พร้อมแล้ว" };
-  const canUseSafehouseCredit = offer.id === "saika-medicine" && state.economy.obligations.some((entry) => entry.id === "debt-safehouse-rations" && entry.status === "open");
-  const paidOnCredit = state.character.resources.property < offer.price && canUseSafehouseCredit;
-  if (state.character.resources.property < offer.price && !paidOnCredit) return { state, message: "ทรัพย์สินไม่พอ · ลองเจรจา รับงาน หรือใช้เครดิตแทน" };
+  const currencyAmount = state.character.resources.currency?.amount ?? state.character.resources.property;
+  const canUseObligation = Boolean(offer.debtAllowed) && offer.id === "saika-medicine" && state.economy.obligations.some((entry) => entry.id === "debt-safehouse-rations" && entry.status === "open");
+  const paidOnObligation = currencyAmount < offer.price && canUseObligation;
+  if (currencyAmount < offer.price && !paidOnObligation) return { state, message: "เงินไม่พอ · ลองเจรจา รับงาน หรือสร้างหนี้บุญคุณกับผู้ขาย" };
   const inventory = offer.kind === "goods" ? [...state.character.inventory, { ...item(`market-${offer.id}-${Date.now()}`, offer.label, "reserve", offer.note, offer.slots ?? 1, ["unlock"], { value: 1, tags: [offer.id] }), location: "carried" as const, ownership: "owned" as const }] : state.character.inventory;
-  const transaction: ExchangeRecord = { id: `tx-${offer.id}-${Date.now()}`, kind: paidOnCredit ? "debt" : offer.kind === "service" ? "service" : "purchase", title: offer.kind === "service" ? `จ้าง ${offer.label}` : `รับ ${offer.label} จากตลาด`, counterpart: paidOnCredit ? "เซฟเฮาส์ของไซกะ" : offer.kind === "service" ? offer.label : state.economy.marketTitle, payment: paidOnCredit ? `ค้างหนี้เซฟเฮาส์ · ทรัพย์สิน ${offer.price}` : `ทรัพย์สิน ${offer.price}`, witness: paidOnCredit ? "กันทาโร่รับรู้การค้ำ" : "คนในตลาดที่มองเห็นการแลกเปลี่ยน", consequence: paidOnCredit ? `ยอดค้างของเซฟเฮาส์เพิ่มขึ้นจาก ${offer.label}` : offer.priceReason ?? offer.note, tick: state.tick };
+  const transaction: ExchangeRecord = { id: `tx-${offer.id}-${Date.now()}`, kind: paidOnObligation ? "debt" : offer.kind === "service" ? "service" : "purchase", title: offer.kind === "service" ? `จ้าง ${offer.label}` : `รับ ${offer.label} จากตลาด`, counterpart: paidOnObligation ? "เซฟเฮาส์ของไซกะ" : offer.kind === "service" ? offer.label : state.economy.marketTitle, payment: paidOnObligation ? `หนี้บุญคุณต่อเซฟเฮาส์ · มูลค่า ${formatMoney(offer.price)}` : `จ่าย ${formatMoney(offer.price)}`, witness: paidOnObligation ? "กันทาโร่รับรู้การค้ำ" : "คนในตลาดที่มองเห็นการแลกเปลี่ยน", consequence: paidOnObligation ? `ต้องชำระด้วยแรงงาน ของ หรือภารกิจเสริมจาก ${offer.label}` : offer.priceReason ?? offer.note, tick: state.tick };
   const memory: WorldMemory = { id: `memory-${transaction.id}`, kind: "market_change", title: transaction.title, detail: `${transaction.payment}; ${transaction.consequence}`, tick: state.tick, tone: "ochre" };
   return {
-    state: { ...state, character: { ...state.character, resources: { ...state.character.resources, property: paidOnCredit ? state.character.resources.property : state.character.resources.property - offer.price }, inventory }, market: state.market.map((entry) => entry.id === offer.id ? { ...entry, available: false } : entry), economy: { ...state.economy, obligations: paidOnCredit ? state.economy.obligations.map((entry) => entry.id === "debt-safehouse-rations" ? { ...entry, note: `${entry.note} · รับ ${offer.label} เพิ่มโดยกันทาโร่ค้ำ`, due: "ก่อนออกจากที่ซ่อน หรือเมื่อกันทาโร่ทวง" } : entry) : state.economy.obligations, transactions: [...state.economy.transactions, transaction] }, memories: [...state.memories, memory] },
-    message: paidOnCredit ? `รับ ${offer.label} แบบค้ำประกันแล้ว · หนี้เซฟเฮาส์เพิ่มขึ้น` : offer.kind === "goods" ? `ซื้อ ${offer.label} แล้ว` : `ใช้บริการ: ${offer.label}`,
+    state:       { ...state, character: { ...state.character, resources: { ...state.character.resources, currency: { unit: "mon", amount: paidOnObligation ? currencyAmount : currencyAmount - offer.price }, property: paidOnObligation ? currencyAmount : currencyAmount - offer.price, credit: 0 }, inventory }, market: state.market.map((entry) => entry.id === offer.id ? { ...entry, available: false } : entry), economy: { ...state.economy, obligations: paidOnObligation ? state.economy.obligations.map((entry) => entry.id === "debt-safehouse-rations" ? { ...entry, note: `${entry.note} · รับ ${offer.label} เพิ่มโดยกันทาโร่ค้ำ`, due: "ก่อนออกจากที่ซ่อน หรือเมื่อกันทาโร่ทวง" } : entry) : state.economy.obligations, transactions: [...state.economy.transactions, transaction] }, memories: [...state.memories, memory] },
+    message: paidOnObligation ? `รับ ${offer.label} แล้ว · บันทึกเป็นหนี้บุญคุณและภารกิจที่ต้องชำระ` : offer.kind === "goods" ? `รับ ${offer.label} แล้ว · จ่ายเป็น ${formatMoney(offer.price)}` : `ใช้บริการ: ${offer.label} · จ่ายเป็น ${formatMoney(offer.price)}`,
   };
 }
