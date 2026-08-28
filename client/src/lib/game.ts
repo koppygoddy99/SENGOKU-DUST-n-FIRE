@@ -15,6 +15,8 @@ export type InventoryCategory = "weapon" | "food" | "medicine" | "story" | "tool
 export type Currency = { unit: CurrencyUnit; amount: number };
 export type MemoryKind = "news" | "witness" | "debt" | "favor" | "oath" | "stain" | "injury" | "market_change" | "community_change" | "actor_relation";
 
+import { emptyPowerRumorState, applyWorldEvent, eventFromRoll, eventFromDebt } from "./worldEvents";
+
 export const STATS: { id: StatId; en: string; th: string; hint: string }[] = [
   { id: "body", en: "strength", th: "พลังกาย", hint: "แรง อึด แบก ฝ่าอุปสรรค" },
   { id: "hand", en: "Finesse", th: "ฝีมือ", hint: "อาวุธ งานช่าง การลงมือแม่น" },
@@ -392,6 +394,8 @@ export type WorldSystemsFlags = {
 export type WorldSystems = {
   schemaVersion: 1;
   flags?: WorldSystemsFlags;
+  /** Phase 3: state ที่คำนวณจากเหตุการณ์จริง (event-driven) */
+  powerRumor?: import("./worldEvents").PowerRumorState;
 };
 
 export type GameState = {
@@ -1467,7 +1471,10 @@ export function applyRoll(state: GameState, record: RollRecord): GameState {
   const storedRecord: RollRecord = { ...record, practice: awarded.practice, statPractice: traitAwarded.practice, timeMark: clock.timeMark, missionUpdate: missionResult.update };
   const storyRecord: StoryRecord = { id: `story-${record.id}`, tick: record.tick, inGameDay: state.campaign.day, title: nextScene.title, prose: nextScene.body.join("\n\n"), location: nextScene.location };
   const previousStoryRecords = state.storyRecords ?? [];
-  return { ...state, campaign: calendar.campaign, progression: { ...calendar.progression, lastPractice: awarded.practice, lastStatPractice: traitAwarded.practice }, character: updatedCharacter, currentScene: nextScene, missions, economy: missionResult.transaction ? { ...state.economy, transactions: [...state.economy.transactions, missionResult.transaction] } : state.economy, memories: [...state.memories, memory], rolls: [...state.rolls, storedRecord], storyRecords: [...previousStoryRecords.filter((entry) => entry.id !== storyRecord.id), storyRecord], relationships, tick: record.tick };
+  const priorWorld = state.worldSystems?.powerRumor ?? emptyPowerRumorState();
+  const rollEvent = eventFromRoll(state, record);
+  const updatedWorld = applyWorldEvent(priorWorld, rollEvent);
+  return { ...state, campaign: calendar.campaign, progression: { ...calendar.progression, lastPractice: awarded.practice, lastStatPractice: traitAwarded.practice }, character: updatedCharacter, currentScene: nextScene, missions, economy: missionResult.transaction ? { ...state.economy, transactions: [...state.economy.transactions, missionResult.transaction] } : state.economy, memories: [...state.memories, memory], rolls: [...state.rolls, storedRecord], storyRecords: [...previousStoryRecords.filter((entry) => entry.id !== storyRecord.id), storyRecord], relationships, tick: record.tick, worldSystems: { ...state.worldSystems, schemaVersion: 1, powerRumor: updatedWorld } };
 }
 
 export function buyMarketOffer(state: GameState, offerId: string): { state: GameState; message: string } {
@@ -1480,8 +1487,10 @@ export function buyMarketOffer(state: GameState, offerId: string): { state: Game
   const inventory = offer.kind === "goods" ? [...state.character.inventory, { ...item(`market-${offer.id}-${Date.now()}`, offer.label, "reserve", offer.note, offer.slots ?? 1, ["unlock"], { value: 1, tags: [offer.id] }), location: "carried" as const, ownership: "owned" as const }] : state.character.inventory;
   const transaction: ExchangeRecord = { id: `tx-${offer.id}-${Date.now()}`, kind: paidOnObligation ? "debt" : offer.kind === "service" ? "service" : "purchase", title: offer.kind === "service" ? `จ้าง ${offer.label}` : `รับ ${offer.label} จากตลาด`, counterpart: paidOnObligation ? "เซฟเฮาส์ของไซกะ" : offer.kind === "service" ? offer.label : state.economy.marketTitle, payment: paidOnObligation ? `หนี้บุญคุณต่อเซฟเฮาส์ · มูลค่า ${formatMoney(offer.price)}` : `จ่าย ${formatMoney(offer.price)}`, witness: paidOnObligation ? "กันทาโร่รับรู้การค้ำ" : "คนในตลาดที่มองเห็นการแลกเปลี่ยน", consequence: paidOnObligation ? `ต้องชำระด้วยแรงงาน ของ หรือภารกิจเสริมจาก ${offer.label}` : offer.priceReason ?? offer.note, tick: state.tick };
   const memory: WorldMemory = { id: `memory-${transaction.id}`, kind: "market_change", title: transaction.title, detail: `${transaction.payment}; ${transaction.consequence}`, tick: state.tick, tone: "ochre" };
+  const priorWorld = state.worldSystems?.powerRumor ?? emptyPowerRumorState();
+  const debtEvent = paidOnObligation ? applyWorldEvent(priorWorld, eventFromDebt(state, transaction.id, transaction.counterpart)) : priorWorld;
   return {
-    state:       { ...state, character: { ...state.character, resources: { ...state.character.resources, currency: { unit: "mon", amount: paidOnObligation ? currencyAmount : currencyAmount - offer.price }, property: paidOnObligation ? currencyAmount : currencyAmount - offer.price, credit: 0 }, inventory }, market: state.market.map((entry) => entry.id === offer.id ? { ...entry, available: false } : entry), economy: { ...state.economy, obligations: paidOnObligation ? state.economy.obligations.map((entry) => entry.id === "debt-safehouse-rations" ? { ...entry, note: `${entry.note} · รับ ${offer.label} เพิ่มโดยกันทาโร่ค้ำ`, due: "ก่อนออกจากที่ซ่อน หรือเมื่อกันทาโร่ทวง" } : entry) : state.economy.obligations, transactions: [...state.economy.transactions, transaction] }, memories: [...state.memories, memory] },
+    state:       { ...state, character: { ...state.character, resources: { ...state.character.resources, currency: { unit: "mon", amount: paidOnObligation ? currencyAmount : currencyAmount - offer.price }, property: paidOnObligation ? currencyAmount : currencyAmount - offer.price, credit: 0 }, inventory }, market: state.market.map((entry) => entry.id === offer.id ? { ...entry, available: false } : entry), economy: { ...state.economy, obligations: paidOnObligation ? state.economy.obligations.map((entry) => entry.id === "debt-safehouse-rations" ? { ...entry, note: `${entry.note} · รับ ${offer.label} เพิ่มโดยกันทาโร่ค้ำ`, due: "ก่อนออกจากที่ซ่อน หรือเมื่อกันทาโร่ทวง" } : entry) : state.economy.obligations, transactions: [...state.economy.transactions, transaction] }, memories: [...state.memories, memory], worldSystems: { ...state.worldSystems, schemaVersion: 1, powerRumor: debtEvent } },
     message: paidOnObligation ? `รับ ${offer.label} แล้ว · บันทึกเป็นหนี้บุญคุณและภารกิจที่ต้องชำระ` : offer.kind === "goods" ? `รับ ${offer.label} แล้ว · จ่ายเป็น ${formatMoney(offer.price)}` : `ใช้บริการ: ${offer.label} · จ่ายเป็น ${formatMoney(offer.price)}`,
   };
 }

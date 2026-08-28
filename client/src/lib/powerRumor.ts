@@ -1,9 +1,9 @@
 /**
- * Power & Rumor Network — read-only projection module (Phase 1)
+ * Power & Rumor Network — projection module (Phase 1 → Phase 3)
  *
- * ระบบนี้ไม่เปลี่ยน GameState เดิม และไม่เขียน save ใหม่ใน Phase 1
- * ทุกค่าคำนวณจาก state ที่มีจริง (memories / social / relationships /
- * community / economy / campaign) ผ่าน visibility filter
+ * Phase 1: อ่านจาก state เดิมแบบตื้นๆ
+ * Phase 3: ถ้ามี worldSystems.powerRumor (คำนวณจากเหตุการณ์จริง) ให้นำค่านั้นมาแสดง
+ *          หากยังไม่มี ให้ fallback เดาตาม Phase 1 (legacy-safe)
  *
  * กฎสถาปัตยกรรม (จาก integration contract):
  *  - อ่านอย่างเดียว: ห้ามแก้ reputation/heat โดยตรงจาก UI
@@ -13,6 +13,7 @@
  */
 
 import type { GameState } from "./game";
+import { describeFaction, type FactionReputation, type FactionHeat } from "./worldEvents";
 
 export type Language = "en" | "th";
 

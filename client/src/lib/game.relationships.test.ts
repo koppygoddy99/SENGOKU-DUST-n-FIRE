@@ -5,7 +5,7 @@ describe("public relationship projection", () => {
   it("seeds the four player-visible Saika contacts with clamped story-facing scales and source evidence", () => {
     const game = createSaikaSafehouseDemo();
 
-    expect(game.schemaVersion).toBe(8);
+    expect(game.schemaVersion).toBe(9);
     expect(game.relationships.map((contact) => contact.contactId)).toEqual(["gantaro", "tokichi", "masakichi", "genshiro"]);
     expect(game.relationships.every((contact) => contact.familiarity >= 0 && contact.familiarity <= 5)).toBe(true);
     expect(game.relationships.every((contact) => contact.affinity >= -3 && contact.affinity <= 3)).toBe(true);
@@ -30,7 +30,7 @@ describe("public relationship projection", () => {
     const migrated = normalizeGameState(legacy);
     const saved = JSON.stringify(migrated);
 
-    expect(migrated.schemaVersion).toBe(8);
+    expect(migrated.schemaVersion).toBe(9);
     expect(migrated.relationships).toHaveLength(1);
     expect(migrated.relationships[0]).toMatchObject({ contactId: "gantaro", familiarity: 5, affinity: -3 });
     expect(saved).not.toContain("internalCore");
