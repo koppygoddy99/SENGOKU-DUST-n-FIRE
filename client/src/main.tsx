@@ -8,6 +8,19 @@ import App from "./App";
 import { startLogin } from "./const";
 import "./index.css";
 
+// Conditional analytics load: only inject Umami when an endpoint is configured
+// (production). Locally the env vars are unset, so we skip it — this avoids the
+// URIError that occurred when the literal placeholder was left in index.html.
+const analyticsEndpoint = import.meta.env.VITE_ANALYTICS_ENDPOINT;
+const analyticsWebsiteId = import.meta.env.VITE_ANALYTICS_WEBSITE_ID;
+if (analyticsEndpoint && analyticsWebsiteId) {
+  const s = document.createElement("script");
+  s.defer = true;
+  s.src = `${analyticsEndpoint}/umami`;
+  s.setAttribute("data-website-id", analyticsWebsiteId);
+  document.head.appendChild(s);
+}
+
 const queryClient = new QueryClient();
 
 const redirectToLoginIfUnauthorized = (error: unknown) => {
