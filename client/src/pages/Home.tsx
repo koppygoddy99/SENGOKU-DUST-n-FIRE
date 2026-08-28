@@ -11,6 +11,8 @@ import { startLogin } from "@/const";
 import { trpc } from "@/lib/trpc";
 import { SengokuIcon, type SengokuIconName } from "@/components/SengokuIcon";
 import { StoryMap } from "@/features/story/StoryMap";
+import { PowerRumorPanel } from "@/features/powerRumor/PowerRumorPanel";
+import { buildPowerRumorSummary } from "@/lib/powerRumor";
 import { managementMenuFor, type ManagementItemId, type ManagementMenuItem } from "@/features/management/managementData";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { gmUnavailableLocalTrialNotice, historicalStatusLabel, openLocalPreview, saveLocalTrialResult, shouldFetchProfileCredits, shouldUseLocalRules, splitStoryParagraphs, withHistoricalBoundary } from "@/features/shared/gameplayHelpers";
@@ -129,6 +131,7 @@ function toGMContext(game: GameState) {
       debts: game.memories.filter((entry) => entry.kind === "debt").slice(-4).map((entry) => entry.detail),
     },
     recentMemories: game.memories.slice(-8).map((entry) => ({ title: entry.title, detail: entry.detail, tone: entry.tone })),
+    powerRumor: buildPowerRumorSummary(game, "th"),
   };
 }
 
@@ -348,6 +351,7 @@ export default function Home({ forceUiPreviewMode }: { forceUiPreviewMode?: bool
     </aside>
     <main data-testid="player-main-content" className={`main-content ${page === "play" ? "main-content--play" : ""}`} data-review-screen={reviewScreen?.screenshotFile} data-review-seed={reviewScreen?.seed} data-review-title={reviewScreen?.pageTitle}>
       {page === "home" && <StoryMap game={game} language={language} onOpen={open} />}
+      {page === "home" && <PowerRumorPanel game={game} language={language} />}
       {page === "campaigns" && <React.Suspense fallback={<DeferredViewFallback language={language} />}><CampaignsView campaigns={Object.values(campaignLibrary)} activeId={game.campaign.id} language={language} onSelect={selectCampaign} onNew={() => open("start")} /></React.Suspense>}
       {page === "start" && <StartView language={language} onStart={beginNew} />}
       {page === "play" && <React.Suspense fallback={<DeferredViewFallback language={language} />}><PlayScene game={game} language={language} onOpen={open} onUpdate={updateGame} isAuthenticated={isAuthenticated} uiPreviewMode={uiPreviewMode} onLogin={startLogin} onAccountCreditChange={() => accountCredits.refetch()} /></React.Suspense>}

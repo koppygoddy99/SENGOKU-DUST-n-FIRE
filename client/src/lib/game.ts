@@ -376,6 +376,24 @@ export type Scene = {
   suggestedActions: string[];
 };
 
+export type WorldSystemsFlags = {
+  powerRumorNetwork: boolean;
+  factionReputation: boolean;
+  scopedHeat: boolean;
+  seasonalPressure: boolean;
+  npcMemoryRetrieval: boolean;
+};
+
+/**
+ * Phase 1 placeholder: โครงสร้าง worldSystems ถูกเพิ่มเป็น optional
+ * ห้ามเปลี่ยน GameState เดิม และห้ามเขียน save ใหม่ใน Phase 1
+ * Projection ทั้งหมดคำนวณจาก state ที่มีจริงผ่าน powerRumor.ts
+ */
+export type WorldSystems = {
+  schemaVersion: 1;
+  flags?: WorldSystemsFlags;
+};
+
 export type GameState = {
   schemaVersion: number;
   credits: number;
@@ -392,6 +410,7 @@ export type GameState = {
   relationships: PublicRelationshipContact[];
   historicalBoundary?: HistoricalBoundary & { tick: number };
   progression?: ProgressionState;
+  worldSystems?: WorldSystems;
   tick: number;
 };
 
@@ -1101,6 +1120,7 @@ export function normalizeGameState(state: GameState): GameState {
     relationships,
     progression: { ...progression, currentAge: Math.max(progression.currentAge, progression.ageAtCampaignStart) },
     economy: state.economy ?? (campaign.id === "camp-saika-1569" ? buildSaikaEconomy() : buildCampaignEconomy(campaign)),
+    worldSystems: state.worldSystems ?? { schemaVersion: 1 },
   };
 }
 

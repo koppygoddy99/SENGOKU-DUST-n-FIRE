@@ -1,0 +1,58 @@
+/* Story/Play compact persistent status rail (Phase 1) */
+.story-compact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 16px;
+  border-bottom: 1px solid var(--rule-strong);
+  background: color-mix(in srgb, var(--paper-strong) 92%, transparent);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+.story-compact__group { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
+.story-compact__group + .story-compact__group { border-left: 1px solid var(--rule); padding-left: 14px; }
+
+.sc-vital {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: Poppins, sans-serif; font-size: 12px; font-weight: 700; color: var(--ink);
+}
+.sc-vital svg { color: var(--ochre); }
+.sc-vital.is-critical { color: var(--vermilion); }
+.sc-vital.is-critical svg { color: var(--vermilion); }
+
+.sc-stat { font-family: Poppins, sans-serif; font-size: 10px; color: var(--ink-soft); white-space: nowrap; }
+.sc-stat b { color: var(--ink); font-size: 13px; }
+
+.sc-time { font-family: Poppins, sans-serif; font-size: 10px; color: var(--ink-soft); gap: 6px; }
+.sc-time span { white-space: nowrap; }
+
+.sc-power { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.sc-power--unseen { color: var(--teal); }
+.sc-power--suspected, .sc-power--identified { color: var(--ochre); }
+.sc-power--wanted, .sc-power--archived { color: var(--vermilion); }
+.sc-faction { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; color: var(--ink-soft); white-space: nowrap; }
+.sc-faction svg { color: var(--teal); }
+.sc-seasonal { display: inline-flex; align-items: center; gap: 4px; font-size: 10px; color: var(--ink-soft); white-space: nowrap; }
+.sc-seasonal svg { color: var(--ochre); }
+
+.story-compact__alert {
+  flex-basis: 100%;
+  margin-top: 2px;
+  padding: 5px 10px;
+  border-left: 3px solid var(--vermilion);
+  background: color-mix(in srgb, var(--vermilion) 7%, transparent);
+  color: var(--vermilion);
+  font-family: "Noto Serif Thai", serif;
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (max-width: 720px) {
+  .story-compact { gap: 8px 12px; padding: 8px 12px; }
+  .story-compact__group + .story-compact__group { border-left: 0; padding-left: 0; }
+  .sc-stat { font-size: 9px; }
+}
