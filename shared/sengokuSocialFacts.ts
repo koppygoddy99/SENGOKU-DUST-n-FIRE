@@ -149,7 +149,7 @@ export const sengokuSocialFacts: SengokuSocialFact[] = [
     regions: ["pre-modern Japan; evidence varies"],
     confidence: "requires-local-source",
     claim: "Research on pre-modern Japan treats healing, religious specialists, ritual, and ideas about illness as historically connected while also emphasising evidentiary gaps.",
-    gmUse: "Let an NPC seek a healer, medicine, temple, ritual, or family care as culturally situated choices. Keep the game’s wound and focus tracks clearly abstract.",
+    gmUse: "Let an NPC seek a healer, medicine, temple, ritual, or family care as culturally situated choices. Keep the game’s blood and focus tracks clearly abstract.",
     prohibition: "Do not diagnose real disease, guarantee treatment, or present ritual as medically proven.",
     sourceIds: ["J-11", "J-08"],
   },

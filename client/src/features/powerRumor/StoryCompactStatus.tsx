@@ -14,8 +14,8 @@ export function StoryCompactStatus({ game, language }: { game: GameState; langua
   return (
     <aside className="story-compact" aria-label={copy(language, "Campaign status", "สถานะแคมเปญ")} data-testid="story-compact-status">
       <div className="story-compact__group story-compact__vitals">
-        <span className={`sc-vital ${data.vitals.critical ? "is-critical" : ""}`} title={copy(language, "Wounds", "บาดแผล")}>
-          <HeartPulse size={13} /> {data.vitals.wounds}/{data.vitals.maxWounds}
+        <span className={`sc-vital ${data.vitals.critical ? "is-critical" : ""}`} title={copy(language, "Blood", "เลือด")}>
+          <HeartPulse size={13} /> {data.vitals.blood}/{data.vitals.maxBlood}
         </span>
         <span className="sc-vital" title={copy(language, "Focus", "สมาธิ")}>
           <Brain size={13} /> {data.vitals.focus}/{data.vitals.maxFocus}

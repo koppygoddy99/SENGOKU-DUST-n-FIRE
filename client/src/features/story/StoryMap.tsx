@@ -134,8 +134,8 @@ export function StoryMap({ game, language, onOpen }: { game: GameState; language
         </div>
         <div className="story-map__consequence"><p className="story-map__eyebrow">{lastRoll ? outcomeLabel(lastRoll.outcome) : copy(language, "THE CURRENT PAGE", "หน้าปัจจุบัน")}</p><h2>{localized(language, lastRoll?.summary ?? game.currentScene.title)}</h2><p>{localized(language, lastRoll?.consequence ?? game.currentScene.pressure)}</p></div>
         <dl className="story-map__condition-strip" aria-label={copy(language, "Current condition", "สภาพปัจจุบัน")}>
-          <div><dt>{copy(language, "Wounds", "บาดแผล")}</dt><dd>{game.character.vitals.wounds}/6</dd></div>
-          <div><dt>{copy(language, "Focus", "ค่าสติ")}</dt><dd>{game.character.vitals.focus}/6</dd></div>
+          <div><dt>{copy(language, "Blood", "เลือด")}</dt><dd>{game.character.vitals.blood}/{game.character.vitals.maxBlood ?? 6}</dd></div>
+          <div><dt>{copy(language, "Focus", "ค่าสติ")}</dt><dd>{game.character.vitals.focus}/{game.character.vitals.maxFocus ?? 6}</dd></div>
           <div><dt>{copy(language, "Trait cap", "เพดาน Trait")}</dt><dd>10</dd></div>
         </dl>
         <Button className="df-button df-button--primary story-map__continue" aria-label={copy(language, `Return to ${game.currentScene.location}`, `กลับสู่ฉากที่${game.currentScene.location}`)} onClick={() => onOpen("play")}><SengokuIcon name="sword" tone="ink" size={17} /> {copy(language, "Continue scene", "กลับสู่ฉาก")} <ArrowRight size={18} /></Button>

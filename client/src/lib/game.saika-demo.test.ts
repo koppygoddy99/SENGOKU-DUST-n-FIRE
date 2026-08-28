@@ -7,7 +7,7 @@ describe("Saika safehouse local demo", () => {
     expect(game.campaign.year).toBe(1569);
     expect(game.campaign.location).toContain("เซฟเฮาส์ลับของไซกะ");
     expect(game.character.name).toBe("ซาเนฟุยุ");
-    expect(game.character.vitals.wounds).toBe(5);
+    expect(game.character.vitals.blood).toBe(5);
     expect(game.currentScene.speaker).toBe("กันทาโร่");
     expect(game.currentScene.body.join("\n\n")).toContain("เอจิยะ");
     expect(game.missions[0].title).toBe("คำตอบใต้ห้องขัง");

@@ -32,6 +32,8 @@ export type GMContext = {
   mainThread?: { id: string; title: string; giver: string; objective: string; pressure: string; deadline: string; reward: string; risk: string; canonTerms: string[]; challenge: "ordinary" | "elevated" };
   sideLeads: Array<{ id: string; title: string; objective: string; pressure: string; deadline: string }>;
   socialState: { honor: number; influence: number; stain: number; rumors: string[]; oaths: string[]; debts: string[] };
+  /** แต้มเติบโต (ผู้เล่นเห็นได้) — AI อ่านเพื่อเข้าใจทิศทางการเติบโต ห้ามใช้เปลี่ยนค่าเอง */
+  progression?: { growthPoints: number; milestonePoints: number; claimedMilestoneIds: string[]; recentVitalEvents: Array<{ type: string; delta: number; reason: string }> };
   recentMemories: Array<{ title: string; detail: string; tone: string }>;
 };
 

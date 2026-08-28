@@ -34,6 +34,8 @@ const contextSchema = z.object({
   mainThread: z.object({ id: z.string().max(160), title: z.string().max(160), giver: z.string().max(120), objective: z.string().max(500), pressure: z.string().max(300), deadline: z.string().max(160), reward: z.string().max(300), risk: z.string().max(300), canonTerms: z.array(z.string().max(100)).max(8), challenge: z.enum(["ordinary", "elevated"]) }).optional(),
   sideLeads: z.array(z.object({ id: z.string().max(160), title: z.string().max(160), objective: z.string().max(500), pressure: z.string().max(300), deadline: z.string().max(160) })).max(2).default([]),
   socialState: z.object({ honor: z.number().int().min(0).max(6), influence: z.number().int().min(0).max(6), stain: z.number().int().min(0).max(6), rumors: z.array(z.string().max(200)).max(5), oaths: z.array(z.string().max(200)).max(5), debts: z.array(z.string().max(200)).max(5) }),
+  /** แต้มเติบโตแบบ read-only — AI ห้ามเพิ่มแต้มเอง (ไม่มี write path) ใช้เพื่อบรรยายการเติบโต/เสนอรางวัลเท่านั้น */
+  progression: z.object({ growthPoints: z.number().int().min(0).max(99), milestonePoints: z.number().int().min(0).max(99), claimedMilestoneIds: z.array(z.string().max(160)).max(50), recentVitalEvents: z.array(z.object({ type: z.string().max(20), delta: z.number().int().min(-5).max(5), reason: z.string().max(120) })).max(5) }).optional(),
   recentMemories: z.array(z.object({ title: z.string().max(160), detail: z.string().max(360), tone: z.string().max(30) })).max(8),
 });
 

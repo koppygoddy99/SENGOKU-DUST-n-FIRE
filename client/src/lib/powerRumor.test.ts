@@ -45,17 +45,17 @@ describe("Power & Rumor Network — Phase 1 read-only projection", () => {
   it("builds a compact projection for Story/Play with vitals and attributes", () => {
     const game = demo();
     const compact = buildStoryCompact(game, "th");
-    expect(compact.vitals.wounds).toBe(game.character.vitals.wounds);
-    expect(compact.vitals.maxWounds).toBe(game.character.vitals.maxWounds ?? 6);
+    expect(compact.vitals.blood).toBe(game.character.vitals.blood);
+    expect(compact.vitals.maxBlood).toBe(game.character.vitals.maxBlood ?? 6);
     expect(compact.vitals.maxFocus).toBe(game.character.vitals.maxFocus ?? 6);
     expect(compact.attributes.length).toBe(5); // body hand wit mind heart
     expect(compact.time.province).toBe(game.campaign.region);
     expect(compact.powerRumor.topFactions.length).toBeGreaterThan(0);
   });
 
-  it("flags critical vitals when wounds are critically low", () => {
+  it("flags critical vitals when blood is critically low", () => {
     const game = demo();
-    game.character.vitals.wounds = 2;
+    game.character.vitals.blood = 2;
     const compact = buildStoryCompact(game, "th");
     expect(compact.vitals.critical).toBe(true);
   });
