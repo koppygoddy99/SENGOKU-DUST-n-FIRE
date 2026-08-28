@@ -16,6 +16,9 @@ export type Currency = { unit: CurrencyUnit; amount: number };
 export type MemoryKind = "news" | "witness" | "debt" | "favor" | "oath" | "stain" | "injury" | "market_change" | "community_change" | "actor_relation";
 
 import { emptyPowerRumorState, applyWorldEvent, eventFromRoll, eventFromDebt } from "./worldEvents";
+import { regionInitialState, FACTION_NAMES } from "./regionInitialState";
+import { timelineRegionKey } from "./historicalTimeline";
+import type { FactionReputation, FactionHeat } from "./worldEvents";
 
 export const STATS: { id: StatId; en: string; th: string; hint: string }[] = [
   { id: "body", en: "strength", th: "พลังกาย", hint: "แรง อึด แบก ฝ่าอุปสรรค" },
@@ -791,6 +794,30 @@ export function canonicalDifficulty(value: number): Difficulty {
   return 32;
 }
 
+/** แปลง stance เป็นคะแนนเริ่มต้นสำหรับ FactionReputation (สอดคล้อง worldEvents.stanceFromScore) */
+function stanceScore(stance: string): number {
+  switch (stance) {
+    case "allies": return 3;
+    case "friendly": return 2;
+    case "helpful": case "cooperative": return 1.5;
+    case "neutral": case "conditional-cooperation": return 0;
+    case "wary": return -1;
+    case "interfering": return -2;
+    case "hostile": return -3;
+    case "war": return -3;
+    default: return 0;
+  }
+}
+
+/** แปลงระดับ heat (0..5) เป็น status ตรงกับ worldEvents.applyWorldEvent */
+function heatStatus(level: number): FactionHeat["status"] {
+  if (level <= 0) return "unseen";
+  if (level <= 1) return "suspected";
+  if (level <= 3) return "identified";
+  if (level <= 4) return "wanted";
+  return "archived";
+}
+
 export function xpNeededForMasteryLevel(level: number) {
   return level >= MAX_MASTERY_LEVEL ? 0 : MASTERY_PROGRESS_PER_LEVEL;
 }
@@ -1023,22 +1050,47 @@ export function createGameState(context: CampaignContext, draft: CharacterDraft)
   const template = templateById(draft.templateId);
   const mission: Mission = { ...template.mission, title: openingProfileFor(template, context.selectionSeed ?? 0).title, request: openingRequestFor(template, context, character), id: `mission-${Date.now()}`, state: "offered" as MissionState, role: "main", visibility: "visible", progress: { current: 0, required: 2, triggerPhrases: template.mission.options } };
   const opening = openingScene(character, context, mission);
+  // ค่าเริ่มต้นตามเมือง/แคว้น อิงไทมไลน์ประวัติศาสตร์ (อิง sengoku-rpg-historian)
+  const regionInit = regionInitialState(context.year, context.region, context.season);
+  // สร้าง powerRumor เริ่มต้นจากบริบทภูมิภาค (faction stance + heat) — กลไก event-driven เริ่มทันที
+  const initialFactions: FactionReputation[] = (Object.keys(regionInit.factionStance) as Array<keyof typeof regionInit.factionStance>).map((fid) => {
+    const stance = regionInit.factionStance[fid]!;
+    return {
+      factionId: fid,
+      name: FACTION_NAMES[fid] ?? fid,
+      score: stanceScore(stance),
+      stance,
+      trend: "steady",
+      reasons: [regionInit.factionReason[fid] ?? "สถานการณ์บริบทของแคว้น"],
+    };
+  });
+  const initialHeat: FactionHeat[] = regionInit.heatLevel > 0
+    ? [{ provinceId: timelineRegionKey(context.region), locationId: context.location, level: regionInit.heatLevel, status: heatStatus(regionInit.heatLevel), reasons: [regionInit.heatReason] }]
+    : [];
   return {
-    schemaVersion: 8,
+    schemaVersion: 9,
     credits: 50,
     campaign: context,
     character,
-    community: { food: 4, labor: 3, voice: 2, safety: 3, cohesion: 4, lastChange: "กองกำลังเดินผ่านเส้นทางหลัก" },
+    community: {
+      food: regionInit.community.food ?? 4,
+      labor: regionInit.community.labor ?? 3,
+      voice: 2,
+      safety: regionInit.community.safety ?? 3,
+      cohesion: 4,
+      lastChange: regionInit.brief,
+    },
     currentScene: opening,
     missions: [mission],
     market: buildMarket(context.season),
-    economy: buildCampaignEconomy(context),
+    economy: { ...buildCampaignEconomy(context), routeStatus: regionInit.routeStatus },
     memories: [{ id: `memory-${Date.now()}`, kind: "news", title: opening.title, detail: opening.body.join("\n\n"), tick: 1, tone: "teal" }],
     rolls: [],
     storyRecords: [{ id: `story-opening-${context.id}`, tick: 1, inGameDay: context.day, title: opening.title, prose: opening.body.join("\n\n"), location: opening.location }],
     relationships: [],
     progression: defaultProgression(context, template.age, context.season),
     tick: 1,
+    worldSystems: { schemaVersion: 1, powerRumor: { schemaVersion: 1, factions: initialFactions, heatTracks: initialHeat, events: [] } },
   };
 }
 

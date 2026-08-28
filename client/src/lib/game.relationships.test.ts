@@ -45,7 +45,7 @@ describe("public relationship projection", () => {
       { name: "Hana", identity: "player-defined", templateId: "freeform", freeformOccupation: "traveler", origin: "Mikawa", strength: "careful", weakness: "old debt", flaws: ["old debt"], answers: {} },
     );
 
-    expect(game.schemaVersion).toBe(8);
+    expect(game.schemaVersion).toBe(9);
     expect(game.relationships).toEqual([]);
   });
 

@@ -48,11 +48,23 @@ export type WorldEvent = {
   sourceEventIds: string[];
 };
 
+export type FactionStanceValue =
+  | "allies"
+  | "friendly"
+  | "helpful"
+  | "cooperative"
+  | "neutral"
+  | "conditional-cooperation"
+  | "wary"
+  | "interfering"
+  | "hostile"
+  | "war";
+
 export type FactionReputation = {
   factionId: string;
   name: string;
   score: number; // -3 .. +3 (จากรายงานวิจัย Blades-in-the-Dark แนวทาง)
-  stance: "allies" | "friendly" | "helpful" | "neutral" | "interfering" | "hostile" | "war";
+  stance: FactionStanceValue;
   trend: "improving" | "steady" | "worsening";
   lastChangedBy?: string;
   reasons: string[];
@@ -73,13 +85,38 @@ export type PowerRumorState = {
   events: WorldEvent[];
 };
 
-const FACTION_NAMES: Record<string, string> = {
+export const FACTION_NAMES: Record<string, string> = {
   villagers: "ชาวบ้าน",
   "checkpoint-guard": "ผู้คุมด่าน",
   "sakai-merchants": "สภาพ่อค้า",
   "local-warband": "กลุ่มนักรบท้องถิ่น",
   "temple-shrine": "วัดหรือศาลเจ้า",
 };
+
+/** คะแนนพื้นฐานของแต่ละ stance (ลบ = ไม่ไว้ใจ, บวก = เชื่อใจ) — ใช้ตั้งค่าเริ่มต้นจากภูมิภาค */
+const STANCE_SCORE: Record<FactionStanceValue, number> = {
+  allies: 3,
+  friendly: 2,
+  helpful: 1,
+  cooperative: 0.5,
+  neutral: 0,
+  "conditional-cooperation": -0.5,
+  wary: -1,
+  interfering: -2,
+  hostile: -3,
+  war: -3,
+};
+
+/** แปลง stance → คะแนนเริ่มต้น (-3..+3) */
+export function stanceScore(stance: FactionStanceValue): number {
+  return STANCE_SCORE[stance] ?? 0;
+}
+
+/** แปลงระดับ heat (0..5) → status ตามเกณฑ์ระบบ */
+export function heatStatus(level: number): FactionHeat["status"] {
+  const l = Math.max(0, Math.min(5, level));
+  return l <= 0 ? "unseen" : l <= 1 ? "suspected" : l <= 3 ? "identified" : l <= 4 ? "wanted" : "archived";
+}
 
 function stanceFromScore(score: number): FactionReputation["stance"] {
   if (score >= 3) return "allies";
@@ -228,7 +265,10 @@ export function describeFaction(faction: FactionReputation, language: Language =
     allies: "เป็นพันธมิตร",
     friendly: "เป็นมิตร",
     helpful: "ยินดีช่วย",
+    cooperative: "ร่วมมือ",
     neutral: "เป็นกลาง",
+    "conditional-cooperation": "ร่วมมือแบบมีเงื่อนไข",
+    wary: "ระแวง",
     interfering: "ก่อกวน",
     hostile: "เป็นศัตรู",
     war: "ทำสงคราม",
@@ -237,7 +277,10 @@ export function describeFaction(faction: FactionReputation, language: Language =
     allies: "Allies",
     friendly: "Friendly",
     helpful: "Helpful",
+    cooperative: "Cooperative",
     neutral: "Neutral",
+    "conditional-cooperation": "Conditional cooperation",
+    wary: "Wary",
     interfering: "Interfering",
     hostile: "Hostile",
     war: "War",
