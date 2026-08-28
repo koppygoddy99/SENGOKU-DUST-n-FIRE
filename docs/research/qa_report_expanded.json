@@ -1,0 +1,12 @@
+{
+  "count": 66,
+  "expected": 66,
+  "count_ok": true,
+  "duplicate_ids": [],
+  "missing_fields": [],
+  "missing_trade_fields": [],
+  "deep_dive_count": 10,
+  "invalid_events": [],
+  "month_type_errors": [],
+  "valid": true
+}

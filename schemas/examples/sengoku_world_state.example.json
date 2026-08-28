@@ -1,0 +1,261 @@
+{
+  "schema_version": "0.1.0",
+  "run_id": "run_demo_1577_sakai",
+  "world_snapshot": {
+    "schema_version": "0.1.0",
+    "created_at": "1577-06-10",
+    "updated_at": "1577-06-10",
+    "provenance": {
+      "kind": "game_invention",
+      "confidence_label": "game_invention",
+      "note": "ตัวอย่าง state เพื่อทดสอบระบบ ไม่ใช่บัญชีประวัติศาสตร์"
+    },
+    "version": 1,
+    "world_id": "world_sengoku_demo",
+    "run_id": "run_demo_1577_sakai",
+    "current_date": "1577-06-10",
+    "calendar_system": "gregorian_game_clock",
+    "current_era_name": "Tenshō",
+    "current_season": "rainy_season",
+    "current_province_id": "izumi",
+    "active_route_ids": ["route_sakai_kyoto", "route_sakai_kishu"],
+    "projection_version": 4
+  },
+  "factions": [
+    {
+      "schema_version": "0.1.0",
+      "created_at": "1577-01-01",
+      "updated_at": "1577-06-10",
+      "provenance": {"kind": "historical_source", "source_url": "https://www.sakai-tcb.or.jp/en/about-sakai/history/", "confidence_label": "supported", "note": "Sakai trade-city context; NPC names and run state are fictional"},
+      "version": 1,
+      "faction_id": "faction_sakai_merchant_council",
+      "name": "สภาพ่อค้าเมืองซาไก",
+      "name_jp": "堺の会合衆",
+      "faction_type": "merchant_council",
+      "interests": ["port_security", "warehouse_access", "profit", "city_autonomy"],
+      "resources": {"credit": 65, "warehouses": 8, "ships": 12, "information": 70},
+      "known_region_ids": ["izumi", "settsu", "yamashiro", "kii"],
+      "policy": {"protect_trusted_merchants": true, "report_forgeries": true, "avoid_open_war": true},
+      "visibility": "public"
+    },
+    {
+      "schema_version": "0.1.0",
+      "created_at": "1577-01-01",
+      "updated_at": "1577-06-10",
+      "provenance": {"kind": "derived_projection", "confidence_label": "game_invention", "note": "ตัวอย่างฝ่ายท่า ไม่แทนรายชื่อฝ่ายจริงทั้งหมด"},
+      "version": 1,
+      "faction_id": "faction_sakai_gate_guard",
+      "name": "ผู้คุมด่านทางใต้ซาไก",
+      "name_jp": "堺南口番所",
+      "faction_type": "military_unit",
+      "interests": ["tax_collection", "document_control", "public_order"],
+      "resources": {"guards": 18, "seals": 4, "search_budget": 0.55},
+      "known_region_ids": ["izumi", "sakai"],
+      "policy": {"inspect_suspicious_seals": true, "accept_compensation": true},
+      "visibility": "public"
+    }
+  ],
+  "relationships": [
+    {
+      "schema_version": "0.1.0",
+      "created_at": "1577-06-01",
+      "updated_at": "1577-06-10",
+      "provenance": {"kind": "derived_projection", "source_event_ids": ["evt_help_village", "evt_forged_pass"], "confidence": 0.78, "confidence_label": "game_invention", "note": "ตัวอย่างการคำนวณจาก event"},
+      "version": 3,
+      "relationship_id": "rel_player_merchant_council",
+      "subject_id": "player_001",
+      "target_id": "faction_sakai_merchant_council",
+      "scope": {"scope_type": "settlement", "province_id": "izumi", "settlement_id": "sakai"},
+      "scores": {"trust": 38, "respect": 21, "fear": 4, "debt": 12, "resentment": 0, "reliability": 58},
+      "stance": "cautious_cooperation",
+      "last_changed_at": "1577-06-10",
+      "visible_to": ["player_001", "gm_001"]
+    },
+    {
+      "schema_version": "0.1.0",
+      "created_at": "1577-06-01",
+      "updated_at": "1577-06-10",
+      "provenance": {"kind": "derived_projection", "source_event_ids": ["evt_forged_pass"], "confidence": 0.91, "confidence_label": "game_invention", "note": "ตัวอย่าง; faction ผู้คุมเห็นหลักฐานตราปลอม"},
+      "version": 2,
+      "relationship_id": "rel_player_gate_guard",
+      "subject_id": "player_001",
+      "target_id": "faction_sakai_gate_guard",
+      "scope": {"scope_type": "gate", "province_id": "izumi", "settlement_id": "sakai", "gate_id": "gate_sakai_south"},
+      "scores": {"trust": -22, "respect": 7, "fear": 3, "debt": 0, "resentment": 31, "reliability": 42},
+      "stance": "interfering",
+      "last_changed_at": "1577-06-10",
+      "visible_to": ["player_001", "gm_001"]
+    }
+  ],
+  "incidents": [
+    {
+      "schema_version": "0.1.0",
+      "created_at": "1577-06-08",
+      "updated_at": "1577-06-08",
+      "provenance": {"kind": "game_invention", "confidence_label": "game_invention", "note": "ตัวอย่างเหตุการณ์ในเกม"},
+      "version": 1,
+      "incident_id": "incident_forged_pass",
+      "incident_type": "forgery",
+      "occurred_at": "1577-06-08",
+      "province_id": "izumi",
+      "settlement_id": "sakai",
+      "actor_ids": ["player_001", "npc_clerk_004"],
+      "visibility": "suspected",
+      "severity": 2,
+      "witness_count": 1,
+      "evidence_strength": 0.82,
+      "identity_confidence": 0.66,
+      "affected_faction_ids": ["faction_sakai_gate_guard", "faction_sakai_merchant_council"],
+      "effects": [
+        {"target_id": "faction_sakai_gate_guard", "delta_type": "heat", "delta": 2},
+        {"target_id": "faction_sakai_merchant_council", "delta_type": "trust", "delta": -8}
+      ]
+    }
+  ],
+  "heat_tracks": [
+    {
+      "schema_version": "0.1.0",
+      "created_at": "1577-06-08",
+      "updated_at": "1577-06-10",
+      "provenance": {"kind": "derived_projection", "source_event_ids": ["incident_forged_pass"], "confidence_label": "game_invention"},
+      "version": 2,
+      "heat_track_id": "heat_player_sakai_south_gate",
+      "subject_id": "player_001",
+      "scope": {"scope_type": "gate", "province_id": "izumi", "settlement_id": "sakai", "gate_id": "gate_sakai_south", "faction_id": "faction_sakai_gate_guard"},
+      "status": "identified",
+      "level": 3,
+      "incident_severity": 2,
+      "witness_count": 1,
+      "evidence_strength": 0.82,
+      "identity_confidence": 0.66,
+      "communication_speed": 0.75,
+      "search_budget": 0.55,
+      "border_control": 0.48,
+      "political_priority": 0.35,
+      "last_incident_ids": ["incident_forged_pass"],
+      "decay_rule": "ลด local suspicion เมื่อผ่านเหตุการณ์สาธารณะสองครั้งโดยไม่เกิดหลักฐานใหม่; incident documented ไม่ลบ"
+    }
+  ],
+  "seasonal_states": [
+    {
+      "schema_version": "0.1.0",
+      "created_at": "1577-06-10",
+      "updated_at": "1577-06-10",
+      "provenance": {"kind": "derived_projection", "confidence_label": "game_invention", "note": "ค่าตัวอย่างที่ผูกกับฤดูฝนและภูมิภาค Sakai"},
+      "version": 1,
+      "seasonal_state_id": "season_sakai_1577_06",
+      "scope": {"scope_type": "province", "province_id": "izumi"},
+      "date": "1577-06-10",
+      "calendar_system": "gregorian_game_clock",
+      "lunar_month": null,
+      "crop_phase": "transplanting",
+      "food_stock": 0.62,
+      "labor_availability": 0.38,
+      "road_condition": 0.54,
+      "river_level": 0.76,
+      "sea_state": 0.51,
+      "disease_risk": 0.43,
+      "war_readiness": 0.61,
+      "market_pressure": 0.67,
+      "reason_codes": ["rainy_season", "transplanting_labor_demand", "river_high", "port_market_active"]
+    }
+  ],
+  "markets": [
+    {
+      "schema_version": "0.1.0",
+      "created_at": "1577-06-10",
+      "updated_at": "1577-06-10",
+      "provenance": {"kind": "game_invention", "confidence_label": "game_invention", "note": "ตัวอย่างตลาดสำหรับทดสอบ query"},
+      "version": 1,
+      "market_id": "market_sakai_port",
+      "province_id": "izumi",
+      "settlement_id": "sakai",
+      "goods": [
+        {"item_id": "rice", "stock": 0.48, "price_band": "high", "price_basis": "ฝนและแรงกดดันจากเสบียง", "trend": "rising", "provenance": {"kind": "derived_projection", "confidence_label": "game_invention"}},
+        {"item_id": "salt", "stock": 0.72, "price_band": "normal", "price_basis": "ท่าเรือและเส้นทางทะเลยังเปิด", "trend": "stable", "provenance": {"kind": "derived_projection", "confidence_label": "game_invention"}},
+        {"item_id": "iron_tools", "stock": 0.58, "price_band": "normal", "price_basis": "ช่างเมืองและการขนส่งทางเรือ", "trend": "volatile", "provenance": {"kind": "derived_projection", "confidence_label": "game_invention"}}
+      ],
+      "route_ids": ["route_sakai_kyoto", "route_sakai_kishu"],
+      "controlling_faction_ids": ["faction_sakai_merchant_council", "faction_sakai_gate_guard"]
+    }
+  ],
+  "npc_memories": [
+    {
+      "schema_version": "0.1.0",
+      "created_at": "1577-06-08",
+      "updated_at": "1577-06-10",
+      "provenance": {"kind": "npc_report", "source_event_ids": ["incident_forged_pass"], "confidence": 0.66, "confidence_label": "game_invention", "note": "เสมียนเห็นผู้เล่นบางส่วน แต่ไม่ยืนยันตัวตนเต็มที่"},
+      "version": 1,
+      "memory_id": "memory_clerk_player_forged_pass",
+      "actor_id": "npc_clerk_004",
+      "memory_type": "belief",
+      "summary": "เสมียนเชื่อว่าผู้เดินทางคนนั้นใช้ตราประทับที่ไม่ตรงกับคลังซาไก แต่จำใบหน้าได้ไม่ชัด",
+      "salience": 0.81,
+      "confidence": 0.66,
+      "scope": {"scope_type": "settlement", "province_id": "izumi", "settlement_id": "sakai"},
+      "visibility": "private",
+      "decay_rate": 0.08,
+      "source_event_ids": ["incident_forged_pass"],
+      "contradiction_ids": []
+    },
+    {
+      "schema_version": "0.1.0",
+      "created_at": "1577-06-09",
+      "updated_at": "1577-06-10",
+      "provenance": {"kind": "rumor", "source_event_ids": ["incident_forged_pass"], "confidence": 0.31, "confidence_label": "game_invention", "note": "ข่าวลือจากคนแบกหาม ไม่ใช่หลักฐาน"},
+      "version": 1,
+      "memory_id": "memory_porter_rumor_player_bandit",
+      "actor_id": "npc_porter_012",
+      "memory_type": "rumor",
+      "summary": "คนแบกหามได้ยินว่ามีคนของฝ่ายศัตรูปลอมตราซาไก แต่ไม่รู้ว่าเป็นผู้เล่นหรือไม่",
+      "salience": 0.42,
+      "confidence": 0.31,
+      "scope": {"scope_type": "settlement", "province_id": "izumi", "settlement_id": "sakai"},
+      "visibility": "shared",
+      "decay_rate": 0.22,
+      "source_event_ids": ["incident_forged_pass"],
+      "contradiction_ids": ["memory_clerk_player_forged_pass"]
+    }
+  ],
+  "context_summaries": [
+    {
+      "schema_version": "0.1.0",
+      "created_at": "1577-06-10",
+      "updated_at": "1577-06-10",
+      "provenance": {"kind": "derived_projection", "source_event_ids": ["incident_forged_pass"], "confidence_label": "game_invention"},
+      "version": 1,
+      "context_summary_id": "ctx_npc_gate_guard_sakai",
+      "scope": {"scope_type": "npc", "province_id": "izumi", "actor_id": "npc_gate_guard_001"},
+      "time_window": {"from": "1577-06-01", "to": "1577-06-10"},
+      "layers": {
+        "invariants": ["Sakai is a port city with gate inspection", "The NPC must not reveal hidden faction data"],
+        "current_scene": ["Rainy season", "South gate inspection is active", "Player presents a travel document"],
+        "local_facts": ["A suspected forged seal was found on 1577-06-08", "Player is identified with confidence 0.66"],
+        "actor_memory": ["The clerk believes the seal did not match the warehouse record", "A porter rumor says an enemy agent may be involved"],
+        "recent_causal_events": ["incident_forged_pass increased gate heat and merchant concern"]
+      },
+      "source_ids": ["incident_forged_pass", "heat_player_sakai_south_gate", "memory_clerk_player_forged_pass", "memory_porter_rumor_player_bandit"],
+      "token_estimate": 210,
+      "audience": "npc"
+    }
+  ],
+  "event_log": [
+    {
+      "schema_version": "0.1.0",
+      "created_at": "1577-06-08",
+      "updated_at": "1577-06-08",
+      "provenance": {"kind": "game_invention", "confidence_label": "game_invention"},
+      "version": 1,
+      "event_id": "evt_forged_pass",
+      "event_type": "travel_document_inspection",
+      "occurred_at": "1577-06-08",
+      "actor_ids": ["player_001", "npc_clerk_004", "npc_gate_guard_001"],
+      "province_id": "izumi",
+      "settlement_id": "sakai",
+      "caused_by_event_ids": [],
+      "payload": {"document_status": "suspected_forgery", "player_choice": "deny_knowledge", "witness_count": 1},
+      "knowledge_scope": ["faction_sakai_gate_guard", "npc_clerk_004", "npc_gate_guard_001"],
+      "visibility": "suspected"
+    }
+  ]
+}

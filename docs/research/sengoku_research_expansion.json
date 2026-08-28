@@ -1,0 +1,125 @@
+{
+  "schema_version": "0.1.0",
+  "document_id": "sengoku-historian-world-state-research-expansion",
+  "title_th": "งานวิจัยต่อยอด Sengoku Historian และ World State",
+  "scope": {
+    "period": {"from": 1467, "to": 1615, "calendar_note": "ญี่ปุ่นยุคก่อนเมจิใช้ปฏิทินจันทรสุริยคติ; การแปลงเป็น Gregorian ต้องเก็บความไม่แน่นอน"},
+    "provinces": 66,
+    "research_languages": ["ไทย", "ญี่ปุ่น", "อังกฤษ"],
+    "historical_method": ["primary_or_institutional_source_first", "cross_check", "separate_fact_inference_legend_game_invention"]
+  },
+  "recommended_ui": {
+    "decision": "keep_contextual_panels_and_add_one_global_network_menu",
+    "global_menu": {"id": "power_and_rumor_network", "name_th": "เครือข่ายอำนาจและข่าวสาร", "tabs": ["power_map", "relationships", "regional_risk", "markets_and_routes", "seasonal_pressure", "records_and_rumors"]},
+    "contextual_panels": [
+      {"location": "dialogue", "show": ["current_faction_stance", "what_this_faction_knows", "current_request", "relevant_debt"]},
+      {"location": "hud", "show": ["month_or_season", "local_heat_label", "current_route_pressure"]},
+      {"location": "province_screen", "show": ["known_factions", "known_risk", "market_band", "route_condition", "short_term_consequences"]}
+    ],
+    "visibility_classes": ["known_to_player", "known_to_character", "rumor", "hidden_truth", "unknown"]
+  },
+  "reputation_system": {
+    "principle": "relationship_edge_per_faction_or_community",
+    "axes": ["trust", "respect", "fear", "debt", "resentment", "reliability"],
+    "recommended_internal_range": [-100, 100],
+    "ui_rule": "show semantic stance first and numbers only when planning requires precision",
+    "update_event_required": ["actor_id", "target_faction_id", "action", "magnitude", "witness_scope", "evidence_strength", "occurred_at", "location", "confidence"],
+    "decay": {"rule": "conditional", "examples": {"rumor": "fast", "trust": "medium_and_experience_based", "debt": "slow", "resentment": "slow_if_documented", "fear": "depends_on_regime_change"}},
+    "example": {"villagers": {"trust": 65, "debt": 42, "respect": 18}, "samurai_guard": {"trust": -24, "respect": 8, "fear": 17}, "merchant_council": {"trust": 38, "respect": 21, "debt": 12}}
+  },
+  "heat_wanted_system": {
+    "scopes": ["local", "province", "faction_alert"],
+    "components": ["incident_severity", "witness_count", "evidence_strength", "identity_confidence", "communication_speed", "search_budget", "border_control", "political_priority"],
+    "state_machine": ["unseen", "suspected", "identified", "wanted", "archived"],
+    "principle": "an archived incident remains historical memory even when active pursuit ends",
+    "player_tools": ["change_route", "use_valid_pass", "forge_pass_with_risk", "pay_compensation", "create_counter_witness", "change_name_or_clothes", "help_gate_guard", "submit_information", "accept_interrogation"],
+    "side_effect_rule": "every heat-reduction method adds a different possible cost or new evidence",
+    "visibility_rule": "a faction can only act on knowledge, witnesses, communication, and search capacity it possesses"
+  },
+  "seasonal_pressure": {
+    "state_scope": ["province", "route", "market"],
+    "variables": ["crop_phase", "food_stock", "labor_availability", "road_condition", "river_level", "sea_state", "disease_risk", "war_readiness", "market_pressure"],
+    "calendar": "japanese_lunisolar_with_optional_gregorian_game_clock",
+    "regional_modifiers": {"hokuriku": ["snow", "road_closure"], "mountain_passes": ["snow", "mud", "low_transport_capacity"], "inland_sea": ["wind", "waves", "tide", "port_security"], "kinai": ["dense_markets", "river_transport", "political_priority"], "kyushu_ports": ["overseas_goods", "sea_state", "port_policy"]},
+    "player_choice_rule": "pressure must open different strategies rather than only apply a universal debuff",
+    "example_choices": ["wait_for_harvest_but_let_enemy_reinforce", "buy_rice_early_at_cost_of_credit", "take_high_price_sea_route_with_storm_risk", "mobilize_during_planting_and_accept_resentment"]
+  },
+  "occupations": [
+    {"id": "ronin", "jp": ["浪人", "牢人"], "status": "temporary_or_unattached_patronage_status", "game_role": "skilled_but_uncertain_recruit", "confidence": "supported", "avoid": ["treat_as_single_profession", "assume_wandering_swordsman_stereotype"]},
+    {"id": "ashigaru", "jp": ["足軽"], "status": "lower_or_recruited_infantry_varied_by_period_and_house", "game_role": "levy_or_retained_infantry_with_promotion_path", "confidence": "supported", "avoid": ["equate_all_with_peasants", "equate_all_with_samurai"]},
+    {"id": "jizamurai", "jp": ["地侍", "土豪"], "status": "local_landholding_warrior_and_intermediary", "game_role": "bridge_between_village_land_warrior_and_daimyo", "confidence": "supported"},
+    {"id": "kokujin", "jp": ["国人"], "status": "regional_warrior_or_landholding_power_node", "game_role": "conditional_loyalty_faction_node", "confidence": "supported"},
+    {"id": "shinobi", "jp": ["忍び", "くさ", "かまり", "透波", "乱波"], "status": "mission_based_scout_infiltrator_informant_or_saboteur", "game_role": "information_network_with_uncertain_reports", "confidence": "supported", "avoid": ["modern_black_suit_assumption", "assassin_as_default"]},
+    {"id": "village_official", "jp": ["乙名", "年寄", "名主", "庄屋"], "status": "local_administration_varied_by_time_and_place", "game_role": "collective_village_memory_and_tax_gate", "confidence": "supported", "avoid": ["use_shoya_as_universal_sengoku_title"]},
+    {"id": "scribe", "jp": ["右筆", "奉行", "代官"], "status": "document_and_administration_role_varied_by_house", "game_role": "document_seal_ledger_and_order_conflict_node", "confidence": "supported"},
+    {"id": "boat_worker", "jp": ["船頭", "梶取"], "status": "pilot_captain_or_crew_role_varied_by_route", "game_role": "weather_route_and_port_reputation", "confidence": "supported"},
+    {"id": "toimaru", "jp": ["問丸"], "status": "transport_storage_and_brokerage_intermediary", "game_role": "producer_carrier_warehouse_credit_link", "confidence": "supported"},
+    {"id": "sakai_merchant_network", "jp": ["会合衆", "納屋衆"], "status": "merchant_and_warehouse_power_network", "game_role": "council_broker_warehouse_porter_pilot_linguist_graph", "confidence": "supported", "source_note": "Sakai urban-trade context is documented; exact membership and chain differs by period"},
+    {"id": "horse_network", "jp": ["馬廻", "騎馬衆", "足軽大将"], "status": "horse_guard_mounted_retainer_or_infantry_commander_varied_by house", "game_role": "owner_groom_rider_commander_chain", "confidence": "supported"},
+    {"id": "craft_worker", "jp": ["鍛冶", "大工", "石工"], "status": "craft specialist under temple_merchant_or_warrior patronage", "game_role": "materials_orders_and_protection_faction", "confidence": "supported"},
+    {"id": "farmer_fisher_forester", "jp": ["百姓", "漁民", "杣人"], "status": "heterogeneous producer household tenant laborer fisher forest worker", "game_role": "collective_bargaining_migration_hidden_stock_and_seasonal_labor", "confidence": "supported"},
+    {"id": "monk_yamabushi", "jp": ["僧", "山伏"], "status": "religious_ceremonial_documentary_healing_or_mountain_network_role", "game_role": "ritual_medicine_route_and_information_node", "confidence": "supported"},
+    {"id": "doctor_interpreter_messenger", "jp": ["医師", "通詞", "飛脚"], "status": "mobile specialist with bounded knowledge network", "game_role": "care_translation_and_news_latency", "confidence": "supported"}
+  ],
+  "faction_case_studies": [
+    {"id": "sakai_izumi", "nodes": ["merchant_council", "warehouse_houses", "porters", "pilots", "smiths", "temples", "military_protectors", "tax_officials"], "cooperate_when": ["port_security", "shared_profit", "city_autonomy"], "conflict_when": ["forced_levy", "warehouse_seizure", "port_closure", "duplicate_tax"], "confidence": "supported"},
+    {"id": "iga_koka", "nodes": ["jizamurai", "village_leagues", "shrines", "mountain_religion", "scouts"], "cooperate_when": ["external_threat", "autonomy", "shared_defense"], "conflict_when": ["outside_fortification", "hostages", "forced_vassalage"], "confidence": "supported"},
+    {"id": "kai_takeda", "nodes": ["takeda_house", "vassal_houses", "horse_network", "salt_carriers", "mine_workers", "scribes"], "cooperate_when": ["reward_and_protection", "stable_supply"], "conflict_when": ["salt_shortage", "conflicting_orders", "overmobilization"], "confidence": "supported"},
+    {"id": "omi_lake_biwa", "nodes": ["rokkaku", "azai", "oda", "lake_ports", "temples", "grain_merchants"], "cooperate_when": ["safe_lake_route", "shared_tolls"], "conflict_when": ["route_control", "duplicate_toll", "castle_war"], "confidence": "supported"},
+    {"id": "kaga_ikko", "nodes": ["honganji_network", "temples", "village_leagues", "local_warriors", "provision_merchants"], "cooperate_when": ["shared_religious_and_local_interest", "defense"], "conflict_when": ["external_subjugation", "tax_and_temple_seizure"], "confidence": "supported"},
+    {"id": "kanto_hojo", "nodes": ["hojo_house", "kokujin", "gates", "six_day_markets", "village_officials", "horse_owners"], "cooperate_when": ["market_security", "land_rights", "road_control"], "conflict_when": ["land_reassessment", "alliance_shift", "market_closure"], "confidence": "supported"},
+    {"id": "mori_inland_sea", "nodes": ["mori_house", "port_groups", "pilots", "castle_stewards", "convoys"], "cooperate_when": ["port_protection", "shared_freight"], "conflict_when": ["toll_competition", "piracy", "forced_port_support"], "confidence": "supported"},
+    {"id": "hakata_hizen", "nodes": ["merchant_houses", "interpreters", "port_officials", "foreign_trade_groups", "local_warlords"], "cooperate_when": ["stable_port_policy", "credit_and_profit"], "conflict_when": ["port_takeover", "foreign_trade_restriction", "protector_change"], "confidence": "supported"},
+    {"id": "satsuma_ryukyu", "nodes": ["shimazu", "island_merchants", "pilots", "interpreters", "warehouse_stewards"], "cooperate_when": ["safe_sea_route", "trade_profit"], "conflict_when": ["island_control", "military requisition", "cargo competition"], "confidence": "supported"},
+    {"id": "hine_estate", "nodes": ["estate_lord", "temple_or_shrine", "village_representatives", "tax_collectors", "water_users"], "cooperate_when": ["recognized estate documents", "water_and_field_protection"], "conflict_when": ["duplicate_tax", "forced_labor", "document_override"], "confidence": "supported"}
+  ],
+  "economy_model": {
+    "flow": ["producer_household", "village_or_estate_intermediary", "tax_or_rent_collector", "local_storehouse", "castle_or_port_warehouse", "market_or_army_or_temple", "consumer"],
+    "goods": ["rice", "salt", "silver_or_copper", "iron", "cloth", "horses", "fish", "timber", "foreign_goods"],
+    "price_drivers": ["harvest_timing", "war", "siege", "road_condition", "river_level", "sea_state", "toll", "tax", "coin_acceptance", "security", "army_demand", "disease", "flood", "snow"],
+    "case_studies": [{"region": "echizen", "finding": "1551 example shows rice tax, land dues,段銭、公事 and marine products as different exactions", "confidence": "supported", "source_url": "https://www.library-archives.pref.fukui.lg.jp/fukui/07/kenshi/T2/T2-4-01-03-04-02.htm"}, {"region": "hojo_domain", "finding": "六斎市 described as a market where peasants converted grain into cash; coin policy matters", "confidence": "supported", "source_url": "https://repository.kulib.kyoto-u.ac.jp/bitstreams/38a53113-b39b-46f2-a97b-db608cac7675/download"}],
+    "anti_overclaim_rule": "do not assign exact nationwide prices or customs ledgers without local-year evidence"
+  },
+  "game_comparisons": {
+    "blades_in_the_dark": {"source_urls": ["https://bladesinthedark.com/faction-game", "https://bladesinthedark.com/heat", "https://bladesinthedark.com/entanglements"], "borrow": ["faction_status_per_group", "heat_as_exposure", "wanted_threshold", "post_score_entanglement", "consequence_that_creates_new_play"], "adapt": ["province_and_gate_scope", "witness_and_evidence", "slow_communication", "different_knowledge_per_faction"], "avoid": ["single_global_heat", "same_information_for_all_factions"]},
+    "pendragon": {"source_urls": ["https://www.chaosium.com/pendragon-rpg/"], "borrow": ["seasonal_phase", "long_term_traits_or_values", "glory_or_house_reputation", "family_and_generational_consequence"], "adapt": ["replace_chivalry_with_local_obligations_and_faction_debt", "support_non_noble_player_roles"], "avoid": ["universal_honor_code", "knight_only_progression"]},
+    "nemesis_pattern": {"source_urls": ["https://patents.google.com/patent/US20160279522A1/en"], "borrow": ["stable_npc_id", "hierarchy", "persistent_relation", "event_triggered_return", "faction_aggregation"], "adapt": ["household_port_village_and_religious_networks", "fact_belief_rumor_unknown", "historical_communication_limits"], "legal_note": "patent claims are not a license; conduct separate IP review before commercial implementation"}
+  },
+  "backend_architecture": {
+    "source_of_truth": "append_only_event_log",
+    "projections": ["world_snapshot", "factions", "relationships", "incidents", "heat_tracks", "seasonal_states", "markets", "npc_memories", "context_summaries"],
+    "hot_query_indexes": ["run_id+province_id+local_heat_level", "run_id+faction_id+stance", "subject_id+target_id+scope", "actor_id+memory_type+salience", "province_id+season+market_pressure", "event_type+occurred_at+province_id", "item_id+market_id"],
+    "storage_rule": "use jsonb for flexible details and relational/materialized projections for hot queries; retain event history for replay and migration"
+  },
+  "context_pipeline": {
+    "steps": ["parse_actor_region_time_goal", "retrieve_canonical_facts", "retrieve_current_local_state", "retrieve_top_k_allowed_memories_and_rumors", "retrieve_recent_causal_events", "build_provenance_summary", "deduplicate", "check_contradictions", "apply_visibility_filter", "send_structured_context"],
+    "layers": ["invariants", "current_scene", "retrieved_local_facts", "actor_memory_and_beliefs", "recent_causal_events"],
+    "memory_types": ["fact", "belief", "rumor", "unknown"],
+    "ranking_features": ["scope_match", "actor_relation", "recency", "salience", "causal_relevance", "distance", "evidence_strength", "mission_relevance"],
+    "retrieval_strategy": ["contextual_chunk_prefix", "semantic_embeddings", "BM25_exact_match", "rank_fusion", "reranking", "top_k_budget"],
+    "compression_rule": "summarize repeated state but preserve causal events, contradictions, provenance and facts the player may cite later",
+    "source_url": "https://www.anthropic.com/engineering/contextual-retrieval"
+  },
+  "quality_gates": {
+    "historical": ["term_is_period_appropriate", "region_and_year_are_bound", "fact_inference_legend_game_invention_are_labeled", "lower_class_evidence_bias_is_acknowledged"],
+    "systems": ["every_delta_has_source_event", "heat_is_scoped", "seasonal_pressure_creates_choices", "npc_visibility_is_enforced", "unknown_is_not_auto_filled"],
+    "technical": ["schema_validates", "projection_can_rebuild_from_events", "hot_queries_have_indexes", "context_has_token_budget", "save_load_and_replay_tested"]
+  },
+  "sources": [
+    {"id": "jp_calendar", "url": "https://www.ndl.go.jp/koyomi/chapter1/s1.html", "title": "国立国会図書館 暦の渡来と普及", "language": "ja"},
+    {"id": "jp_dogo", "url": "https://www.tachibana-u.ac.jp/admission/tcbn/contents/1-3noda.html", "title": "京都橘大学 土豪を探す", "language": "ja"},
+    {"id": "jp_shinobi", "url": "https://www.ndl.go.jp/kaleido/entry/33/2.html", "title": "国立国会図書館 本の万華鏡 忍者", "language": "ja"},
+    {"id": "jp_iga_koka", "url": "https://japan-heritage.bunka.go.jp/ja/stories/story042/", "title": "文化庁 日本遺産 忍びの里 伊賀・甲賀", "language": "ja"},
+    {"id": "jp_echizen_tax", "url": "https://www.library-archives.pref.fukui.lg.jp/fukui/07/kenshi/T2/T2-4-01-03-04-02.htm", "title": "福井県史 年貢・公事の収取", "language": "ja"},
+    {"id": "jp_sakai", "url": "https://kansai-u.repo.nii.ac.jp/records/10009", "title": "港湾都市の盛衰 神戸と堺の比較から", "language": "ja"},
+    {"id": "sakai_history", "url": "https://www.sakai-tcb.or.jp/en/about-sakai/history/", "title": "The History of Sakai", "language": "en"},
+    {"id": "blades_faction", "url": "https://bladesinthedark.com/faction-game", "title": "The Faction Game", "language": "en"},
+    {"id": "blades_heat", "url": "https://bladesinthedark.com/heat", "title": "Heat", "language": "en"},
+    {"id": "blades_entanglements", "url": "https://bladesinthedark.com/entanglements", "title": "Entanglements", "language": "en"},
+    {"id": "pendragon_official", "url": "https://www.chaosium.com/pendragon-rpg/", "title": "Pendragon RPG", "language": "en"},
+    {"id": "nemesis_patent", "url": "https://patents.google.com/patent/US20160279522A1/en", "title": "Nemesis characters, nemesis forts, social vendettas and followers in computer games", "language": "en"},
+    {"id": "postgres_json", "url": "https://www.postgresql.org/docs/current/datatype-json.html", "title": "PostgreSQL 18 Documentation JSON Types", "language": "en"},
+    {"id": "json_schema", "url": "https://json-schema.org/draft/2020-12", "title": "JSON Schema Draft 2020-12", "language": "en"},
+    {"id": "contextual_retrieval", "url": "https://www.anthropic.com/engineering/contextual-retrieval", "title": "Contextual Retrieval in AI Systems", "language": "en"}
+  ]
+}
