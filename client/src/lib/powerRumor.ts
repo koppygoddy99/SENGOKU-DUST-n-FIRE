@@ -1,19 +1,24 @@
 /**
  * Power & Rumor Network — projection module (Phase 1 → Phase 3)
  *
- * Phase 1: อ่านจาก state เดิมแบบตื้นๆ
- * Phase 3: ถ้ามี worldSystems.powerRumor (คำนวณจากเหตุการณ์จริง) ให้นำค่านั้นมาแสดง
- *          หากยังไม่มี ให้ fallback เดาตาม Phase 1 (legacy-safe)
+ * Phase 1: อ่านจาก state เดิมแบบตื้นๆ (fallback)
+ * Phase 3: ถ้ามี worldSystems.powerRumor (คำนวณจากเหตุการณ์จริงใน worldEvents.ts)
+ *          ให้นำค่านั้นมาแสดงเป็นหลัก — กลไกขยับได้จริงตามที่ผู้เล่นทำ
  *
- * กฎสถาปัตยกรรม (จาก integration contract):
+ * หลักการ redesign (จากคำขอผู้ใช้):
+ *  - ผู้เล่นเข้าใจสถานการณ์ใน 5 วินาที
+ *  - ทุกค่ามี impact hint บอก "ถ้าค่านี้แย่ → จะเกิดอะไร"
+ *  - อะไรต้องตัดสินใจตอนนี้ ให้ขึ้นก่อน (priority)
+ *  - ภาษาง่าย บอกผลกระทบตรงๆ ไม่ใช่ศัพท์เกม
+ *
+ * กฎสถาปัตยกรรม (integration contract):
  *  - อ่านอย่างเดียว: ห้ามแก้ reputation/heat โดยตรงจาก UI
- *  - แยกความรู้: player / character / witness / faction / GM คนละชั้น
  *  - ไม่มี global score: ไม่สร้าง reputation หรือ heat ค่าเดียวทั้งโลก
- *  - legacy safe: หาก save เดิมไม่มี worldSystems ให้ใช้ empty projection
+ *  - legacy safe: หาก save เดิมไม่มี worldSystems ให้ใช้ empty projection (Phase 1)
  */
 
 import type { GameState } from "./game";
-import { describeFaction, type FactionReputation, type FactionHeat } from "./worldEvents";
+import { describeFaction, type FactionReputation, type FactionHeat, type PowerRumorState } from "./worldEvents";
 
 export type Language = "en" | "th";
 
@@ -33,18 +38,25 @@ export const DEFAULT_WORLD_FLAGS: WorldSystemsFlags = {
   npcMemoryRetrieval: false,
 };
 
+/** ท่าทีฝ่าย (แสดงชื่อ + สถานะ + ผลกระทบถ้าแย่) */
 export type FactionStance = {
   factionId: string;
   name: string;
   stance: string;
+  /** คำอธิบายสั้นๆ ว่าเกิดอะไรขึ้นล่าสุด (1 บรรทัด) */
   visibleReason: string;
+  /** ถ้าค่านี้แย่ลง → จะเกิดอะไรกับผู้เล่น (ภาษาชาวบ้าน) */
+  impactHint: string;
 };
 
 export type LocalHeat = {
   heatLevel: number; // 0 unseen .. 5 archived
   status: "unseen" | "suspected" | "identified" | "wanted" | "archived";
   label: string;
+  /** 2-3 บรรทัดอธิบายสั้นๆ */
   reason: string;
+  /** ถ้า heat สูง → ผลกระทบตรงๆ */
+  impactHint: string;
 };
 
 export type SeasonalPressure = {
@@ -52,13 +64,20 @@ export type SeasonalPressure = {
   laborAvailability: number;
   routeCondition: number;
   marketPressure: number;
+  /** สั้นๆ ฤดูกาลี้กระทบอะไรในเกม */
   summary: string;
+  /** icon + label สั้น */
+  shortLabel: string;
 };
 
 export type RouteChoice = {
   routeId: string;
   status: "open" | "risky" | "closed" | "unknown";
   reason: string;
+  /** ถ้า risky/closed → ผลกระทบตรงๆ */
+  impactHint: string;
+  /** ลำดับความสำคัญ: ตัวเลขน้อย = ต้องตัดสินใจก่อน */
+  priority: number;
 };
 
 export type RecentRumor = {
@@ -68,15 +87,29 @@ export type RecentRumor = {
   sourceLabel: string;
 };
 
+/** กลุ่มที่ต้องทำอะไร "ตอนนี้" (priority สูงสุด) */
+export type ActionNow = {
+  id: string;
+  icon: "route" | "heat" | "faction" | "season";
+  message: string; // ภาษาชาวบ้าน บอกว่าควรระวังอะไร
+  severity: "calm" | "watch" | "warn" | "danger";
+  priority: number; // น้อย = ต้องทำก่อน
+};
+
 /** Projection ที่ Campaign Command อ่าน (แบบเต็ม) */
 export type PowerRumorSummary = {
   provinceId: string;
   currentSeason: "Spring" | "Summer" | "Autumn" | "Winter";
+  /** สิ่งที่ผู้เล่นควรทำ/ระวังตอนนี้ — ขึ้นบนสุด */
+  actionNow: ActionNow[];
+  /** เส้นทางเลือก — เรียงตาม priority (ต้องตัดสินใจก่อน) */
+  routeChoices: RouteChoice[];
   knownFactions: FactionStance[];
   localRisk: LocalHeat;
   seasonalPressure: SeasonalPressure;
-  routeChoices: RouteChoice[];
   recentRumors: RecentRumor[];
+  /** true ถาดึงค่าจริงจาก Phase 3 event-driven */
+  eventDriven: boolean;
 };
 
 /** Compact projection ที่หน้า Story/Play แสดงค้างตลอด */
@@ -96,6 +129,7 @@ export type StoryCompactProjection = {
     heat: LocalHeat;
     rumorAlert: string | null;
     seasonalSummary: string;
+    actionNow: ActionNow[];
   };
 };
 
@@ -119,7 +153,16 @@ function label(language: Language, en: string, th: string) {
   return language === "en" ? en : th;
 }
 
-/** แปลงความเสี่ยงจาก stain + memory ให้เป็น local heat (0–5) แบบ conservative */
+/** ดึง state Phase 3 จาก save (ถ้ามี) */
+function getEventDrivenState(game: GameState): PowerRumorState | null {
+  const ws = game.worldSystems;
+  if (ws && ws.powerRumor && ws.powerRumor.factions.length >= 0 && ws.powerRumor.schemaVersion === 1) {
+    return ws.powerRumor;
+  }
+  return null;
+}
+
+/** แปลงความเสี่ยงจาก stain + memory ให้เป็น local heat (0–5) แบบ conservative (Phase 1 fallback) */
 function deriveLocalHeat(game: GameState): LocalHeat {
   const stain = game.character.social.stain;
   const stainMemories = game.memories.filter((m) => m.kind === "stain").length;
@@ -132,25 +175,94 @@ function deriveLocalHeat(game: GameState): LocalHeat {
     status,
     label: HEAT_STATUS_LABELS[status].th,
     reason: lastStain ? lastStain.detail : "ยังไม่มีเหตุการณ์ที่ทิ้งร่องรอย",
+    impactHint:
+      heatRaw >= 3
+        ? "ระวังด่านตรวจ: มีคนจำหน้าได้ อาจถูกเรียกค้นตัวหรือจับกุม"
+        : heatRaw >= 1
+          ? "คนบางกลุ่มเริ่มจับตา หลบไม่ให้หน้าตาติดตา"
+          : "ยังปลอดภัย ไม่มีใครจำได้",
   };
 }
 
-/** ดึง faction stance จากความสัมพันธ์สาธารณะ + social score */
-function deriveFactionStances(game: GameState): FactionStance[] {
-  const out: FactionStance[] = [];
+/** Local heat จาก Phase 3 event-driven tracks */
+function heatFromEvents(state: PowerRumorState, game: GameState): LocalHeat {
+  const locationId = game.currentScene.location;
+  const provinceId = game.campaign.region.toLowerCase();
+  const track = state.heatTracks.find((h) => h.locationId === locationId && h.provinceId === provinceId)
+    ?? state.heatTracks[0];
+  if (!track) return deriveLocalHeat(game);
+  const status = track.status;
+  const reasons = track.reasons ?? [];
+  return {
+    heatLevel: track.level,
+    status,
+    label: HEAT_STATUS_LABELS[status].th,
+    reason: reasons[0] ?? "ยังไม่มีเหตุการณ์ที่ทิ้งร่องรอย",
+    impactHint:
+      track.level >= 3
+        ? "ระวังด่านตรวจ: มีคนจำหน้าได้ อาจถูกเรียกค้นตัวหรือจับกุม"
+        : track.level >= 1
+          ? "คนบางกลุ่มเริ่มจับตา หลบไม่ให้หน้าตาติดตา"
+          : "ยังปลอดภัย ไม่มีใครจำได้",
+  };
+}
+
+/** คำอธิบายผลกระทบถ้าฝ่ายนี้แย่ลง */
+function factionImpactHint(factionId: string, stance: string): string {
+  const hints: Record<string, string> = {
+    villagers: "ชาวบ้านไม่ช่วยเวลาต้องการที่ซ่อนหรือเสบียง",
+    "checkpoint-guard": "ผู้คุมด่านค้นตัวเข้มขึ้น หลบการตรวจไม่พ้น",
+    "sakai-merchants": "สภาพ่อค้าไม่ยอมขายหรือให้หนี้เพิ่ม ของราคาแพงขึ้น",
+    "local-warband": "นักรบท้องถิ่นอาจเข้าหาฝ่ายตรงข้ามหรือซุ่มโจมตี",
+    "temple-shrine": "วัดไม่ให้ที่พักหรือพร ไม่มีพื้นที่สงบให้ซ่อนตัว",
+  };
+  const base = hints[factionId] ?? "ฝ่ายนี้ไม่ยอมช่วยเมื่อคุณติดเรื่อง";
+  if (stance === "hostile" || stance === "war") return `แย่แล้ว: ${base}`;
+  if (stance === "wary" || stance === "interfering") return `ระวัง: ${base}`;
+  return base;
+}
+
+/** ดึง faction stance จาก Phase 3 events (ถ้ามี) ไม่งั้น fallback Phase 1 */
+function deriveFactionStances(game: GameState, eventState: PowerRumorState | null): FactionStance[] {
+  const groups: Array<{ factionId: string; name: string }> = [
+    { factionId: "villagers", name: "ชาวบ้าน" },
+    { factionId: "checkpoint-guard", name: "ผู้คุมด่าน" },
+    { factionId: "sakai-merchants", name: "สภาพ่อค้า" },
+    { factionId: "local-warband", name: "กลุ่มนักรบท้องถิ่น" },
+    { factionId: "temple-shrine", name: "วัดหรือศาลเจ้า" },
+  ];
+
+  if (eventState) {
+    // ใช้ค่าจริงจาก events
+    const out: FactionStance[] = [];
+    for (const group of groups) {
+      const f = eventState.factions.find((x) => x.factionId === group.factionId);
+      if (!f) continue; // ซ่อนฝ่ายที่ยังไม่เคยปรากฏ (clean UI)
+      const d = describeFaction(f, "th");
+      out.push({
+        factionId: group.factionId,
+        name: group.name,
+        stance: f.stance,
+        visibleReason: f.reasons?.[0] ?? "ยังไม่มีเหตุการณ์",
+        impactHint: factionImpactHint(group.factionId, f.stance),
+      });
+    }
+    return out;
+  }
+
+  // Phase 1 fallback
   const affinityAvg = (ids: string[]) => {
     const found = game.relationships.filter((r) => ids.includes(r.contactId));
     if (!found.length) return 0;
     return found.reduce((sum, r) => sum + (r.affinity ?? 0), 0) / found.length;
   };
-  // กลุ่มที่รู้จักจาก relationships (public projection เท่านั้น)
-  const groups: Array<{ factionId: string; name: string; ids: string[] }> = [
+  const map: Array<{ factionId: string; name: string; ids: string[] }> = [
     { factionId: "villagers", name: "ชาวบ้าน", ids: ["masakichi"] },
     { factionId: "checkpoint-guard", name: "ผู้คุมด่าน", ids: [] },
     { factionId: "sakai-merchants", name: "สภาพ่อค้า", ids: ["gantaro"] },
     { factionId: "local-warband", name: "กลุ่มนักรบท้องถิ่น", ids: ["tokichi"] },
   ];
-  for (const group of groups) {
+  return map.map((group) => {
     const affinity = affinityAvg(group.ids);
     const socialInf = game.character.social.influence;
     let stance = "neutral";
@@ -171,12 +283,11 @@ function deriveFactionStances(game: GameState): FactionStance[] {
       stance = affinity >= 3 ? "friendly" : affinity <= 1 ? "wary" : "neutral";
       reason = affinity >= 3 ? "ช่วยเหลือกันมาหลายครั้ง" : affinity <= 1 ? "ยังระแวงอยู่" : "ยังไม่ชัดเจน";
     }
-    out.push({ factionId: group.factionId, name: group.name, stance, visibleReason: reason });
-  }
-  return out;
+    return { factionId: group.factionId, name: group.name, stance, visibleReason: reason, impactHint: factionImpactHint(group.factionId, stance) };
+  });
 }
 
-/** คำนวณ seasonal pressure จาก community + season (ไม่ลงโทษแบบเดียวทั่วประเทศ) */
+/** คำนวณ seasonal pressure จาก community + season */
 function deriveSeasonalPressure(game: GameState): SeasonalPressure {
   const c = game.community;
   const season = game.campaign.season;
@@ -190,7 +301,20 @@ function deriveSeasonalPressure(game: GameState): SeasonalPressure {
     Autumn: "มีผลผลิตใหม่ แต่การแย่งชิงและเก็บภาษีเพิ่มขึ้น",
     Winter: "ภูเขาและเส้นทางหิมะเสี่ยงขึ้น การรบและขนส่งแพงขึ้น",
   };
-  return { foodStock, laborAvailability, routeCondition, marketPressure, summary: summaries[season] };
+  const short: Record<typeof season, string> = {
+    Spring: "🌱 เพาะปลูกแย่งแรงงาน",
+    Summer: "🌧️ ฝนทำถนนพัง",
+    Autumn: "🍂 เก็บเกี่ยวแต่ภาษีแพง",
+    Winter: "❄️ หิมะปิดเส้นทาง",
+  };
+  return {
+    foodStock,
+    laborAvailability,
+    routeCondition,
+    marketPressure,
+    summary: summaries[season],
+    shortLabel: short[season],
+  };
 }
 
 /** ดึง rumors จาก memories ที่เป็นข่าว/พยาน */
@@ -207,42 +331,96 @@ function deriveRumors(game: GameState): RecentRumor[] {
     }));
 }
 
+/** สร้างรายการ "ควรทำ/ระวังตอนนี้" เรียงตาม priority */
+function buildActionNow(
+  routeChoices: RouteChoice[],
+  heat: LocalHeat,
+  factions: FactionStance[],
+  seasonal: SeasonalPressure,
+): ActionNow[] {
+  const actions: ActionNow[] = [];
+
+  for (const r of routeChoices) {
+    if (r.status === "closed") {
+      actions.push({ id: `route-${r.routeId}`, icon: "route", severity: "danger", message: `เส้นทาง${r.routeId === "overland" ? "บก" : "น้ำ"}ปิดแล้ว — หาทางอื่นหรือรอ`, priority: 1 });
+    } else if (r.status === "risky") {
+      actions.push({ id: `route-${r.routeId}`, icon: "route", severity: "warn", message: `เส้นทาง${r.routeId === "overland" ? "บก" : "น้ำ"}เสี่ยง — โอกาสโดนซุ่มโจมตีสูง`, priority: 2 });
+    }
+  }
+
+  if (heat.heatLevel >= 3) {
+    actions.push({ id: "heat", icon: "heat", severity: "danger", message: "ความเสี่ยงระดับพื้นที่สูง — มีคนจำหน้าได้ ระวังด่านตรวจ", priority: 1 });
+  } else if (heat.heatLevel >= 1) {
+    actions.push({ id: "heat", icon: "heat", severity: "watch", message: "เริ่มมีคนจับตา — อย่าทำตัวโดดเด่น", priority: 3 });
+  }
+
+  const hostile = factions.filter((f) => f.stance === "hostile" || f.stance === "war");
+  if (hostile.length) {
+    actions.push({ id: "faction-hostile", icon: "faction", severity: "warn", message: `${hostile.map((f) => f.name).join(" และ ")}เป็นศัตรูกับคุณแล้ว`, priority: 2 });
+  }
+
+  if (seasonal.routeCondition <= 2) {
+    actions.push({ id: "season", icon: "season", severity: "watch", message: seasonal.shortLabel, priority: 4 });
+  }
+
+  // เรียง priority น้อยไปมาก
+  return actions.sort((a, b) => a.priority - b.priority);
+}
+
 /** Projection เต็มสำหรับ Campaign Command */
 export function buildPowerRumorSummary(game: GameState, language: Language = "th"): PowerRumorSummary {
-  const factions = deriveFactionStances(game);
-  const heat = deriveLocalHeat(game);
+  const eventState = getEventDrivenState(game);
+  const factions = deriveFactionStances(game, eventState);
+  const heat = eventState ? heatFromEvents(eventState, game) : deriveLocalHeat(game);
   const seasonal = deriveSeasonalPressure(game);
   const rumors = deriveRumors(game);
   const routeStatus = game.economy.routeStatus;
   const isRisky = /ซักถาม|ตรวจ|ปิด/.test(routeStatus);
+
+  const routeChoices: RouteChoice[] = ([
+    {
+      routeId: "overland",
+      status: isRisky ? "risky" : "open",
+      reason: isRisky ? "ผู้เดินทางถูกซักถาม บางด่านปิด" : "เส้นทางบกเปิดแต่ขึ้นอยู่กับฤดูกาล",
+      impactHint: isRisky ? "ถ้าเลือกทางบก มีโอกาสโดนซุ่มโจมตีหรือค้นตัวสูง" : "ทางบกปลอดโปร่ง แต่ slower ในฤดูฝน/หนาว",
+      priority: isRisky ? 2 : 5,
+    },
+    {
+      routeId: "waterway",
+      status: seasonal.routeCondition <= 2 && game.campaign.season === "Summer" ? "open" : "open",
+      reason: game.campaign.season === "Summer" ? "เส้นทางน้ำยังเปิดและมีค่าจ้างคนเรือสูงขึ้น" : "เส้นทางน้ำเปิดตามปกติ",
+      impactHint: "ทางน้ำเร็วและซ่อนตัวง่าย แต่พึ่งพาคนเรือ",
+      priority: 5,
+    },
+  ] as RouteChoice[]).sort((a, b) => a.priority - b.priority);
+
+  const actionNow = buildActionNow(routeChoices, heat, factions, seasonal);
+
   return {
     provinceId: game.campaign.region.toLowerCase(),
     currentSeason: game.campaign.season,
+    actionNow,
+    routeChoices,
     knownFactions: factions.map((f) => ({ ...f, stance: label(language, f.stance, f.stance) })),
     localRisk: heat,
     seasonalPressure: seasonal,
-    routeChoices: [
-      {
-        routeId: "overland",
-        status: isRisky ? "risky" : "open",
-        reason: isRisky ? "ผู้เดินทางถูกซักถาม บางด่านปิด" : "เส้นทางบกเปิดแต่ขึ้นอยู่กับฤดูกาล",
-      },
-      {
-        routeId: "waterway",
-        status: seasonal.routeCondition <= 2 && game.campaign.season === "Summer" ? "open" : "open",
-        reason: game.campaign.season === "Summer" ? "เส้นทางน้ำยังเปิดและมีค่าจ้างคนเรือสูงขึ้น" : "เส้นทางน้ำเปิดตามปกติ",
-      },
-    ],
     recentRumors: rumors,
+    eventDriven: Boolean(eventState),
   };
 }
 
 /** Projection ย่อสำหรับหน้า Story/Play */
 export function buildStoryCompact(game: GameState, language: Language = "th"): StoryCompactProjection {
-  const factions = deriveFactionStances(game);
-  const heat = deriveLocalHeat(game);
+  const eventState = getEventDrivenState(game);
+  const factions = deriveFactionStances(game, eventState);
+  const heat = eventState ? heatFromEvents(eventState, game) : deriveLocalHeat(game);
   const rumors = deriveRumors(game);
   const seasonal = deriveSeasonalPressure(game);
+  const routeChoices: RouteChoice[] = [
+    { routeId: "overland", status: /ซักถาม|ตรวจ|ปิด/.test(game.economy.routeStatus) ? "risky" : "open", reason: "", impactHint: "", priority: 5 },
+    { routeId: "waterway", status: "open", reason: "", impactHint: "", priority: 5 },
+  ];
+  const actionNow = buildActionNow(routeChoices, heat, factions, seasonal);
   return {
     vitals: {
       wounds: game.character.vitals.wounds,
@@ -268,6 +446,7 @@ export function buildStoryCompact(game: GameState, language: Language = "th"): S
       heat,
       rumorAlert: rumors[0]?.summary ?? null,
       seasonalSummary: seasonal.summary,
+      actionNow,
     },
   };
 }

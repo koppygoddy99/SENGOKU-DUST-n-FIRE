@@ -1,9 +1,7 @@
-/* Power & Rumor Network — Campaign Command panel (Phase 1) */
 .power-rumor-panel {
-  margin-top: 24px;
   border: 1px solid var(--rule-strong);
-  border-top: 3px solid var(--vermilion);
-  background: color-mix(in srgb, var(--paper-strong) 94%, transparent);
+  background: var(--paper-strong);
+  box-shadow: 0 8px 18px var(--shadow);
 }
 .power-rumor-panel__head {
   display: flex;
@@ -12,92 +10,202 @@
   width: 100%;
   border: 0;
   background: transparent;
-  padding: 14px 18px;
   color: var(--ink);
+  padding: 13px 16px;
   text-align: left;
   cursor: pointer;
 }
-.power-rumor-panel__head svg { color: var(--vermilion); flex-shrink: 0; }
-.power-rumor-panel__head > div:nth-child(2) { flex: 1; min-width: 0; }
+.power-rumor-panel__head > svg { color: var(--vermilion); flex: none; }
 .power-rumor-panel__eyebrow {
-  margin: 0; color: var(--vermilion);
-  font-family: Poppins, sans-serif; font-size: 9px; font-weight: 700;
-  letter-spacing: 1.4px; text-transform: uppercase;
+  margin: 0;
+  color: var(--vermilion);
+  font-family: Poppins, sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
 }
 .power-rumor-panel__head h2 {
-  margin: 3px 0 0; font-family: "Noto Serif Thai", serif;
-  font-size: 21px; font-weight: 500; line-height: 1.15;
+  margin: 2px 0 0;
+  font-family: "Noto Serif Thai", serif;
+  font-size: 19px;
+  font-weight: 500;
 }
 .power-rumor-panel__season {
-  font-family: Poppins, sans-serif; font-size: 10px; font-weight: 700;
-  letter-spacing: .8px; color: var(--ink-soft);
+  margin-left: auto;
+  color: var(--ink-soft);
+  font-family: Poppins, sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
 }
+.power-rumor-panel__body { padding: 4px 16px 16px; display: grid; gap: 12px; }
 .power-rumor-panel__summary {
-  display: flex; flex-wrap: wrap; gap: 8px;
-  padding: 0 18px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  padding: 12px 16px 16px;
 }
 .pr-chip {
-  display: inline-flex; align-items: center;
-  border: 1px solid currentColor; padding: 3px 9px;
-  font-family: Poppins, sans-serif; font-size: 10px; font-weight: 700;
-  letter-spacing: .4px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  background: var(--paper);
 }
-.pr-chip--teal { color: var(--teal); }
-.pr-chip--vermilion { color: var(--vermilion); }
-.pr-chip--ochre { color: var(--ochre); }
+.pr-chip--teal { border-color: color-mix(in srgb, var(--teal) 46%, var(--rule)); color: var(--teal); }
+.pr-chip--ochre { border-color: color-mix(in srgb, var(--ochre) 46%, var(--rule)); color: var(--ochre); }
+.pr-chip--vermilion { border-color: color-mix(in srgb, var(--vermilion) 46%, var(--rule)); color: var(--vermilion); }
 
-.power-rumor-panel__body { padding: 4px 18px 18px; border-top: 1px solid var(--rule); }
-.pr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 14px; }
-.pr-card {
-  border: 1px solid var(--rule); padding: 13px 15px; background: var(--paper);
+/* ── ACTION NOW banner (สิ่งที่ควรทำ/ระวังตอนนี้) ── */
+.pr-actionnow { display: grid; gap: 7px; }
+.pr-actionnow__item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border-left: 4px solid var(--rule);
+  font-size: 13px;
+  line-height: 1.4;
+  font-weight: 600;
 }
+.pr-actionnow__item svg { flex: none; }
+.pr-actionnow__item--teal { background: color-mix(in srgb, var(--teal) 9%, var(--paper)); border-left-color: var(--teal); color: var(--teal); }
+.pr-actionnow__item--ochre { background: color-mix(in srgb, var(--ochre) 9%, var(--paper)); border-left-color: var(--ochre); color: color-mix(in srgb, var(--ochre) 70%, var(--ink)); }
+.pr-actionnow__item--vermilion { background: color-mix(in srgb, var(--vermilion) 10%, var(--paper)); border-left-color: var(--vermilion); color: var(--vermilion); }
+
+/* ── cards ── */
+.pr-card {
+  border: 1px solid var(--rule);
+  background: var(--paper);
+  padding: 13px 14px;
+}
+.pr-card--route { border-color: color-mix(in srgb, var(--teal) 30%, var(--rule)); background: color-mix(in srgb, var(--teal) 4%, var(--paper)); }
 .pr-card--wide { grid-column: 1 / -1; }
 .pr-card > header {
-  display: flex; align-items: center; gap: 7px; margin-bottom: 10px;
-  color: var(--vermilion); font-family: Poppins, sans-serif;
-  font-size: 10px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 10px;
+  color: var(--ink);
+  font-family: "Noto Serif Thai", serif;
+  font-size: 15px;
+  font-weight: 600;
 }
-.pr-faction { display: grid; gap: 2px; padding: 7px 0; border-bottom: 1px solid var(--rule); }
-.pr-faction:last-child { border-bottom: 0; }
-.pr-faction strong { font-family: "Noto Serif Thai", serif; font-size: 15px; font-weight: 500; }
-.pr-faction small { color: var(--ink-soft); font-size: 11px; line-height: 1.45; }
-.pr-stance { font-family: Poppins, sans-serif; font-size: 10px; font-weight: 700; }
-.pr-stance--teal { color: var(--teal); }
-.pr-stance--ochre { color: var(--ochre); }
-.pr-stance--vermilion { color: var(--vermilion); }
-.pr-faction--vermilion { border-left: 3px solid var(--vermilion); padding-left: 9px; }
-.pr-faction--ochre { border-left: 3px solid var(--ochre); padding-left: 9px; }
-.pr-faction--teal { border-left: 3px solid var(--teal); padding-left: 9px; }
+.pr-card > header svg { color: var(--vermilion); }
 
-.pr-heat { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
-.pr-heat strong { font-family: "Noto Serif Thai", serif; font-size: 17px; font-weight: 500; }
-.pr-heat span { font-family: Poppins, sans-serif; font-size: 10px; color: var(--ink-soft); }
-.pr-heat--unseen { border-left: 3px solid var(--teal); padding-left: 9px; }
-.pr-heat--suspected, .pr-heat--identified { border-left: 3px solid var(--ochre); padding-left: 9px; }
-.pr-heat--wanted, .pr-heat--archived { border-left: 3px solid var(--vermilion); padding-left: 9px; }
-.pr-card small { color: var(--ink-soft); font-size: 11px; line-height: 1.45; }
+/* ── Route ── */
+.pr-route { display: flex; gap: 10px; align-items: flex-start; padding: 9px 0; border-top: 1px solid var(--rule); }
+.pr-route:first-of-type { border-top: 0; }
+.pr-route__icon { font-size: 20px; line-height: 1; flex: none; }
+.pr-route__main { display: grid; gap: 3px; }
+.pr-route__main strong { font-size: 14px; display: flex; align-items: center; gap: 8px; }
+.pr-route__main small { color: var(--ink-soft); font-size: 12px; line-height: 1.45; }
+.pr-route-status {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.pr-route-status--open { background: color-mix(in srgb, var(--teal) 14%, var(--paper)); color: var(--teal); }
+.pr-route-status--risky { background: color-mix(in srgb, var(--vermilion) 14%, var(--paper)); color: var(--vermilion); }
+.pr-route-status--closed { background: color-mix(in srgb, var(--ink) 10%, var(--paper)); color: var(--ink); }
+.pr-route-status--unknown { background: var(--rule); color: var(--ink-soft); }
 
-.pr-seasonal { margin: 0 0 8px; color: var(--ink); font-size: 12.5px; line-height: 1.55; font-family: "Noto Serif Thai", serif; }
-.pr-meters { display: flex; flex-wrap: wrap; gap: 10px; font-family: Poppins, sans-serif; font-size: 10px; color: var(--ink-soft); }
+/* ── impact hints (ผลกระทบตรงๆ) ── */
+.pr-impact {
+  margin: 2px 0 0;
+  padding: 6px 9px;
+  border-left: 3px solid var(--ochre);
+  background: color-mix(in srgb, var(--ochre) 7%, var(--paper));
+  color: color-mix(in srgb, var(--ochre) 64%, var(--ink));
+  font-size: 12px;
+  line-height: 1.5;
+  border-radius: 0 6px 6px 0;
+}
+.pr-impact--heat { border-left-color: var(--vermilion); background: color-mix(in srgb, var(--vermilion) 7%, var(--paper)); color: var(--vermilion); }
 
-.pr-route { display: grid; gap: 2px; padding: 7px 0; border-bottom: 1px solid var(--rule); }
-.pr-route:last-child { border-bottom: 0; }
-.pr-route strong { font-family: "Noto Serif Thai", serif; font-size: 15px; font-weight: 500; }
-.pr-route small { color: var(--ink-soft); font-size: 11px; line-height: 1.45; }
-.pr-route-status { font-family: Poppins, sans-serif; font-size: 10px; font-weight: 700; text-transform: uppercase; }
-.pr-route-status--open { color: var(--teal); }
-.pr-route-status--risky { color: var(--ochre); }
-.pr-route-status--closed { color: var(--vermilion); }
-.pr-route-status--unknown { color: var(--ink-soft); }
+/* ── Local Heat ── */
+.pr-heat { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.pr-heat strong { font-family: "Noto Serif Thai", serif; font-size: 17px; }
+.pr-heat span { color: var(--ink-soft); font-size: 12px; }
+.pr-heat--wanted strong, .pr-heat--archived strong { color: var(--vermilion); }
+.pr-heat--identified strong { color: var(--ochre); }
+.pr-heat__detail { display: block; color: var(--ink-soft); font-size: 12px; line-height: 1.5; margin-top: 6px; }
+.pr-readmore {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  border: 0;
+  background: transparent;
+  color: var(--ink-soft);
+  font-size: 12px;
+  cursor: pointer;
+}
+.pr-readmore:hover { color: var(--ink); }
 
-.pr-rumor { display: grid; gap: 2px; padding: 7px 0; border-bottom: 1px solid var(--rule); }
-.pr-rumor:last-child { border-bottom: 0; }
-.pr-rumor__conf { color: var(--ochre); font-size: 10px; letter-spacing: 1px; }
-.pr-rumor p { margin: 0; color: var(--ink); font-size: 12.5px; line-height: 1.5; font-family: "Noto Serif Thai", serif; }
-.pr-rumor small { color: var(--ink-soft); font-size: 10px; }
-.pr-empty { color: var(--ink-soft); font-size: 12px; font-style: italic; }
-.pr-footnote { margin: 14px 0 0; color: var(--ink-soft); font-size: 10px; line-height: 1.5; border-top: 1px solid var(--rule); padding-top: 10px; }
+/* ── Seasonal (icon + label สั้น) ── */
+.pr-seasonal-short { margin: 0; font-family: "Noto Serif Thai", serif; font-size: 17px; font-weight: 600; }
+.pr-seasonal-impact { margin: 6px 0 10px; color: var(--ink-soft); font-size: 12px; line-height: 1.5; }
+.pr-meters--mini { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--ink-soft); }
 
-@media (max-width: 720px) {
-  .pr-grid { grid-template-columns: 1fr; }
+/* ── Rumor ── */
+.pr-rumor { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; padding: 8px 0; border-top: 1px solid var(--rule); align-items: baseline; }
+.pr-rumor:first-of-type { border-top: 0; }
+.pr-rumor__conf { grid-row: 1 / 3; color: var(--ochre); font-size: 10px; letter-spacing: 1px; }
+.pr-rumor p { margin: 0; font-size: 13px; line-height: 1.5; }
+.pr-rumor small { color: var(--ink-soft); font-size: 11px; }
+
+/* ── Faction (ชื่อ + สถานะ + tooltip) ── */
+.pr-faction-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.pr-faction {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 4px 6px;
+  padding: 9px 11px;
+  border: 1px solid var(--rule);
+  border-radius: 7px;
+  background: var(--paper-strong);
+  cursor: help;
+}
+.pr-faction strong { font-size: 13px; font-weight: 600; }
+.pr-faction .pr-stance { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 999px; }
+.pr-faction__hint { color: var(--ink-soft); }
+.pr-stance--teal { background: color-mix(in srgb, var(--teal) 14%, var(--paper)); color: var(--teal); }
+.pr-stance--ochre { background: color-mix(in srgb, var(--ochre) 14%, var(--paper)); color: var(--ochre); }
+.pr-stance--vermilion { background: color-mix(in srgb, var(--vermilion) 14%, var(--paper)); color: var(--vermilion); }
+.pr-faction--vermilion { border-color: color-mix(in srgb, var(--vermilion) 40%, var(--rule)); }
+.pr-faction--ochre { border-color: color-mix(in srgb, var(--ochre) 40%, var(--rule)); }
+.pr-faction__tooltip {
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 5;
+  display: none;
+  padding: 8px 10px;
+  border-radius: 7px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 11.5px;
+  line-height: 1.5;
+  box-shadow: 0 8px 18px var(--shadow);
+}
+.pr-faction:hover .pr-faction__tooltip,
+.pr-faction:focus-within .pr-faction__tooltip { display: block; }
+
+.pr-footnote { margin: 4px 0 0; color: var(--ink-soft); font-size: 11px; line-height: 1.5; }
+.pr-footnote em { color: var(--teal); font-style: normal; }
+
+@media (max-width: 620px) {
+  .pr-card--wide { grid-column: auto; }
+  .pr-faction-grid { grid-template-columns: 1fr 1fr; }
 }
