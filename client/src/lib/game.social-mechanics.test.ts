@@ -33,17 +33,17 @@ describe("Social Record — ขึ้นเฉพาะภารกิจหล�
     const next = applyRoll(base, recordFor(base, "partial_success"));
     expect(next.character.social.honor).toBe(0);
     expect(next.character.social.influence).toBe(1);
-    expect(next.character.social.information).toBe(2); // เดิมเคย +1 จาก partial — เปลี่ยนแล้ว
+    expect(next.character.social.information).toBe(2); // "ข่าวในมือ" ตัดจากกลไก — คงค่าไว้
     expect(next.character.social.stain).toBe(2);
   });
 
-  it("resolving a main mission grants +0.5 (เพิ่มยาก 2x) ต่อเกียรติ/บารมี/ข่าว และล้างข้อครหา -0.5", () => {
+  it("resolving a main mission grants +0.5 (เพิ่มยาก 2x) ต่อเกียรติ/บารมี และล้างข้อครหา -0.5 (ข่าวในมือไม่ขยับ)", () => {
     const base = demo();
     // decisive_success → progress +2 → 2/2 resolves
     const next = applyRoll(base, recordFor(base, "decisive_success"));
     expect(next.character.social.honor).toBe(0.5);
     expect(next.character.social.influence).toBe(1.5);
-    expect(next.character.social.information).toBe(2.5);
+    expect(next.character.social.information).toBe(2); // not touched หลังตัดกลไก
     expect(next.character.social.stain).toBe(1.5); // 2 - 0.5
     // เตรียมภารกิจรองตัวที่สอง เพื่อให้ resolve ได้จริง 2 ครั้ง (2x0.5 = ขึ้น 1 ระดับบน UI)
     const main = next.missions[0];
@@ -66,11 +66,10 @@ describe("Social Record — ขึ้นเฉพาะภารกิจหล�
 describe("Social Record — cap และ clamp", () => {
   it("clamps influence at 4 and honor at 5", () => {
     const base = demo();
-    const highInfluence = { ...base, character: { ...base.character, social: { ...base.character.social, honor: 5, influence: 4, information: 5, stain: 5 } } };
+    const highInfluence = { ...base, character: { ...base.character, social: { ...base.character.social, honor: 5, influence: 4, stain: 5 } } };
     const next = applyRoll(highInfluence, recordFor(highInfluence, "decisive_success"));
     expect(next.character.social.influence).toBe(4); // ไม่เกิน cap
     expect(next.character.social.honor).toBe(5);
-    expect(next.character.social.information).toBe(5);
   });
 
   it("never drops honor/influence/information below 0 and never raises stain above 5", () => {
@@ -79,7 +78,7 @@ describe("Social Record — cap และ clamp", () => {
     const next = applyRoll(zeroed, recordFor(zeroed, "decisive_success"));
     expect(next.character.social.honor).toBe(0.5);
     expect(next.character.social.influence).toBe(0.5);
-    expect(next.character.social.information).toBe(0.5);
+    expect(next.character.social.information).toBe(0); // "ข่าวในมือ" ตัดจากกลไก — คงค่า
     expect(next.character.social.stain).toBe(4.5); // ลบ 0.5 ไม่ต่ำกว่า 0
     const failed = applyRoll(zeroed, recordFor(zeroed, "failure_with_consequence"));
     expect(failed.character.social.stain).toBe(5); // clamp บน

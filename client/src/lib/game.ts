@@ -1505,16 +1505,12 @@ function applySocialRecord(
 ): Character["social"] {
   const missionResolved = missionResult.update?.state === "resolved";
   const clamp = (value: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, value));
+  // "ข่าวในมือ" (information) ถูกตัดออกจากกลไกแล้ว — เก็บ field ไว้ในโครงสร้าง เผื่อ random event (สืบ/สอบสวน) ใช้ทีหลัง
   return {
     ...social,
     honor: clamp(social.honor + (missionResolved ? 0.5 : 0), 0, 5),
     influence: clamp(social.influence + (missionResolved ? 0.5 : 0), 0, 4),
-    information: clamp(social.information + (missionResolved ? 0.5 : 0), 0, 5),
-    stain: clamp(
-      social.stain + (record.outcome === "failure_with_consequence" ? 1 : 0) - (missionResolved ? 0.5 : 0),
-      0,
-      5,
-    ),
+    stain: clamp(social.stain + (record.outcome === "failure_with_consequence" ? 1 : 0) - (missionResolved ? 0.5 : 0), 0, 5),
   };
 }
 

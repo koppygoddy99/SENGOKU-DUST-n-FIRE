@@ -463,7 +463,7 @@ function MarketView({ game, language, onUpdate }: { game: GameState; language: L
 function CharacterView({ game, language, open }: { game: GameState; language: Language; open: (page: PageId) => void }) {
   const [tab, setTab] = useState<"traits" | "masteries" | "inventory" | "ties">("traits");
   const usedSlots = game.character.inventory.reduce((sum, item) => sum + item.slots, 0);
-  const socialRows: Array<[SocialField, string, string, number, string]> = [["honor", "Honor", "เกียรติ", game.character.social.honor, "teal"], ["influence", "Influence", "บารมี", game.character.social.influence, "ochre"], ["information", "Information", "ข่าวในมือ", game.character.social.information, "navy"], ["stain", "Stain", "ข้อครหา", game.character.social.stain, "vermilion"]];
+  const socialRows: Array<[SocialField, string, string, number, string]> = [["honor", "Honor", "เกียรติ", game.character.social.honor, "teal"], ["influence", "Influence", "บารมี", game.character.social.influence, "ochre"], ["stain", "Stain", "ข้อครหา", game.character.social.stain, "vermilion"]];
   const traitRows = STATS.map((stat) => {
     const level = game.character.attributes[stat.id];
     const progress = game.character.statXp[stat.id];
