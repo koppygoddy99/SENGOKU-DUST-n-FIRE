@@ -12,7 +12,7 @@ import { trpc } from "@/lib/trpc";
 import { SengokuIcon, type SengokuIconName } from "@/components/SengokuIcon";
 import { StoryMap } from "@/features/story/StoryMap";
 import { PowerRumorPanel } from "@/features/powerRumor/PowerRumorPanel";
-import { buildPowerRumorSummary } from "@/lib/powerRumor";
+import { buildPowerRumorSummary, socialTierLabel, type SocialField } from "@/lib/powerRumor";
 import { managementMenuFor, type ManagementItemId, type ManagementMenuItem } from "@/features/management/managementData";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { gmUnavailableLocalTrialNotice, historicalStatusLabel, openLocalPreview, saveLocalTrialResult, shouldFetchProfileCredits, shouldUseLocalRules, splitStoryParagraphs, withHistoricalBoundary } from "@/features/shared/gameplayHelpers";
@@ -463,7 +463,7 @@ function MarketView({ game, language, onUpdate }: { game: GameState; language: L
 function CharacterView({ game, language, open }: { game: GameState; language: Language; open: (page: PageId) => void }) {
   const [tab, setTab] = useState<"traits" | "masteries" | "inventory" | "ties">("traits");
   const usedSlots = game.character.inventory.reduce((sum, item) => sum + item.slots, 0);
-  const socialRows: Array<[string, string, number, string]> = [["Honor", "เกียรติ", game.character.social.honor, "teal"], ["Influence", "บารมี", game.character.social.influence, "ochre"], ["Information", "ข่าวในมือ", game.character.social.information, "navy"], ["Stain", "ข้อครหา", game.character.social.stain, "vermilion"]];
+  const socialRows: Array<[SocialField, string, string, number, string]> = [["honor", "Honor", "เกียรติ", game.character.social.honor, "teal"], ["influence", "Influence", "บารมี", game.character.social.influence, "ochre"], ["information", "Information", "ข่าวในมือ", game.character.social.information, "navy"], ["stain", "Stain", "ข้อครหา", game.character.social.stain, "vermilion"]];
   const traitRows = STATS.map((stat) => {
     const level = game.character.attributes[stat.id];
     const progress = game.character.statXp[stat.id];
@@ -478,7 +478,7 @@ function CharacterView({ game, language, open }: { game: GameState; language: La
       {tab === "masteries" && <div className="mastery-list"><div className="list-title"><span>{label(language, "Mastery", "ความชำนาญ")}</span><span>{label(language, "Level & bonus", "ระดับและโบนัส")}</span><span>{label(language, "Progress record", "บันทึกความก้าวหน้า")}</span></div>{game.character.masteries.map((entry) => { const details = masteryLevelDetails(entry.level); const needed = xpNeededForMasteryLevel(entry.level); return <div className="mastery-row" key={entry.id}><span><SengokuIcon name="memory" size={15} tone="ochre" />{localized(language, entry.label)}</span><strong>{label(language, "Level", "ระดับ")} {entry.level} · +{entry.level}</strong><small>{localized(language, entry.origin)}<br />{language === "en" ? details.en : details.th} · {needed === 0 ? label(language, "Peerless", "หาตัวจับไม่ได้") : `${entry.xp ?? 0}/${needed} Progress`}</small></div>; })}</div>}
       {tab === "inventory" && <div className="inventory-sheet"><div className="inventory-capacity"><span>{label(language, "Carried slots", "ช่องสัมภาระ")}</span><strong>{usedSlots}/8</strong></div>{game.character.inventory.map((entry) => <article key={entry.id}><div><strong>{localized(language, entry.label)}</strong><small>{localized(language, entry.description)}</small></div><span>{titleCase(entry.kind)}</span><b>{entry.slots} {label(language, "slot", "ช่อง")}</b></article>)}</div>}
       {tab === "ties" && <div className="ties-sheet">{game.character.pulls.map((pull) => <article key={pull.id}><small>{pull.question}</small><strong>{pull.answer}</strong><span>{pull.tags.join(" · ")}</span></article>)}</div>}
-    </section><aside className="status-rail"><SectionKicker>{label(language, "Social record", "สถานะทางสังคม")}</SectionKicker>{socialRows.map(([en, th, value, tone]) => <div className={`status-row status-row--${tone}`} key={en}><span className="status-dot" /><strong>{language === "en" ? en : th}</strong><small>{value}</small></div>)}<div className="status-note"><SengokuIcon name="relation" tone="teal" />{label(language, "Social values do not grant automatic obedience. They describe access, attention, and what failure can cost.", "ค่าสถานะสังคมไม่ได้ทำให้ใครเชื่อฟังอัตโนมัติ แต่บอกสิทธิ์เข้าถึง สายตาที่จับจ้อง และราคาของความพลาด")}</div></aside></div>
+    </section><aside className="status-rail"><SectionKicker>{label(language, "Social record", "สถานะทางสังคม")}</SectionKicker>{socialRows.map(([field, en, th, value, tone]) => <div className={`status-row status-row--${tone}`} key={field}><span className="status-dot" /><strong>{language === "en" ? en : th}</strong><small title={`${value} / ${label(language, "cap", "เพดาน")} ${field === "influence" ? 4 : 5}`}>{socialTierLabel(language, field, value)}</small></div>)}<div className="status-note"><SengokuIcon name="relation" tone="teal" />{label(language, "Social values do not grant automatic obedience. They describe access, attention, and what failure can cost.", "ค่าสถานะสังคมไม่ได้ทำให้ใครเชื่อฟังอัตโนมัติ แต่บอกสิทธิ์เข้าถึง สายตาที่จับจ้อง และราคาของความพลาด")}</div></aside></div>
   </div>;
 }
 

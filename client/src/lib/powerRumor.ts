@@ -141,6 +141,38 @@ const STAT_LABELS: Record<string, { en: string; th: string }> = {
   heart: { en: "Heart", th: "ใจสู้" },
 };
 
+/**
+ * Social Record — แบบ C (ตัวเลข 0..5 ซ่อนข้างใน + โชว์คำระดับใน UI)
+ *
+ * ค่าเก็บเป็นทศนิยมครึ่งหน่วย (เพิ่มยาก 2x: ทุก 0.5 ต่อเหตุการณ์สำคัญ)
+ * แต่ผู้เล่นเห็นแค่ Math.floor(value) แปลงเป็นคำระดับต่อเนื่อง เช่นเดียวกับ heat status
+ * — ต้องได้ "ครึ่ง 2 ครั้ง" จึงขึ้น 1 ระดับบนหน้าจอ
+ *
+ * cap: honor 5 · influence 4 (เพราะฝ่ายมีจำกัด) · information 5 · stain 5
+ */
+export type SocialField = "honor" | "influence" | "information" | "stain";
+
+const SOCIAL_TIER_TH: Record<SocialField, string[]> = {
+  honor: ["ไร้ชื่อ", "เรื่อยเปื่อย", "พอมีชื่อ", "ได้รับนับถือ", "เลื่องชื่อ", "เกียรติยศเต็มภูมิ"],
+  influence: ["ไร้สายสัมพันธ์", "รู้จักบางคน", "มีคนฟัง", "มีเครือข่าย", "มีอำนาจต่อรอง"],
+  information: ["หูตาห่าง", "รู้บ้าง", "ค่อนข้างรู้รอบ", "ช่างสืบ", "รู้ถึงความลับ", "รู้ราวเล่า"],
+  stain: ["ไร้รอย", "เริ่มมีรอย", "มีผู้จดจำ", "ถูกจับตามอง", "รอยชัด", "อัปมงคล"],
+};
+
+const SOCIAL_TIER_EN: Record<SocialField, string[]> = {
+  honor: ["Nameless", "Ordinary", "Respected", "Esteemed", "Renowned", "Flawless honor"],
+  influence: ["No ties", "Known to some", "People listen", "Networked", "Power to bargain"],
+  information: ["Cut off", "Knows a little", "Well-informed", "Sleuth", "Knows secrets", "Sees through rumor"],
+  stain: ["Clean record", "A mark begins", "Remembered", "Under watch", "Stained", "Ill-omened"],
+};
+
+/** แปลงค่าตัวเลข (0..cap) → คำระดับภาษาไทย/อังกฤษที่ผู้เล่นเห็น (Math.floor เพื่อกันเศษครึ่ง) */
+export function socialTierLabel(language: Language, field: SocialField, value: number): string {
+  const tier = Math.max(0, Math.min(5, Math.floor(value)));
+  const table = language === "en" ? SOCIAL_TIER_EN[field] : SOCIAL_TIER_TH[field];
+  return table[Math.min(tier, table.length - 1)];
+}
+
 const HEAT_STATUS_LABELS: Record<LocalHeat["status"], { en: string; th: string }> = {
   unseen: { en: "Unseen", th: "ไม่มีใครรู้" },
   suspected: { en: "Suspected", th: "ถูกสงสัย" },

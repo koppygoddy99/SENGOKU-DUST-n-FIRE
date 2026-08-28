@@ -1489,6 +1489,35 @@ export function captureRelationshipEvidence(state: GameState, record: RollRecord
   });
 }
 
+/* ==========================================================================
+ * Social Record mechanics — ขึ้นเฉพาะ "เหตุการณ์สำคัญ" (ภารกิจหลัก/รองสำเร็จ)
+ *
+ * Cap: honor 5 · influence 4 (ฝ่ายมีจำกัด) · information 5 · stain 5
+ * เพิ่มยาก 2x: เก็บทศนิยมครึ่งหน่วย — ต้อง "ครึ่ง 2 ครั้ง" จึงขึ้น 1 ระดับที่เห็น
+ *   - เกียรติ / บารมี / ข่าวในมือ: +0.5 ต่อภารกิจสำเร็จ (หลักหรือรอง)
+ *   - ข้อครหา: +1 เมื่อพลาดแบบมีผล (เรื่องสำคัญ) ; ลด -0.5 เมื่อสำเร็จภารกิจ (ลงยาก 2x)
+ * อ้างอิงสเปก (เพิ่มยากสองเท่า / เฉพาะภารกิจสำคัญ) — random event กันไว้ทำทีหลัง
+ * ========================================================================== */
+function applySocialRecord(
+  record: RollRecord,
+  social: Character["social"],
+  missionResult: { update?: RollRecord["missionUpdate"] },
+): Character["social"] {
+  const missionResolved = missionResult.update?.state === "resolved";
+  const clamp = (value: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, value));
+  return {
+    ...social,
+    honor: clamp(social.honor + (missionResolved ? 0.5 : 0), 0, 5),
+    influence: clamp(social.influence + (missionResolved ? 0.5 : 0), 0, 4),
+    information: clamp(social.information + (missionResolved ? 0.5 : 0), 0, 5),
+    stain: clamp(
+      social.stain + (record.outcome === "failure_with_consequence" ? 1 : 0) - (missionResolved ? 0.5 : 0),
+      0,
+      5,
+    ),
+  };
+}
+
 export function applyRoll(state: GameState, record: RollRecord): GameState {
   const copy = outcomeCopy[record.outcome];
   const success = record.outcome !== "failure_with_consequence";
@@ -1500,6 +1529,7 @@ export function applyRoll(state: GameState, record: RollRecord): GameState {
   const missionResult = progressActiveMission(state, record);
   const activeMission = state.missions.find((entry) => entry.state === "offered" || entry.state === "active");
   const relationships = captureRelationshipEvidence(state, record, activeMission);
+  const social = applySocialRecord(record, state.character.social, missionResult);
   const updatedCharacter: Character = {
     ...state.character,
     attributes: traitAwarded.attributes,
@@ -1507,7 +1537,7 @@ export function applyRoll(state: GameState, record: RollRecord): GameState {
     masteries: awarded.masteries,
     inventory: missionResult.inventory,
     vitals: state.character.vitals,
-    social: { ...state.character.social, stain: state.character.social.stain + (record.outcome === "failure_with_consequence" ? 1 : 0), information: state.character.social.information + (record.outcome === "partial_success" ? 1 : 0) },
+    social,
   };
   const memory: WorldMemory = {
     id: `memory-${record.id}`,

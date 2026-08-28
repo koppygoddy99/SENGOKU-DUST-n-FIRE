@@ -2,7 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   buildPowerRumorSummary,
   buildStoryCompact,
+  socialTierLabel,
   type PowerRumorSummary,
+  type SocialField,
 } from "./powerRumor";
 import { createSaikaSafehouseDemo, normalizeGameState } from "./game";
 
@@ -75,5 +77,27 @@ describe("Power & Rumor Network — legacy save migration", () => {
     game.worldSystems = { schemaVersion: 1, flags: { powerRumorNetwork: true, factionReputation: false, scopedHeat: false, seasonalPressure: false, npcMemoryRetrieval: false } };
     const normalized = normalizeGameState(game);
     expect(normalized.worldSystems?.flags?.powerRumorNetwork).toBe(true);
+  });
+});
+describe("Social Record tier labels (แบบ C: เลขใน + คำใน UI)", () => {
+  it("maps numeric values to a continuous Thai word tier, floor-ing halves so a 0.5 credit is invisible until doubled", () => {
+    expect(socialTierLabel("th", "honor", 0)).toBe("ไร้ชื่อ");
+    expect(socialTierLabel("th", "honor", 0.5)).toBe("ไร้ชื่อ"); // ยังไม่เห็นผล — ต้องได้ครึ่ง 2 ครั้ง
+    expect(socialTierLabel("th", "honor", 1)).toBe("เรื่อยเปื่อย");
+    expect(socialTierLabel("th", "honor", 2)).toBe("พอมีชื่อ");
+    expect(socialTierLabel("th", "honor", 5)).toBe("เกียรติยศเต็มภูมิ");
+  });
+
+  it("keeps influence capped at 4 tiers while other fields reach 5", () => {
+    expect(socialTierLabel("th", "influence", 4)).toBe("มีอำนาจต่อรอง");
+    expect(socialTierLabel("th", "influence", 5)).toBe("มีอำนาจต่อรอง"); // clamp กลับระดับสูงสุด
+    expect(socialTierLabel("th", "information", 5)).toBe("รู้ราวเล่า");
+    expect(socialTierLabel("th", "stain", 5)).toBe("อัปมงคล");
+  });
+
+  it("provides English tiers and clamps out-of-range values", () => {
+    expect(socialTierLabel("en", "honor", 3)).toBe("Esteemed");
+    expect(socialTierLabel("en", "stain", -1)).toBe("Clean record");
+    expect(socialTierLabel("en", "information", 99)).toBe("Sees through rumor");
   });
 });
