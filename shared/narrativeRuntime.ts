@@ -81,7 +81,7 @@ export function narrativeTagsForScene(text: string): NarrativeExampleTag[] {
   if (/(เดินทาง|ถนน|ทางผ่าน|travel|road|route)/.test(value)) tags.add("travel");
   if (/(อาวุธ|หอก|ปืน|กองทัพ|war|soldier|battle)/.test(value)) tags.add("war");
   if (/(ช่าง|ไม้|เหล็ก|craft|workshop)/.test(value)) { tags.add("craft"); tags.add("artisan"); }
-  if (/(แผล|เจ็บ|เลือด|ผ้าพันแผล|injury|wound|blood|hurt)/.test(value)) tags.add("injury");
+  if (/(แผล|เจ็บ|เลือด|ผ้าพันแผล|injury|blood|hurt)/.test(value)) tags.add("injury");
   if (/(ลับ|ซ่อน|รอยสัก|ตราเก่า|ความลับ|secret|hide|rumor)/.test(value)) tags.add("secrecy");
   return Array.from(tags);
 }

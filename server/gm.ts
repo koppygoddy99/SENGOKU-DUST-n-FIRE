@@ -205,7 +205,7 @@ function domainsForText(text: string): SengokuSocialFact["domains"] {
   if (/(temple|shrine|monk|oath|faith|วัด|ศาลเจ้า|พระ|คำสัตย์|ศรัทธา)/.test(value)) domains.add("faith");
   if (/(war|army|soldier|siege|weapon|battle|สงคราม|ทหาร|กองทัพ|ปิดล้อม|อาวุธ|รบ)/.test(value)) domains.add("war");
   if (/(winter|spring|summer|autumn|rain|flood|famine|ฤดู|ฝน|หนาว|น้ำท่วม|อดอยาก)/.test(value)) domains.add("season");
-  if (/(sick|wound|heal|medicine|injury|ป่วย|บาดแผล|รักษา|เจ็บ|สมุนไพร|ยารักษา|ยาหมอ)/.test(value)) domains.add("health");
+  if (/(sick|injury|blood|heal|medicine|ป่วย|เลือด|รักษา|เจ็บ|สมุนไพร|ยารักษา|ยาหมอ)/.test(value)) domains.add("health");
   if (/(letter|seal|document|witness|ledger|language|ตรา|เอกสาร|พยาน|จดหมาย|ภาษา|บัญชี)/.test(value)) domains.add("language");
   if (/(port|sea|foreign|ship|translator|ท่าเรือ|ทะเล|ต่างชาติ|ล่าม)/.test(value)) domains.add("maritime");
   if (domains.size === 0) {

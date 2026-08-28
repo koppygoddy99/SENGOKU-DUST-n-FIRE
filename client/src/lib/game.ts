@@ -1139,7 +1139,7 @@ export function inventoryCategory(item: Pick<InventoryItem, "id" | "label" | "ki
 
 export const VITAL_CAP = 10;
 export function clampVital(value: number, max: number): number { return Math.max(0, Math.min(max, Math.round(value))); }
-export function vitalMaxes(character: Character) { return { maxBlood: Math.max(1, Math.min(VITAL_CAP, Math.round(character.vitals.maxBlood ?? (character.vitals as { maxWounds?: number }).maxWounds ?? 6))), maxFocus: Math.max(1, Math.min(VITAL_CAP, Math.round(character.vitals.maxFocus ?? 6))) }; }
+export function vitalMaxes(character: Character) { return { maxBlood: Math.max(1, Math.min(VITAL_CAP, Math.round(character.vitals.maxBlood ?? 6))), maxFocus: Math.max(1, Math.min(VITAL_CAP, Math.round(character.vitals.maxFocus ?? 6))) }; }
 export function applyVitalDelta(state: GameState, type: "blood" | "focus", delta: number, reason: string, source: VitalEvent["source"]): GameState { const m=vitalMaxes(state.character); const before=state.character.vitals[type]; const after=clampVital(before+delta, type === "blood" ? m.maxBlood : m.maxFocus); if(after===before) return state; const ev: VitalEvent={id:`vital-${state.tick}-${type}-${state.progression?.vitalEvents?.length ?? 0}`,type,delta:after-before,reason,source,tick:state.tick}; return {...state, character:{...state.character,vitals:{...state.character.vitals,maxBlood:m.maxBlood,maxFocus:m.maxFocus,[type]:after}}, progression:{...(state.progression ?? defaultProgression(state.campaign)), vitalEvents:[...(state.progression?.vitalEvents ?? []),ev].slice(-50)}}; }
 /** milestone รับรางวัลได้ "ครั้งเดียว" ต่อ milestone_id — เคยให้แล้วระบบข้าม */
 export function awardMilestonePoint(state: GameState, reason: string, milestoneId?: string): GameState { const p=state.progression ?? defaultProgression(state.campaign); if(milestoneId && (p.claimedMilestoneIds ?? []).includes(milestoneId)) return state; return {...state,progression:{...p,milestonePoints:(p.milestonePoints ?? 0)+1,claimedMilestoneIds: milestoneId ? Array.from(new Set([...(p.claimedMilestoneIds ?? []), milestoneId])) : p.claimedMilestoneIds}}; }
@@ -1170,12 +1170,14 @@ export function normalizeGameState(state: GameState): GameState {
     const threshold = traitProgressNeededForLevel(attributes[id]);
     return [id, { xp: threshold === 0 ? 0 : Math.max(0, Math.min(storedStatXp?.[id]?.xp ?? 0, threshold - 1)), totalXp: Math.max(0, storedStatXp?.[id]?.totalXp ?? 0) }];
   })) as StatXp;
-  const rawVitals = state.character.vitals as Character["vitals"] & { wounds?: number; maxWounds?: number };
-  /** Migration: save เก่าใช้ key `wounds`/`maxWounds` → แปลงเป็น `blood`/`maxBlood` พร้อม clamp */
-  const maxBlood = Math.max(1, Math.min(VITAL_CAP, Math.round(rawVitals.maxBlood ?? rawVitals.maxWounds ?? 6)));
+  const rawVitals = state.character.vitals as Character["vitals"] & Record<string, unknown>;
+  /** Migration: เซฟเก่าเก็บเลือดไว้ใต้ชื่อ key เดิม (`wounds`/`maxWounds`) — แปลงเป็น `blood`/`maxBlood` พร้อม clamp
+   *  (ชื่อ key เดิมเป็น literal ของ save format เก่า ลบไม่ได้ ไม่งั้นเซฟเก่าอ่านค่าเลือดไม่ได้) */
+  const maxBlood = Math.max(1, Math.min(VITAL_CAP, Math.round(Number(rawVitals.maxBlood ?? rawVitals["maxWounds"] ?? 6))));
   const maxFocus = Math.max(1, Math.min(VITAL_CAP, Math.round(rawVitals.maxFocus ?? 6)));
-  const { wounds: legacyWounds, maxWounds: _legacyMaxWounds, ...restVitals } = rawVitals;
-  const vitals = { ...restVitals, blood: clampVital(rawVitals.blood ?? legacyWounds ?? 0, maxBlood), focus: clampVital(rawVitals.focus, maxFocus), maxBlood, maxFocus };
+  const legacyBloodValue = Number(rawVitals.blood ?? rawVitals["wounds"] ?? 0);
+  const { "wounds": _legacyKey1, "maxWounds": _legacyKey2, ...restVitals } = rawVitals as Record<string, unknown>;
+  const vitals = { ...restVitals, blood: clampVital(legacyBloodValue, maxBlood), focus: clampVital(rawVitals.focus, maxFocus), maxBlood, maxFocus };
   const flaws = Array.from(new Set((state.character.flaws?.length ? state.character.flaws : [state.character.weakness]).map((entry) => entry.trim()).filter(Boolean))).slice(0, 2);
   const storedRelationships = (state as Partial<GameState>).relationships;
   const relationships = Array.isArray(storedRelationships) ? sanitizePublicRelationships(storedRelationships) : campaign.id === "camp-saika-1569" ? saikaPublicRelationships() : [];
