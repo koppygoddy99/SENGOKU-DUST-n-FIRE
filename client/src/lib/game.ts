@@ -1057,8 +1057,8 @@ export function createSaikaSafehouseDemo(): GameState {
   return { schemaVersion: 9, credits: 50, campaign, character, community: { food: 2, labor: 2, voice: 1, safety: 1, cohesion: 2, lastChange: "เมืองซาไกเพิ่มเวรยามและตรวจเรือ" }, currentScene: opening, missions: [{ ...mission, role: "main", visibility: "visible" }], market: buildSaikaMarket(), economy: buildSaikaEconomy(), memories: [{ id: "memory-saika-opening", kind: "stain", title: "คืนที่เมืองซาไกตื่น", detail: opening.body.join("\n\n"), tick: 1, tone: "vermilion" }, ...saikaRelationshipFoundationMemories()], rolls: [], storyRecords: [{ id: "story-saika-opening", tick: 1, inGameDay: 1, title: opening.title, prose: opening.body.join("\n\n"), location: opening.location }], relationships: saikaPublicRelationships(), progression: defaultProgression(campaign, 13, "Spring"), tick: 1 };
 }
 
-export function formatMoney(amount: number, language: "th" | "en" = "th"): string {
-  return language === "en" ? `${amount} mon` : `${amount} 文`;
+export function formatMoney(amount: number, _language: "th" | "en" = "th"): string {
+  return `${amount} mon`;
 }
 
 export function inventoryCategory(item: Pick<InventoryItem, "id" | "label" | "kind" | "category">): InventoryCategory {
