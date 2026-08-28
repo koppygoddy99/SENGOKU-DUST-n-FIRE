@@ -76,6 +76,8 @@ export type TimeMark = {
   message: string;
 };
 
+export type VitalEvent = { id: string; type: "wounds" | "focus"; delta: number; reason: string; source: "roll" | "rest" | "milestone"; tick: number };
+
 export type ProgressionState = {
   leaf: number;
   segment: TimeSegment;
@@ -88,6 +90,9 @@ export type ProgressionState = {
   lastPractice?: SkillPractice;
   lastStatPractice?: StatPractice;
   lastTimeMark?: TimeMark;
+  growthPoints?: number;
+  milestonePoints?: number;
+  vitalEvents?: VitalEvent[];
 };
 
 export type InventoryItem = {
@@ -127,7 +132,7 @@ export type Character = {
   attributes: Attributes;
   statXp: StatXp;
   masteries: Mastery[];
-  vitals: { wounds: number; focus: number };
+  vitals: { wounds: number; focus: number; maxWounds?: number; maxFocus?: number };
   social: { rank: number; honor: number; influence: number; information: number; stain: number };
   resources: { property: number; supplies: number; credit: number; currency?: Currency };
   /** `property` and `credit` remain as legacy compatibility aliases; UI must use currency/obligations. */
@@ -400,6 +405,7 @@ export type WorldSystems = {
   flags?: WorldSystemsFlags;
   /** Phase 3: state ที่คำนวณจากเหตุการณ์จริง (event-driven) */
   powerRumor?: import("./worldEvents").PowerRumorState;
+  vitalProgression?: { maxWounds: number; maxFocus: number; growthPoints: number; milestonePoints: number };
 };
 
 export type GameState = {
@@ -856,7 +862,7 @@ export function normalizeMasteryProgress(entry: Mastery, legacy = false): Master
 }
 
 function defaultProgression(context: CampaignContext, ageAtCampaignStart = 20, birthSeason: Season = context.season): ProgressionState {
-  return { leaf: 1, segment: "day", timeMarksSinceLeaf: 0, daysSinceLeaf: 0, ageAtCampaignStart, currentAge: ageAtCampaignStart, birthSeason, campaignStartYear: context.year };
+  return { leaf: 1, segment: "day", timeMarksSinceLeaf: 0, daysSinceLeaf: 0, ageAtCampaignStart, currentAge: ageAtCampaignStart, birthSeason, campaignStartYear: context.year, growthPoints: 0, milestonePoints: 0, vitalEvents: [] };
 }
 
 const mastery = (id: string, label: string, level: number, origin: string, tags: string[]): Mastery => normalizeMasteryProgress({ id, label, level, origin, tags });
@@ -953,7 +959,7 @@ export function createCharacter(draft: CharacterDraft): Character {
     attributes: startingAttributesForTemplate(template),
     statXp: defaultStatXp(),
     masteries: selectedMasteriesForDraft(draft, template),
-    vitals: { wounds: 0, focus: 5 },
+    vitals: { wounds: 0, focus: 5, maxWounds: 6, maxFocus: 6 },
     social: { ...template.social },
     resources: { ...template.resources },
     inventory: template.inventory.map((entry) => ({ ...entry })),
@@ -1098,7 +1104,7 @@ export function createGameState(context: CampaignContext, draft: CharacterDraft)
 export function createSaikaSafehouseDemo(): GameState {
   const campaign: CampaignContext = { id: "camp-saika-1569", title: "Smoke Beneath Sakai", year: 1569, season: "Spring", region: "Sakai / Izumi", location: "เซฟเฮาส์ลับของไซกะ — นอกชายเขตเมืองซาไก", warShadow: 5, day: 1 };
   const character: Character = {
-    id: "char-sanefuyu", name: "ซาเนฟุยุ", identity: "เด็กชายวัยสิบสามปี", occupationId: "freeform", occupation: "ทหารรับจ้างถือปืนของไซกะ", origin: "กิอิ", strength: "อ่านผลประโยชน์และพูดในจังหวะที่คนกำลังลังเล", weakness: "บาดเจ็บสาหัสและถูกความหยามเกียรติผลักให้พลั้งมือ", flaws: ["บาดเจ็บสาหัสและถูกความหยามเกียรติผลักให้พลั้งมือ"], attributes: { body: 1, hand: 3, wit: 3, mind: 2, heart: 3 }, statXp: defaultStatXp(), masteries: [mastery("saika-firearm", "ปืนคาบศิลาและคนไซกะ", 2, "งานคุ้มกันและการรบ", ["fight", "weapon", "gunpowder"]), mastery("hard-bargain", "ต่อรองผลประโยชน์", 1, "เอาตัวรอด", ["negotiation", "social"]), mastery("water-escape", "หนีทางน้ำ", 1, "รอดจากการจมน้ำ", ["water", "escape"])], vitals: { wounds: 5, focus: 3 }, social: { rank: 0, honor: 0, influence: 1, information: 2, stain: 2 }, resources: { property: 1, supplies: 1, credit: 0 }, inventory: [item("bandaged-arm", "ผ้าพันแผลชุ่มยา", "status", "ไหล่ซ้ายและแขนขวาบาดเจ็บ ใช้งานได้จำกัด", 0, []), item("saika-matchlock", "ปืนคาบศิลาเปียกชื้น", "equipment", "ปืนที่ต้องซ่อมและทำให้แห้งก่อนใช้", 2, ["bonus"], { stat: "hand", value: 1, tags: ["fight", "weapon"] }), item("dry-ration", "ข้าวปั้นตากแห้งกับเต้าเจี้ยว", "reserve", "ของกินที่กันทาโร่โยนให้", 1, ["bonus"])], pulls: RELATIONSHIP_QUESTIONS.map(([id, question, tags]) => ({ id, question, answer: id === "life_before" ? "เติบโตท่ามกลางเส้นทางค้าของคิอิ ก่อนกลายเป็นทหารรับจ้างของไซกะ" : "ยืนข้างไซกะตราบใดที่ผลประโยชน์ยังตรงกัน", tags: [...tags], weight: 2 })),
+    id: "char-sanefuyu", name: "ซาเนฟุยุ", identity: "เด็กชายวัยสิบสามปี", occupationId: "freeform", occupation: "ทหารรับจ้างถือปืนของไซกะ", origin: "กิอิ", strength: "อ่านผลประโยชน์และพูดในจังหวะที่คนกำลังลังเล", weakness: "บาดเจ็บสาหัสและถูกความหยามเกียรติผลักให้พลั้งมือ", flaws: ["บาดเจ็บสาหัสและถูกความหยามเกียรติผลักให้พลั้งมือ"], attributes: { body: 1, hand: 3, wit: 3, mind: 2, heart: 3 }, statXp: defaultStatXp(), masteries: [mastery("saika-firearm", "ปืนคาบศิลาและคนไซกะ", 2, "งานคุ้มกันและการรบ", ["fight", "weapon", "gunpowder"]), mastery("hard-bargain", "ต่อรองผลประโยชน์", 1, "เอาตัวรอด", ["negotiation", "social"]), mastery("water-escape", "หนีทางน้ำ", 1, "รอดจากการจมน้ำ", ["water", "escape"])], vitals: { wounds: 5, focus: 3, maxWounds: 6, maxFocus: 6 }, social: { rank: 0, honor: 0, influence: 1, information: 2, stain: 2 }, resources: { property: 1, supplies: 1, credit: 0 }, inventory: [item("bandaged-arm", "ผ้าพันแผลชุ่มยา", "status", "ไหล่ซ้ายและแขนขวาบาดเจ็บ ใช้งานได้จำกัด", 0, []), item("saika-matchlock", "ปืนคาบศิลาเปียกชื้น", "equipment", "ปืนที่ต้องซ่อมและทำให้แห้งก่อนใช้", 2, ["bonus"], { stat: "hand", value: 1, tags: ["fight", "weapon"] }), item("dry-ration", "ข้าวปั้นตากแห้งกับเต้าเจี้ยว", "reserve", "ของกินที่กันทาโร่โยนให้", 1, ["bonus"])], pulls: RELATIONSHIP_QUESTIONS.map(([id, question, tags]) => ({ id, question, answer: id === "life_before" ? "เติบโตท่ามกลางเส้นทางค้าของคิอิ ก่อนกลายเป็นทหารรับจ้างของไซกะ" : "ยืนข้างไซกะตราบใดที่ผลประโยชน์ยังตรงกัน", tags: [...tags], weight: 2 })),
   };
   const mission: Mission = { id: "mission-echiya", issuer: "กันทาโร่", issuerType: "samurai", title: "คำตอบใต้ห้องขัง", request: "เสนอทางจัดการเอจิยะและตั๋วสัญญาปืนสามสิบกระบอก โดยไม่ให้สิทธิ์การค้าของไซกะในซาไกพังลง", pressure: "เอโกะชูเพิ่มเวรยาม ปิดประตูเมือง และตรวจเรือเข้าออกตามหาพ่อค้าเอจิยะ", deadline: "ก่อนเมืองซาไกยืนยันข่าวการหายตัว", reward: "การคุ้มครองของกันทาโร่และส่วนแบ่งค่าปืน", risk: "หัวของซาเนฟุยุและเอจิยะอาจถูกส่งไปแลกสิทธิ์การค้า", options: ["เสนอแผนปิดปาก", "สอบเอจิยะ", "หาตั๋วสัญญาปืน"], state: "offered", progress: { current: 0, required: 2, triggerPhrases: ["เอจิยะ", "ตั๋ว", "ปืน", "แผน"], rewardItem: { label: "จดหมายรับรองของกันทาโร่", kind: "document", description: "หลักฐานคุ้มครองชั่วคราวที่ช่วยให้คนของไซกะยอมฟังคำอธิบาย", slots: 0, functions: ["unlock"], bonus: { stat: "heart", value: 1, tags: ["saika", "protection"] }, condition: "usable", location: "carried", ownership: "owned" } } };
   const opening: Scene = {
@@ -1129,6 +1135,13 @@ export function inventoryCategory(item: Pick<InventoryItem, "id" | "label" | "ki
   return "tool";
 }
 
+export const VITAL_CAP = 10;
+export function clampVital(value: number, max: number): number { return Math.max(0, Math.min(max, Math.round(value))); }
+export function vitalMaxes(character: Character) { return { maxWounds: Math.max(1, Math.min(VITAL_CAP, Math.round(character.vitals.maxWounds ?? 6))), maxFocus: Math.max(1, Math.min(VITAL_CAP, Math.round(character.vitals.maxFocus ?? 6))) }; }
+export function applyVitalDelta(state: GameState, type: "wounds" | "focus", delta: number, reason: string, source: VitalEvent["source"]): GameState { const m=vitalMaxes(state.character); const before=state.character.vitals[type]; const after=clampVital(before+delta, type === "wounds" ? m.maxWounds : m.maxFocus); if(after===before) return state; const ev: VitalEvent={id:`vital-${state.tick}-${type}-${state.progression?.vitalEvents?.length ?? 0}`,type,delta:after-before,reason,source,tick:state.tick}; return {...state, character:{...state.character,vitals:{...state.character.vitals,maxWounds:m.maxWounds,maxFocus:m.maxFocus,[type]:after}}, progression:{...(state.progression ?? defaultProgression(state.campaign)), vitalEvents:[...(state.progression?.vitalEvents ?? []),ev].slice(-50)}}; }
+export function awardMilestonePoint(state: GameState, reason: string): GameState { const p=state.progression ?? defaultProgression(state.campaign); return {...state,progression:{...p,milestonePoints:(p.milestonePoints ?? 0)+1}}; }
+export function levelUpVital(state: GameState, choice: "max_wounds" | "max_focus"): GameState { const p=state.progression ?? defaultProgression(state.campaign); if((p.milestonePoints ?? 0)<1) return state; const m=vitalMaxes(state.character); const wound=choice === "max_wounds"; const next=Math.min(VITAL_CAP,(wound?m.maxWounds:m.maxFocus)+1); if(next > VITAL_CAP) return state; const type=wound?"wounds":"focus"; const maxWounds=wound?next:m.maxWounds; const maxFocus=wound?m.maxFocus:next; return {...state,character:{...state.character,vitals:{...state.character.vitals,maxWounds,maxFocus,[type]:clampVital(state.character.vitals[type]+1,next)}},progression:{...p,milestonePoints:(p.milestonePoints ?? 0)-1,vitalEvents:[...(p.vitalEvents ?? []),{id:`level-up-${state.tick}-${choice}`,type,delta:1,reason:"ใช้ milestone เพิ่มเพดาน vitals",source:"milestone",tick:state.tick}]}}; }
+
 export function normalizeGameState(state: GameState): GameState {
   const campaign = state.campaign;
   const legacyState = state.schemaVersion < 4;
@@ -1154,7 +1167,10 @@ export function normalizeGameState(state: GameState): GameState {
     const threshold = traitProgressNeededForLevel(attributes[id]);
     return [id, { xp: threshold === 0 ? 0 : Math.max(0, Math.min(storedStatXp?.[id]?.xp ?? 0, threshold - 1)), totalXp: Math.max(0, storedStatXp?.[id]?.totalXp ?? 0) }];
   })) as StatXp;
-  const vitals = state.character.vitals as Character["vitals"] & { momentum?: number };
+  const rawVitals = state.character.vitals as Character["vitals"];
+  const maxWounds = Math.max(1, Math.min(VITAL_CAP, Math.round(rawVitals.maxWounds ?? 6)));
+  const maxFocus = Math.max(1, Math.min(VITAL_CAP, Math.round(rawVitals.maxFocus ?? 6)));
+  const vitals = { ...rawVitals, maxWounds, maxFocus, wounds: clampVital(rawVitals.wounds, maxWounds), focus: clampVital(rawVitals.focus, maxFocus) };
   const flaws = Array.from(new Set((state.character.flaws?.length ? state.character.flaws : [state.character.weakness]).map((entry) => entry.trim()).filter(Boolean))).slice(0, 2);
   const storedRelationships = (state as Partial<GameState>).relationships;
   const relationships = Array.isArray(storedRelationships) ? sanitizePublicRelationships(storedRelationships) : campaign.id === "camp-saika-1569" ? saikaPublicRelationships() : [];
@@ -1169,13 +1185,13 @@ export function normalizeGameState(state: GameState): GameState {
   return {
     ...state,
     schemaVersion: 9,
-    character: { ...state.character, weakness: flaws[0] ?? "มีหนี้ที่ยังไม่กล้าพูดถึง", flaws: flaws.length ? flaws : ["มีหนี้ที่ยังไม่กล้าพูดถึง"], attributes, statXp, inventory, masteries: state.character.masteries.map((entry) => normalizeMasteryProgress(entry, legacyState)), vitals: { wounds: vitals.wounds, focus: vitals.focus }, resources },
+    character: { ...state.character, weakness: flaws[0] ?? "มีหนี้ที่ยังไม่กล้าพูดถึง", flaws: flaws.length ? flaws : ["มีหนี้ที่ยังไม่กล้าพูดถึง"], attributes, statXp, inventory, masteries: state.character.masteries.map((entry) => normalizeMasteryProgress(entry, legacyState)), vitals: { wounds: vitals.wounds, focus: vitals.focus, maxWounds: vitals.maxWounds, maxFocus: vitals.maxFocus }, resources },
     missions,
     rolls,
     memories,
     storyRecords,
     relationships,
-    progression: { ...progression, currentAge: Math.max(progression.currentAge, progression.ageAtCampaignStart) },
+    progression: { ...progression, currentAge: Math.max(progression.currentAge, progression.ageAtCampaignStart), growthPoints: progression.growthPoints ?? 0, milestonePoints: progression.milestonePoints ?? 0, vitalEvents: progression.vitalEvents ?? [] },
     economy: state.economy ?? (campaign.id === "camp-saika-1569" ? buildSaikaEconomy() : buildCampaignEconomy(campaign)),
     worldSystems: state.worldSystems ?? { schemaVersion: 1 },
   };
@@ -1526,13 +1542,18 @@ export function applyRoll(state: GameState, record: RollRecord): GameState {
   const activeMission = state.missions.find((entry) => entry.state === "offered" || entry.state === "active");
   const relationships = captureRelationshipEvidence(state, record, activeMission);
   const social = applySocialRecord(record, state.character.social, missionResult);
+  const action = record.action.toLocaleLowerCase();
+  const resting = /พัก|ฟื้น|ทำแผล|rest|recover|heal/.test(action);
+  const vitalDelta = resting && record.outcome !== "failure_with_consequence" ? { wounds: 1, focus: 1, reason: "พักฟื้นหรือทำแผลสำเร็จ" } : record.outcome === "failure_with_consequence" ? { wounds: -1, focus: -1, reason: "ผลลัพธ์รุนแรงทำให้บาดเจ็บและเสียสมาธิ" } : record.outcome === "success_with_cost" ? { wounds: 0, focus: -1, reason: "สำเร็จแต่ต้องแลกด้วยความกดดัน" } : { wounds: 0, focus: 0, reason: "ไม่มีการเปลี่ยน vitals" };
+  const maxes = vitalMaxes(state.character);
+  const nextVitals = { ...state.character.vitals, maxWounds: maxes.maxWounds, maxFocus: maxes.maxFocus, wounds: clampVital(state.character.vitals.wounds + vitalDelta.wounds, maxes.maxWounds), focus: clampVital(state.character.vitals.focus + vitalDelta.focus, maxes.maxFocus) };
   const updatedCharacter: Character = {
     ...state.character,
     attributes: traitAwarded.attributes,
     statXp: traitAwarded.statXp,
     masteries: awarded.masteries,
     inventory: missionResult.inventory,
-    vitals: state.character.vitals,
+    vitals: nextVitals,
     social,
   };
   const memory: WorldMemory = {
@@ -1562,7 +1583,7 @@ export function applyRoll(state: GameState, record: RollRecord): GameState {
   const priorWorld = state.worldSystems?.powerRumor ?? emptyPowerRumorState();
   const rollEvent = eventFromRoll(state, record);
   const updatedWorld = applyWorldEvent(priorWorld, rollEvent);
-  return { ...state, campaign: calendar.campaign, progression: { ...calendar.progression, lastPractice: awarded.practice, lastStatPractice: traitAwarded.practice }, character: updatedCharacter, currentScene: nextScene, missions, economy: missionResult.transaction ? { ...state.economy, transactions: [...state.economy.transactions, missionResult.transaction] } : state.economy, memories: [...state.memories, memory], rolls: [...state.rolls, storedRecord], storyRecords: [...previousStoryRecords.filter((entry) => entry.id !== storyRecord.id), storyRecord], relationships, tick: record.tick, worldSystems: { ...state.worldSystems, schemaVersion: 1, powerRumor: updatedWorld } };
+  return { ...state, campaign: calendar.campaign, progression: { ...calendar.progression, lastPractice: awarded.practice, lastStatPractice: traitAwarded.practice, growthPoints: (calendar.progression.growthPoints ?? 0) + (record.outcome === "decisive_success" ? 1 : 0), milestonePoints: (calendar.progression.milestonePoints ?? 0) + (missionResult.update?.state === "resolved" ? 1 : 0), vitalEvents: [...(calendar.progression.vitalEvents ?? []), ...(vitalDelta.wounds || vitalDelta.focus ? [{ id: `vital-${record.id}`, type: vitalDelta.wounds ? "wounds" : "focus", delta: vitalDelta.wounds || vitalDelta.focus, reason: vitalDelta.reason, source: resting ? "rest" : "roll", tick: record.tick } as VitalEvent] : [])].slice(-50) }, character: updatedCharacter, currentScene: nextScene, missions, economy: missionResult.transaction ? { ...state.economy, transactions: [...state.economy.transactions, missionResult.transaction] } : state.economy, memories: [...state.memories, memory], rolls: [...state.rolls, storedRecord], storyRecords: [...previousStoryRecords.filter((entry) => entry.id !== storyRecord.id), storyRecord], relationships, tick: record.tick, worldSystems: { ...state.worldSystems, schemaVersion: 1, powerRumor: updatedWorld } };
 }
 
 export function buyMarketOffer(state: GameState, offerId: string): { state: GameState; message: string } {

@@ -114,7 +114,7 @@ export type PowerRumorSummary = {
 
 /** Compact projection ที่หน้า Story/Play แสดงค้างตลอด */
 export type StoryCompactProjection = {
-  vitals: { wounds: number; focus: number; max: number; critical: boolean };
+  vitals: { wounds: number; focus: number; maxWounds: number; maxFocus: number; critical: boolean };
   attributes: Array<{ id: string; label: string; value: number }>;
   social: { rank: number; honor: number; influence: number; information: number; stain: number };
   time: {
@@ -457,8 +457,9 @@ export function buildStoryCompact(game: GameState, language: Language = "th"): S
     vitals: {
       wounds: game.character.vitals.wounds,
       focus: game.character.vitals.focus,
-      max: 6,
-      critical: game.character.vitals.wounds >= 5,
+      maxWounds: Math.max(1, Math.min(10, Math.round(game.character.vitals.maxWounds ?? 6))),
+      maxFocus: Math.max(1, Math.min(10, Math.round(game.character.vitals.maxFocus ?? 6))),
+      critical: game.character.vitals.wounds <= 2,
     },
     attributes: Object.entries(game.character.attributes).map(([id, value]) => ({
       id,

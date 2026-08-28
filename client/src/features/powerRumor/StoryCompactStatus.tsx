@@ -15,10 +15,10 @@ export function StoryCompactStatus({ game, language }: { game: GameState; langua
     <aside className="story-compact" aria-label={copy(language, "Campaign status", "สถานะแคมเปญ")} data-testid="story-compact-status">
       <div className="story-compact__group story-compact__vitals">
         <span className={`sc-vital ${data.vitals.critical ? "is-critical" : ""}`} title={copy(language, "Wounds", "บาดแผล")}>
-          <HeartPulse size={13} /> {data.vitals.wounds}/{data.vitals.max}
+          <HeartPulse size={13} /> {data.vitals.wounds}/{data.vitals.maxWounds}
         </span>
         <span className="sc-vital" title={copy(language, "Focus", "สมาธิ")}>
-          <Brain size={13} /> {data.vitals.focus}/{data.vitals.max}
+          <Brain size={13} /> {data.vitals.focus}/{data.vitals.maxFocus}
         </span>
       </div>
 
