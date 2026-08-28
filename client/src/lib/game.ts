@@ -17,6 +17,7 @@ export type MemoryKind = "news" | "witness" | "debt" | "favor" | "oath" | "stain
 
 import { emptyPowerRumorState, applyWorldEvent, eventFromRoll, eventFromDebt } from "./worldEvents";
 import { regionInitialState, FACTION_NAMES } from "./regionInitialState";
+import { voiceReplyFor, factionOfSpeaker } from "./factionVoice";
 import { timelineRegionKey } from "./historicalTimeline";
 import type { FactionReputation, FactionHeat } from "./worldEvents";
 
@@ -1317,8 +1318,17 @@ function localSpeakerReply(speaker: string, issuerType: Mission["issuerType"] | 
 function localOutcomeNarration(preview: RollPreview, state: GameState, outcome: Outcome, consequence: string) {
   const mission = activeMainMission(state) ?? state.missions[0];
   const speaker = state.currentScene.speaker || mission?.issuer || "ผู้มอบงาน";
+  // ดึงสถานะฝ่ายจาก worldSystems.powerRumor (event-driven) — read-only ต่อค่าเกม
+  const powerRumor = state.worldSystems?.powerRumor;
+  const factionId = factionOfSpeaker(speaker);
+  const factionStance = factionId ? powerRumor?.factions.find((f) => f.factionId === factionId)?.stance : undefined;
+  const heatLevel = powerRumor?.heatTracks.find(
+    (h) => h.locationId === state.currentScene.location && h.provinceId === state.campaign.region.toLowerCase(),
+  )?.level ?? powerRumor?.heatTracks[0]?.level ?? 0;
+  // ท่อนบทพูดเสริมตามชื่อเสียง (คืน "" ถ้า neutral/ไม่รู้จักฝ่าย)
+  const voiceTag = voiceReplyFor(speaker, factionStance, heatLevel);
   const first = `หลังจาก ${state.character.name} ลงมือทำตามที่ตั้งใจไว้ เสียงใน${state.currentScene.location}เงียบลงชั่วขณะ มีเพียงไม้เก่าลั่นใต้ฝ่าเท้าและผ้ากระทบกันเบา ๆ คนที่อยู่ใกล้สุดขยับถอยครึ่งก้าว ไม่ได้หนีไปไหน แต่ก็ไม่อยากยืนติดกับเรื่องนี้เกินจำเป็น ${state.currentScene.pressure}ยังอยู่ตรงเดิม เพียงแต่ตอนนี้ทุกคนเห็นมันชัดกว่าเมื่อครู่.`;
-  const middle = `${localSpeakerReply(speaker, mission?.issuerType, state.character.name, outcome === "failure_with_consequence")} คนข้างหลัง${speaker}หลบตา คนหนึ่งก้มจัดเชือกฟางที่ข้อเท้า ไม่มีใครรับคำแทน${state.character.name} แต่คนที่ยืนอยู่แถวนั้นได้ยินสิ่งที่พูด และรู้ว่าต้องระวังคำของตนมากขึ้น.`;
+  const middle = `${localSpeakerReply(speaker, mission?.issuerType, state.character.name, outcome === "failure_with_consequence")} คนข้างหลัง${speaker}หลบตา คนหนึ่งก้มจัดเชือกฟางที่ข้อเท้า ไม่มีใครรับคำแทน${state.character.name} แต่คนที่ยืนอยู่แถวนั้นได้ยินสิ่งที่พูด และรู้ว่าต้องระวังคำของตนมากขึ้น.${voiceTag ? " " + voiceTag : ""}`;
   const last = outcome === "decisive_success"
     ? `${speaker}ยอมขยับมือไปแตะสิ่งที่ก่อนหน้านี้ยังไม่ยอมรับ ทางข้างหน้าจึงเปิดกว้างขึ้นกว่าที่คิด แต่ชื่อของ${state.character.name}ก็ถูกคนใน${state.currentScene.location}จำไว้มากขึ้นเช่นกัน ไม่มีใครพูดถึงรางวัลในตอนนั้น ต่างคนต่างกลับไปจับของในมือ หรือมองทางที่ต้องไปต่อ เพราะเรื่องนี้ยังไม่จบแค่ตรงหน้า.`
     : outcome === "failure_with_consequence"
