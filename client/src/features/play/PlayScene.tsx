@@ -60,6 +60,7 @@ function gmContext(game: GameState) {
     sideLeads: visibleSideLeads(game).map((entry) => ({ id: entry.id, title: entry.title, objective: entry.request, pressure: entry.pressure, deadline: entry.deadline })),
     socialState: { honor: game.character.social.honor, influence: game.character.social.influence, stain: game.character.social.stain, rumors: game.memories.filter((entry) => entry.kind === "news").slice(-4).map((entry) => entry.detail), oaths: game.memories.filter((entry) => entry.kind === "oath").slice(-4).map((entry) => entry.detail), debts: game.memories.filter((entry) => entry.kind === "debt").slice(-4).map((entry) => entry.detail) },
     progression: { growthPoints: game.progression?.growthPoints ?? 0, milestonePoints: game.progression?.milestonePoints ?? 0, claimedMilestoneIds: game.progression?.claimedMilestoneIds ?? [], recentVitalEvents: (game.progression?.vitalEvents ?? []).slice(-3).map((entry) => ({ type: entry.type, delta: entry.delta, reason: entry.reason })) },
+    randomEvent: game.pendingRandomEvent ? { title: game.pendingRandomEvent.title, historicalFence: game.pendingRandomEvent.historical_fence, choices: game.pendingRandomEvent.choices.map((choice) => ({ id: choice.id })) } : undefined,
     recentMemories: game.memories.slice(-8).map((entry) => ({ title: entry.title, detail: entry.detail, tone: entry.tone })),
   };
 }

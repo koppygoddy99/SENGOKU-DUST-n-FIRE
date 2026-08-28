@@ -34,6 +34,8 @@ export type GMContext = {
   socialState: { honor: number; influence: number; stain: number; rumors: string[]; oaths: string[]; debts: string[] };
   /** แต้มเติบโต (ผู้เล่นเห็นได้) — AI อ่านเพื่อเข้าใจทิศทางการเติบโต ห้ามใช้เปลี่ยนค่าเอง */
   progression?: { growthPoints: number; milestonePoints: number; claimedMilestoneIds: string[]; recentVitalEvents: Array<{ type: string; delta: number; reason: string }> };
+  /** เหตุการณ์สุ่มที่ engine เลือกแล้ว — AI บรรยายได้เท่านั้น ห้ามเลือกผลแทนผู้เล่น */
+  randomEvent?: { title: string; historicalFence: string; choices: Array<{ id: string }> };
   recentMemories: Array<{ title: string; detail: string; tone: string }>;
 };
 

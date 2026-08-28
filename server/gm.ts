@@ -36,6 +36,8 @@ const contextSchema = z.object({
   socialState: z.object({ honor: z.number().int().min(0).max(6), influence: z.number().int().min(0).max(6), stain: z.number().int().min(0).max(6), rumors: z.array(z.string().max(200)).max(5), oaths: z.array(z.string().max(200)).max(5), debts: z.array(z.string().max(200)).max(5) }),
   /** แต้มเติบโตแบบ read-only — AI ห้ามเพิ่มแต้มเอง (ไม่มี write path) ใช้เพื่อบรรยายการเติบโต/เสนอรางวัลเท่านั้น */
   progression: z.object({ growthPoints: z.number().int().min(0).max(99), milestonePoints: z.number().int().min(0).max(99), claimedMilestoneIds: z.array(z.string().max(160)).max(50), recentVitalEvents: z.array(z.object({ type: z.string().max(20), delta: z.number().int().min(-5).max(5), reason: z.string().max(120) })).max(5) }).optional(),
+  /** เหตุการณ์สุ่ม read-only — engine เป็นคนเลือก AI เล่าได้อย่างเดียว */
+  randomEvent: z.object({ title: z.string().max(160), historicalFence: z.string().max(40), choices: z.array(z.object({ id: z.string().max(60) })).max(4) }).optional(),
   recentMemories: z.array(z.object({ title: z.string().max(160), detail: z.string().max(360), tone: z.string().max(30) })).max(8),
 });
 

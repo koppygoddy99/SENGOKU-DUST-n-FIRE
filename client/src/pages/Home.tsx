@@ -136,6 +136,7 @@ function toGMContext(game: GameState) {
       claimedMilestoneIds: game.progression?.claimedMilestoneIds ?? [],
       recentVitalEvents: (game.progression?.vitalEvents ?? []).slice(-3).map((entry) => ({ type: entry.type, delta: entry.delta, reason: entry.reason })),
     },
+    randomEvent: game.pendingRandomEvent ? { title: game.pendingRandomEvent.title, historicalFence: game.pendingRandomEvent.historical_fence, choices: game.pendingRandomEvent.choices.map((choice) => ({ id: choice.id })) } : undefined,
     recentMemories: game.memories.slice(-8).map((entry) => ({ title: entry.title, detail: entry.detail, tone: entry.tone })),
     powerRumor: buildPowerRumorSummary(game, "th"),
   };

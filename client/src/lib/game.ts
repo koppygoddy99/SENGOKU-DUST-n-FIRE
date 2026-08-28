@@ -15,6 +15,7 @@ export type InventoryCategory = "weapon" | "food" | "medicine" | "story" | "tool
 export type Currency = { unit: CurrencyUnit; amount: number };
 export type MemoryKind = "news" | "witness" | "debt" | "favor" | "oath" | "stain" | "injury" | "market_change" | "community_change" | "actor_relation";
 
+import { maybeTriggerRandomEvent } from "./randomEvents";
 import { emptyPowerRumorState, applyWorldEvent, eventFromRoll, eventFromDebt } from "./worldEvents";
 import { regionInitialState, FACTION_NAMES } from "./regionInitialState";
 import { voiceReplyFor, factionOfSpeaker } from "./factionVoice";
@@ -94,6 +95,8 @@ export type ProgressionState = {
   milestonePoints?: number;
   /** milestone_id ที่เคยให้รางวัลแล้ว — แต่ละ milestone ให้ได้ครั้งเดียว */
   claimedMilestoneIds?: string[];
+  /** ประวัติเหตุการณ์สุ่มที่เจอแล้ว (eventId + วัน) — ใช้ตรวจ cooldown_days */
+  eventHistory?: import("./randomEvents").EventHistoryEntry[];
   vitalEvents?: VitalEvent[];
 };
 
@@ -427,6 +430,8 @@ export type GameState = {
   historicalBoundary?: HistoricalBoundary & { tick: number };
   progression?: ProgressionState;
   worldSystems?: WorldSystems;
+  /** เหตุการณ์สุ่มที่ engine เลือกไว้รอให้ผู้เล่นเลือกทาง (AI เล่าได้ แก้ผลไม่ได้) */
+  pendingRandomEvent?: import("./randomEvents").RandomEvent & { offeredDay: number };
   tick: number;
 };
 
@@ -1594,7 +1599,7 @@ export function applyRoll(state: GameState, record: RollRecord): GameState {
   /** milestone_id: ภารกิจหลัก/รองที่ resolved ให้ milestone_point ได้ "ครั้งเดียว" ต่อ mission */
   const missionMilestoneId = missionResolved ? `mission-${activeMission?.id ?? record.id}` : undefined;
   const milestoneAlreadyClaimed = missionMilestoneId ? (calendar.progression.claimedMilestoneIds ?? []).includes(missionMilestoneId) : false;
-  return { ...state, campaign: calendar.campaign, progression: { ...calendar.progression, lastPractice: awarded.practice, lastStatPractice: traitAwarded.practice, growthPoints: (calendar.progression.growthPoints ?? 0) + (record.outcome === "decisive_success" ? 1 : 0), milestonePoints: (calendar.progression.milestonePoints ?? 0) + (missionResolved && !milestoneAlreadyClaimed ? 1 : 0), claimedMilestoneIds: missionMilestoneId && !milestoneAlreadyClaimed ? Array.from(new Set([...(calendar.progression.claimedMilestoneIds ?? []), missionMilestoneId])) : calendar.progression.claimedMilestoneIds, vitalEvents: [...(calendar.progression.vitalEvents ?? []), ...(vitalDelta.blood || vitalDelta.focus ? [{ id: `vital-${record.id}`, type: vitalDelta.blood ? "blood" : "focus", delta: vitalDelta.blood || vitalDelta.focus, reason: vitalDelta.reason, source: resting ? "rest" : "roll", tick: record.tick } as VitalEvent] : [])].slice(-50) }, character: updatedCharacter, currentScene: nextScene, missions, economy: missionResult.transaction ? { ...state.economy, transactions: [...state.economy.transactions, missionResult.transaction] } : state.economy, memories: [...state.memories, memory], rolls: [...state.rolls, storedRecord], storyRecords: [...previousStoryRecords.filter((entry) => entry.id !== storyRecord.id), storyRecord], relationships, tick: record.tick, worldSystems: { ...state.worldSystems, schemaVersion: 1, powerRumor: updatedWorld } };
+  return maybeTriggerRandomEvent({ ...state, campaign: calendar.campaign, progression: { ...calendar.progression, lastPractice: awarded.practice, lastStatPractice: traitAwarded.practice, growthPoints: (calendar.progression.growthPoints ?? 0) + (record.outcome === "decisive_success" ? 1 : 0), milestonePoints: (calendar.progression.milestonePoints ?? 0) + (missionResolved && !milestoneAlreadyClaimed ? 1 : 0), claimedMilestoneIds: missionMilestoneId && !milestoneAlreadyClaimed ? Array.from(new Set([...(calendar.progression.claimedMilestoneIds ?? []), missionMilestoneId])) : calendar.progression.claimedMilestoneIds, vitalEvents: [...(calendar.progression.vitalEvents ?? []), ...(vitalDelta.blood || vitalDelta.focus ? [{ id: `vital-${record.id}`, type: vitalDelta.blood ? "blood" : "focus", delta: vitalDelta.blood || vitalDelta.focus, reason: vitalDelta.reason, source: resting ? "rest" : "roll", tick: record.tick } as VitalEvent] : [])].slice(-50) }, character: updatedCharacter, currentScene: nextScene, missions, economy: missionResult.transaction ? { ...state.economy, transactions: [...state.economy.transactions, missionResult.transaction] } : state.economy, memories: [...state.memories, memory], rolls: [...state.rolls, storedRecord], storyRecords: [...previousStoryRecords.filter((entry) => entry.id !== storyRecord.id), storyRecord], relationships, tick: record.tick, worldSystems: { ...state.worldSystems, schemaVersion: 1, powerRumor: updatedWorld } });
 }
 
 export function buyMarketOffer(state: GameState, offerId: string): { state: GameState; message: string } {
