@@ -1,0 +1,108 @@
+.revent-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  background: rgba(12, 10, 9, 0.72);
+  backdrop-filter: blur(3px);
+  padding: 24px;
+}
+
+.revent-window {
+  width: min(680px, 100%);
+  max-height: 88vh;
+  overflow-y: auto;
+  background: linear-gradient(180deg, #20191622, transparent), var(--paper, #f3ead7);
+  color: var(--ink, #241d17);
+  border: 1px solid var(--rule, #c9b795);
+  border-top: 4px solid var(--vermilion, #a5311f);
+  border-radius: 10px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  padding: 22px 26px 18px;
+}
+
+.revent-eyebrow {
+  margin: 0 0 6px;
+  font-family: Poppins, sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--vermilion, #a5311f);
+}
+
+.revent-title {
+  margin: 0 0 8px;
+  font-size: 24px;
+  line-height: 1.3;
+}
+
+.revent-lead {
+  margin: 0 0 16px;
+  font-size: 13.5px;
+  opacity: 0.75;
+}
+
+.revent-choices {
+  display: grid;
+  gap: 10px;
+}
+
+.revent-choice {
+  display: grid;
+  gap: 4px;
+  width: 100%;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid var(--rule, #c9b795);
+  border-left: 4px solid var(--vermilion, #a5311f);
+  border-radius: 8px;
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.revent-choice:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.16);
+}
+
+.revent-choice__label {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.revent-choice__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.revent-choice__meta i {
+  font-style: normal;
+  opacity: 0.7;
+}
+
+.revent-choice__meta b {
+  font-weight: 600;
+}
+
+.revent-choice__meta .is-reward { color: #1f6b4e; }
+.revent-choice__meta .is-risk { color: var(--vermilion, #a5311f); }
+
+.revent-reject {
+  margin-top: 14px;
+  width: 100%;
+  padding: 9px 12px;
+  font-size: 12.5px;
+  background: transparent;
+  border: 1px dashed var(--rule, #c9b795);
+  border-radius: 8px;
+  color: inherit;
+  opacity: 0.75;
+  cursor: pointer;
+}
+
+.revent-reject:hover { opacity: 1; }

@@ -15,7 +15,7 @@ export type InventoryCategory = "weapon" | "food" | "medicine" | "story" | "tool
 export type Currency = { unit: CurrencyUnit; amount: number };
 export type MemoryKind = "news" | "witness" | "debt" | "favor" | "oath" | "stain" | "injury" | "market_change" | "community_change" | "actor_relation";
 
-import { maybeTriggerRandomEvent } from "./randomEvents";
+import { maybeTriggerRandomEvent, type EventEffect } from "./randomEvents";
 import { emptyPowerRumorState, applyWorldEvent, eventFromRoll, eventFromDebt } from "./worldEvents";
 import { regionInitialState, FACTION_NAMES } from "./regionInitialState";
 import { voiceReplyFor, factionOfSpeaker } from "./factionVoice";
@@ -190,6 +190,8 @@ export type Mission = {
   canon?: { premise: string; protectedTerms: string[]; evidence: string[] };
   retiredReason?: string;
   supersededBy?: string;
+  /** เควสที่มาจากเหตุการณ์สุ่ม — สำเร็จได้รางวัลพิเศษ / แพ้เสียของพิเศษ */
+  randomEvent?: { eventId: string; choiceId: string; effects: EventEffect[] };
   progress?: { current: number; required: number; triggerPhrases: string[]; rewardItem?: Omit<InventoryItem, "id">; resolvedBy?: string; rewardGranted?: boolean };
 };
 
@@ -868,7 +870,7 @@ export function normalizeMasteryProgress(entry: Mastery, legacy = false): Master
   return { ...entry, rank: level, level, xp: level >= MAX_MASTERY_LEVEL ? 0 : Math.max(0, Math.min(entry.xp ?? 0, xpNeededForMasteryLevel(level) - 1)), totalXp: Math.max(0, entry.totalXp ?? 0) };
 }
 
-function defaultProgression(context: CampaignContext, ageAtCampaignStart = 20, birthSeason: Season = context.season): ProgressionState {
+export function defaultProgression(context: CampaignContext, ageAtCampaignStart = 20, birthSeason: Season = context.season): ProgressionState {
   return { leaf: 1, segment: "day", timeMarksSinceLeaf: 0, daysSinceLeaf: 0, ageAtCampaignStart, currentAge: ageAtCampaignStart, birthSeason, campaignStartYear: context.year, growthPoints: 0, milestonePoints: 0, vitalEvents: [] };
 }
 
@@ -1149,6 +1151,60 @@ export function applyVitalDelta(state: GameState, type: "blood" | "focus", delta
 /** milestone รับรางวัลได้ "ครั้งเดียว" ต่อ milestone_id — เคยให้แล้วระบบข้าม */
 export function awardMilestonePoint(state: GameState, reason: string, milestoneId?: string): GameState { const p=state.progression ?? defaultProgression(state.campaign); if(milestoneId && (p.claimedMilestoneIds ?? []).includes(milestoneId)) return state; return {...state,progression:{...p,milestonePoints:(p.milestonePoints ?? 0)+1,claimedMilestoneIds: milestoneId ? Array.from(new Set([...(p.claimedMilestoneIds ?? []), milestoneId])) : p.claimedMilestoneIds}}; }
 export function levelUpVital(state: GameState, choice: "max_blood" | "max_focus"): GameState { const p=state.progression ?? defaultProgression(state.campaign); if((p.milestonePoints ?? 0)<1) return state; const m=vitalMaxes(state.character); const blood=choice === "max_blood"; const next=Math.min(VITAL_CAP,(blood?m.maxBlood:m.maxFocus)+1); if(next > VITAL_CAP) return state; const type=blood?"blood":"focus"; const maxBlood=blood?next:m.maxBlood; const maxFocus=blood?m.maxFocus:next; return {...state,character:{...state.character,vitals:{...state.character.vitals,maxBlood,maxFocus,[type]:clampVital(state.character.vitals[type]+1,next)}},progression:{...p,milestonePoints:(p.milestonePoints ?? 0)-1,vitalEvents:[...(p.vitalEvents ?? []),{id:`level-up-${state.tick}-${choice}`,type,delta:1,reason:"ใช้ milestone เพิ่มเพดาน vitals",source:"milestone",tick:state.tick}]}}; }
+
+/** ใช้ effects ของเหตุการณ์สุ่มผ่าน reducer ของ engine เท่านั้น (AI/UI ห้ามแก้ state ตรง) */
+export function applyEventEffects(state: GameState, title: string, effects: EventEffect[], tick: number): GameState {
+  let working = state;
+  const memories: WorldMemory[] = [];
+  const remember = (kind: WorldMemory["kind"], detail: string, tone: WorldMemory["tone"]) => memories.push({ id: `revent-${tick}-${memories.length}`, kind, title, detail, tick, tone });
+  for (const effect of effects) {
+    const amount = effect.amount ?? 0;
+    switch (effect.type) {
+      case "blood":
+      case "focus":
+        working = applyVitalDelta(working, effect.type, amount, `เหตุการณ์สุ่ม: ${title}`, "rest");
+        break;
+      case "currency": {
+        const currency = working.character.resources.currency ?? { unit: "mon" as const, amount: 0 };
+        working = { ...working, character: { ...working.character, resources: { ...working.character.resources, currency: { unit: "mon", amount: Math.max(0, currency.amount + amount) } } } };
+        break;
+      }
+      case "food": {
+        const supplies = working.character.resources.supplies;
+        working = { ...working, character: { ...working.character, resources: { ...working.character.resources, supplies: Math.max(0, supplies + amount) } } };
+        break;
+      }
+      case "time":
+        if (amount > 0) remember("news", `เวลาผ่านไป ${amount} วันกับเหตุการณ์นี้`, "ochre");
+        break;
+      case "heat":
+        remember("stain", `${effect.target ?? "local"} ร้อนขึ้น +${amount}`, "vermilion");
+        break;
+      case "reputation":
+        remember(amount >= 0 ? "favor" : "stain", `${effect.target ?? "local"} ${amount >= 0 ? "รู้สึกดีกับเจ้า" : "ไม่พอใจเจ้า"} (${amount > 0 ? "+" : ""}${amount})`, amount >= 0 ? "teal" : "vermilion");
+        break;
+      case "rumor":
+        remember("news", effect.value ?? "ข่าวลือใหม่เริ่มวิ่ง", "ochre");
+        break;
+      case "information":
+        remember("news", "ได้ข่าวจากเหตุการณ์นี้", "teal");
+        break;
+      case "obligation":
+        remember("debt", `ผูกพันใหม่: ${effect.template ?? effect.target ?? "ผู้เกี่ยวข้อง"}`, "ochre");
+        break;
+      default:
+        remember("news", `${effect.type} ${amount > 0 ? "+" : ""}${amount}`, "ochre");
+        break;
+    }
+  }
+  const clamp = (value: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, value));
+  const social = {
+    ...working.character.social,
+    information: clamp(working.character.social.information + effects.filter((entry) => entry.type === "information").reduce((sum, entry) => sum + (entry.amount ?? 0), 0), 0, 5),
+    stain: clamp(working.character.social.stain + effects.filter((entry) => entry.type === "heat").reduce((sum, entry) => sum + Math.max(0, entry.amount ?? 0), 0), 0, 5),
+  };
+  return { ...working, character: { ...working.character, social }, memories: [...working.memories, ...memories] };
+}
 
 export function normalizeGameState(state: GameState): GameState {
   const campaign = state.campaign;
@@ -1471,6 +1527,28 @@ function advanceCampaignCalendar(campaign: CampaignContext, progression: Progres
 }
 
 function progressActiveMission(state: GameState, record: RollRecord): { missions: Mission[]; inventory: InventoryItem[]; transaction?: ExchangeRecord; update?: RollRecord["missionUpdate"] } {
+  // เควสเหตุการณ์สุ่ม: ได้ priority ก่อน mission อื่น — สำเร็จได้รางวัลพิเศษ / แพ้เสียของพิเศษ
+  const eventMission = state.missions.find((entry) => entry.randomEvent && (entry.state === "active" || entry.state === "offered"));
+  if (eventMission?.randomEvent && eventMission.progress) {
+    if (record.outcome === "failure_with_consequence") {
+      const lossEffects = eventMission.randomEvent.effects.filter((effect) => (effect.amount ?? 0) < 0 || effect.type === "heat");
+      const withLoss = applyEventEffects(state, eventMission.title, lossEffects, record.tick);
+      const missions = state.missions.map((entry): Mission => entry.id === eventMission.id ? { ...entry, state: "failed" as MissionState, retiredReason: "ล้มเหลวในเควสเหตุการณ์" } : entry);
+      return { missions, inventory: withLoss.character.inventory, update: { missionId: eventMission.id, current: eventMission.progress.current, required: eventMission.progress.required, state: "failed" } };
+    }
+    const gained = record.outcome === "decisive_success" ? 2 : 1;
+    const current = Math.min(eventMission.progress.required, eventMission.progress.current + gained);
+    const resolved = current >= eventMission.progress.required;
+    if (resolved) {
+      const withReward = applyEventEffects(state, eventMission.title, eventMission.randomEvent.effects, record.tick);
+      const rewardItem = eventMission.progress.rewardItem ? { ...eventMission.progress.rewardItem, id: `revent-reward-${eventMission.id}-${record.id}` } : undefined;
+      const missions = state.missions.map((entry): Mission => entry.id === eventMission.id ? { ...entry, state: "resolved" as MissionState, progress: { ...eventMission.progress!, current, resolvedBy: record.id, rewardGranted: true } } : entry);
+      return { missions, inventory: rewardItem ? [...withReward.character.inventory, rewardItem] : withReward.character.inventory, update: { missionId: eventMission.id, current, required: eventMission.progress.required, state: "resolved", reward: eventMission.reward } };
+    }
+    const questProgress = eventMission.progress;
+    const missions = state.missions.map((entry): Mission => entry.id === eventMission.id ? { ...entry, progress: { ...questProgress, current, required: questProgress.required, triggerPhrases: questProgress.triggerPhrases } } : entry);
+    return { missions, inventory: state.character.inventory, update: { missionId: eventMission.id, current, required: eventMission.progress.required, state: "active" } };
+  }
   const mission = activeMainMission(state) ?? state.missions.find((entry) => entry.state === "offered" || entry.state === "active");
   if (!mission?.progress || record.outcome === "failure_with_consequence") return { missions: state.missions, inventory: state.character.inventory };
   const gained = record.outcome === "decisive_success" ? 2 : 1;

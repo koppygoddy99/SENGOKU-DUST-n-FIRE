@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { applyRandomEventChoice, mapLocationToTypes, maybeTriggerRandomEvent, selectRandomEvent, ALL_RANDOM_EVENTS, RANDOM_EVENT_CHANCE, type SelectRandomEventInput } from "./randomEvents";
-import { createSaikaSafehouseDemo, normalizeGameState } from "./game";
+import { createSaikaSafehouseDemo, normalizeGameState, applyRoll } from "./game";
 
 const baseInput: SelectRandomEventInput = { season: "Spring", year: 1569, location: "ตลาดหน้าด่าน", day: 10, tick: 3 };
 
@@ -113,5 +113,55 @@ describe("maybeTriggerRandomEvent", () => {
     }
     expect(fired).toBeGreaterThan(0);
     expect(fired).toBeLessThan(200);
+  });
+});
+
+describe("event quest flow", () => {
+  const acceptQuest = () => {
+    const game = normalizeGameState(createSaikaSafehouseDemo());
+    const triggered = maybeTriggerRandomEvent({ ...game, tick: 42, campaign: { ...game.campaign } });
+    if (!triggered.pendingRandomEvent) return null;
+    const choiceId = triggered.pendingRandomEvent.choices[0].id;
+    const accepted = acceptRandomEventQuest(triggered, choiceId);
+    return { game, triggered, accepted, quest: accepted.missions.find((mission) => mission.id.startsWith("revent-"))! };
+  };
+
+  it("accepting a choice creates an event quest without applying effects", () => {
+    const result = acceptQuest();
+    if (!result) return;
+    expect(result.triggered.pendingRandomEvent).toBeDefined();
+    expect(result.accepted.pendingRandomEvent).toBeUndefined();
+    expect(result.quest.state).toBe("active");
+    expect(result.quest.role).toBe("side");
+    expect(result.quest.randomEvent?.eventId).toBe(result.triggered.pendingRandomEvent!.event_id);
+    expect(result.accepted.character.vitals.blood).toBe(result.game.character.vitals.blood);
+    expect(result.accepted.progression?.eventHistory?.length).toBe(1);
+  });
+
+  it("rejecting clears the event and records cooldown history", () => {
+    const result = acceptQuest();
+    if (!result) return;
+    const rejected = rejectRandomEventQuest(result.triggered);
+    expect(rejected.pendingRandomEvent).toBeUndefined();
+    expect(rejected.missions.find((mission) => mission.id.startsWith("revent-"))).toBeUndefined();
+    expect(rejected.progression?.eventHistory?.length).toBe(1);
+  });
+
+  it("resolving the quest grants effects and the small reward item", () => {
+    const result = acceptQuest();
+    if (!result) return;
+    const nonFail = { id: "r-test", outcome: "success_with_cost" as const, ...{} } as Parameters<typeof import("./game").applyRoll>[1];
+    const afterRoll = applyRoll(result.accepted, nonFail);
+    expect(afterRoll.missions.find((mission) => mission.id.startsWith("revent-"))?.progress?.current).toBeGreaterThan(0);
+  });
+
+  it("failing the quest applies only the loss effects and closes it", () => {
+    const result = acceptQuest();
+    if (!result) return;
+    const failRecord = { id: "r-fail", outcome: "failure_with_consequence" as const } as Parameters<typeof import("./game").applyRoll>[1];
+    const afterFail = applyRoll(result.accepted, failRecord);
+    const quest = afterFail.missions.find((mission) => mission.id.startsWith("revent-"));
+    expect(quest?.state).toBe("failed");
+    expect(afterFail.memories.some((memory) => memory.title.includes("เหตุการณ์สุ่ม"))).toBe(true);
   });
 });

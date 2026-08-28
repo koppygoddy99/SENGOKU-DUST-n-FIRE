@@ -8,7 +8,7 @@
  *  - cooldown_days + eventHistory กันเหตุการณ์ซ้ำถี่เกิน
  * ========================================================================== */
 import eventsData from "../../../shared/data/random-events.json";
-import { applyVitalDelta, clampVital, type GameState, type WorldMemory } from "./game";
+import { applyEventEffects, defaultProgression, type GameState, type Mission } from "./game";
 
 export type EventEffect = { type: string; amount?: number; target?: string; template?: string; value?: string };
 export type EventChoice = { id: string; check: { stat: string; tags: string[] }; effects: EventEffect[] };
@@ -120,75 +120,109 @@ export function selectRandomEvent(input: SelectRandomEventInput): RandomEvent | 
   return eligible[eligible.length - 1];
 }
 
-const randomMemory = (id: string, kind: WorldMemory["kind"], title: string, detail: string, tick: number, tone: WorldMemory["tone"]): WorldMemory => ({ id, kind, title, detail, tick, tone });
-
-/** Reducer เดียวที่ใช้ผลเหตุการณ์สุ่มได้ — ผ่าน engine เท่านั้น (AI ห้ามเรียก/ห้ามแก้ state ตรง) */
+/** ทางเลือกแบบใช้ผลทันที — ยังคงไว้ผ่าน reducer เดียวกัน */
 export function applyRandomEventChoice(state: GameState, choiceId: string): GameState {
   const pending = state.pendingRandomEvent;
   if (!pending) return state;
   const choice = pending.choices.find((entry) => entry.id === choiceId);
   if (!choice) return state;
+  const after = applyEventEffects({ ...state, pendingRandomEvent: undefined }, pending.title, choice.effects, state.tick);
+  const history: EventHistoryEntry[] = [...(state.progression?.eventHistory ?? []), { eventId: pending.event_id, day: state.campaign.day }].slice(-80);
+  return { ...after, progression: { ...(after.progression ?? state.progression!), eventHistory: history } };
+}
 
-  let working: GameState = { ...state, pendingRandomEvent: undefined };
-  const memories: WorldMemory[] = [];
-  const tick = state.tick;
+/** ชื่อไทยของทางเลือก — ตัวที่ไม่อยู่ในคลังจะสร้างจาก id */
+const CHOICE_LABELS: Record<string, string> = {
+  help_repair: "ช่วยซ่อม", pay_passage: "จ่ายค่าผ่านทาง", bypass_mud: "ลัดเลาะโคลน", wait_dry: "รอให้แห้ง",
+  join_festival: "ร่วมงานเทศกาล", network_nobles: "เก็บข่าวในงาน", sell_snacks: "ขายขนม", avoid_crowd: "หลบฝูงชน",
+  buy_seed: "ซื้อเมล็ดพันธุ์", warn_villagers: "เตือนชาวบ้าน", ignore: "เมินผ่าน", broker_deal: "เป็นนายหน้า",
+  search_crew: "ตามหาลูกเรือ", replace_self: "ลงแรงแทน", report_captain: "รายงานกัปตัน", ignore_departure: "ปล่อยผ่าน",
+  deliver_letter: "ส่งจดหมาย", read_contents: "อ่านเนื้อความ", sell_letter: "ขายจดหมาย", burn_letter: "เผาทิ้ง",
+  comply_work: "ยอมลงแรง", bribe_exemption: "ติดสินบนให้พ้นเกณฑ์", forge_exemption: "ปลอมเอกสาร", flee_village: "หนีออกจากหมู่บ้าน",
+  help_drain: "ช่วยระบายน้ำ", offer_expertise: "เสนอความรู้", pass_through: "ลอดผ่านไป", demand_payment: "ทวงค่าตอบแทน",
+  guide_caravan: "นำทางขบวน", share_food: "แบ่งอาหาร", rob_caravan: "ปล้นขบวน", avoid_pilgrims: "เลี่ยงขบวน",
+  help_extinguish: "ช่วยดับไฟ", evacuate: "อพยพคน", loot_abandoned: "ล้วงของที่ถูกทิ้ง", watch_distance: "ดูไกลๆ",
+  deliver_materials: "ส่งวัสดุลับ", refuse_job: "ปฏิเสธงาน", probe_client: "สืบลูกค้า", tip_off: "แจ้งเบาะแส",
+  wait_flood: "รอน้ำลด", pay_boatman: "จ่ายคนพาย", cross_risk: "ข้ามแบบเสี่ยง", find_alternate: "หาทางเลือกใหม่",
+  tend_injured: "ดูแลคนเจ็บ", question_info: "ถามหาข่าว", rob_bloodied: "ปล้นคนบาดเจ็บ", walk_past: "เดินผ่าน",
+  defend_village: "สู้ปกป้องหมู่บ้าน", help_evacuate: "ช่วยอพยพ", hide_and_watch: "ซ่อนดูสถานการณ์", join_bandits: "ร่วมกับโจร",
+  break_ice: "ตีน้ำแข็ง", wait_thaw: "รอน้ำแข็งละลาย", travel_overland: "เดินลัดบก", bribe_icebreaker: "จ้างคนตีน้ำแข็ง",
+  share_supplies: "แบ่งเสบียง", hoard_food: "กกอาหารไว้", steal_supplies: "ขโมยเสบียง", help_refugees: "ช่วยผู้ลี้ภัย",
+  guide_shelter: "พาไปที่พัก", rob_refugees: "ปล้นผู้ลี้ภัย", avoid_involvement: "ไม่ยุ่ง", buy_weapon: "ซื้ออาวุธ",
+  report_black_market: "แจ้งตลาดมืด", ignore_market: "เดินผ่านตลาดมืด", fetch_firewood: "ไปหาฟืน", share_fuel: "แบ่งเชื้อเพลิง",
+  leave_cold: "ทิ้งไว้ในความหนาว", hire_desperate: "รับคนที่ถูกปลด", seek_enlistment: "สมัครเข้ากอง", loot_deserters: "ล้วงของทหารหนี",
+  side_captain: "อยู่ข้างกัปตัน", side_mutineers: "อยู่ข้างคนกบฏ", mediate_peace: "เข้าไกล่เกลี่ย", abandon_ship: "ทิ้งเรือ",
+  defend_fire: "สู้ปกป้องเตาไฟ", feed_wolves: "โยนอาหารให้หมาป่า", climb_tree: "ปีนต้นไม้", light_torches: "จุดคบเพลิง",
+};
 
-  for (const effect of choice.effects) {
+export function humanizeChoiceLabel(choiceId: string): string {
+  return CHOICE_LABELS[choiceId] ?? choiceId.replace(/_/g, " ").replace(/^\w/, (ch) => ch.toUpperCase());
+}
+
+/** สรุปผลดี/ร้ายของทางเลือก เป็นข้อความไทย */
+export function summarizeEffects(effects: EventEffect[]): { reward: string; risk: string } {
+  const rewardParts: string[] = [];
+  const riskParts: string[] = [];
+  for (const effect of effects) {
     const amount = effect.amount ?? 0;
-    switch (effect.type) {
-      case "blood":
-      case "focus":
-        working = applyVitalDelta(working, effect.type, amount, `เหตุการณ์สุ่ม: ${pending.title}`, "rest");
-        break;
-      case "currency": {
-        const currency = working.character.resources.currency ?? { unit: "mon" as const, amount: 0 };
-        working = { ...working, character: { ...working.character, resources: { ...working.character.resources, currency: { unit: "mon", amount: Math.max(0, currency.amount + amount) } } } };
-        break;
-      }
-      case "food": {
-        const supplies = working.character.resources.supplies;
-        working = { ...working, character: { ...working.character, resources: { ...working.character.resources, supplies: Math.max(0, supplies + amount) } } };
-        break;
-      }
-      case "time":
-        // วันถูกขยับโดย clock ของ engine ตามผลทอยอยู่แล้ว — เหตุการณ์สุ่มบันทึกเป็นความทรงจำแทน
-        if (amount > 0) memories.push(randomMemory(`revent-time-${tick}-${memories.length}`, "news", pending.title, `เวลาผ่านไป ${amount} วันกับเหตุการณ์นี้`, tick, "ochre"));
-        break;
-      case "heat":
-        memories.push(randomMemory(`revent-heat-${tick}-${memories.length}`, "stain", pending.title, `${effect.target ?? "local"} ร้อนขึ้น +${amount}`, tick, "vermilion"));
-        break;
-      case "reputation":
-        memories.push(randomMemory(`revent-rep-${tick}-${memories.length}`, amount >= 0 ? "favor" : "stain", pending.title, `${effect.target ?? "local"} ${amount >= 0 ? "รู้สึกดีกับเจ้า" : "ไม่พอใจเจ้า"} (${amount > 0 ? "+" : ""}${amount})`, tick, amount >= 0 ? "teal" : "vermilion"));
-        break;
-      case "rumor":
-        memories.push(randomMemory(`revent-rumor-${tick}-${memories.length}`, "news", pending.title, effect.value ?? "ข่าวลือใหม่เริ่มวิ่ง", tick, "ochre"));
-        break;
-      case "information":
-        memories.push(randomMemory(`revent-info-${tick}-${memories.length}`, "news", pending.title, "ได้ข่าวจากเหตุการณ์นี้", tick, "teal"));
-        break;
-      case "obligation":
-        memories.push(randomMemory(`revent-debt-${tick}-${memories.length}`, "debt", pending.title, `ผูกพันใหม่: ${effect.template ?? effect.target ?? "ผู้เกี่ยวข้อง"}`, tick, "ochre"));
-        break;
-      default:
-        // medicine / เอฟเฟกต์อื่น — บันทึกเป็นความทรงจำ ยังไม่แตะทรัพยากรจริง
-        memories.push(randomMemory(`revent-${effect.type}-${tick}-${memories.length}`, "news", pending.title, `${effect.type} ${amount > 0 ? "+" : ""}${amount}`, tick, "ochre"));
-        break;
+    const target = effect.target ?? "";
+    if (amount > 0 || effect.type === "rumor" || effect.type === "information" || effect.type === "obligation") {
+      const names: Record<string, string> = { currency: `เงิน +${amount}`, food: `อาหาร +${amount}`, blood: `เลือด +${amount}`, focus: `สมาธิ +${amount}`, reputation: `ความน่าเชื่อถือ (${target}) +${amount}`, time: `อยู่นานขึ้น ${amount} วัน`, information: "ได้ข่าวสาร", rumor: "ได้ข่าวลือ", obligation: "ได้ผู้สนับสนุนใหม่" };
+      rewardParts.push(names[effect.type] ?? `${effect.type} +${amount}`);
+    }
+    if (amount < 0 || effect.type === "heat") {
+      const names: Record<string, string> = { currency: `เงิน ${amount}`, food: `อาหาร ${amount}`, blood: `เลือด ${amount}`, focus: `สมาธิ ${amount}`, reputation: `ความน่าเชื่อถือ (${target}) ${amount}`, time: `เสียเวลา ${Math.abs(amount)} วัน`, heat: `Heat พุ่ง +${amount}` };
+      riskParts.push(names[effect.type] ?? `${effect.type} ${amount}`);
     }
   }
+  return { reward: rewardParts.join(" · ") || "ไม่มีโบนัสพิเศษ", risk: riskParts.join(" · ") || "ไม่มีความเสี่ยงพิเศษ" };
+}
 
+function defaultProgressionFrom(state: GameState) {
+  return state.progression ?? defaultProgression(state.campaign);
+}
+
+/** ผู้เล่นกดเลือกทางในหน้าต่างเหตุการณ์ → รับเป็น "เควสเหตุการณ์" (ไม่ทอย ไม่ใช้ผลทันที) */
+export function acceptRandomEventQuest(state: GameState, choiceId: string): GameState {
+  const pending = state.pendingRandomEvent;
+  if (!pending) return state;
+  const choice = pending.choices.find((entry) => entry.id === choiceId);
+  if (!choice) return state;
+  const label = humanizeChoiceLabel(choice.id);
+  const { reward, risk } = summarizeEffects(choice.effects);
+  const quest: Mission = {
+    id: `revent-${pending.event_id}-${state.tick}`,
+    issuer: "เหตุการณ์บนเส้นทาง",
+    issuerType: "commoner",
+    title: pending.title,
+    request: label,
+    pressure: risk,
+    deadline: "ภายในไม่กี่วัน",
+    state: "active",
+    role: "side",
+    visibility: "visible",
+    challenge: "ordinary",
+    reward,
+    risk,
+    options: [label],
+    progress: { current: 0, required: 2, triggerPhrases: [label, ...choice.check.tags], rewardItem: { label: `${pending.title} · ของฝาก`, kind: "reserve", slots: 1, description: reward, functions: ["bonus"], condition: "usable" } },
+    randomEvent: { eventId: pending.event_id, choiceId: choice.id, effects: choice.effects },
+  };
   const history: EventHistoryEntry[] = [...(state.progression?.eventHistory ?? []), { eventId: pending.event_id, day: state.campaign.day }].slice(-80);
-  const clamp = (value: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, value));
-  const social = {
-    ...working.character.social,
-    information: clamp(working.character.social.information + choice.effects.filter((entry) => entry.type === "information").reduce((sum, entry) => sum + (entry.amount ?? 0), 0), 0, 5),
-    stain: clamp(working.character.social.stain + choice.effects.filter((entry) => entry.type === "heat").reduce((sum, entry) => sum + Math.max(0, entry.amount ?? 0), 0), 0, 5),
-  };
   return {
-    ...working,
-    character: { ...working.character, social },
-    memories: [...working.memories, ...memories],
-    progression: { ...(working.progression ?? state.progression!), eventHistory: history },
+    ...state,
+    pendingRandomEvent: undefined,
+    missions: [...state.missions, quest],
+    progression: { ...defaultProgressionFrom(state), eventHistory: history },
   };
+}
+
+/** ปัดปฏิเสธเหตุการณ์ — หายไปเฉยๆ แต่จด cooldown ไว้ */
+export function rejectRandomEventQuest(state: GameState): GameState {
+  const pending = state.pendingRandomEvent;
+  if (!pending) return state;
+  const history: EventHistoryEntry[] = [...(state.progression?.eventHistory ?? []), { eventId: pending.event_id, day: state.campaign.day }].slice(-80);
+  return { ...state, pendingRandomEvent: undefined, progression: { ...defaultProgressionFrom(state), eventHistory: history } };
 }
 
 /** Hook สำหรับ applyRoll — สุ่มแบบ deterministic, โอกาสตายตัว 25% ต่อผลทอย */
