@@ -1,55 +1,12 @@
+// AUTO-GENERATED catalog is the single source of truth for these keys —
+// edit client/src/lib/i18n/messages.json and run `pnpm i18n:extract`.
+import { uiMessages } from "./i18n/generated/messages";
+
 export type Language = "en" | "th";
 
-export type UiTranslationKey =
-  | "campaign.command"
-  | "campaign.command.short"
-  | "current.campaign"
-  | "world.currents"
-  | "reward.context"
-  | "market.local"
-  | "local.sellers"
-  | "office.overview"
-  | "campaign.boundaries"
-  | "historical.reference"
-  | "runtime.fallbacks"
-  | "audit.policy"
-  | "controlled.settings"
-  | "language.selection"
-  | "reward.latest"
-  | "page.label"
-  | "story.label"
-  | "chronicle.label"
-  | "markets.and.gear"
-  | "campaign.ledger"
-  | "world.archive"
-  | "local.save.active"
-  | "stat.label";
+export type UiTranslationKey = keyof typeof uiMessages;
 
-export const uiTranslationMap: Record<UiTranslationKey, { en: string; th: string }> = {
-  "campaign.command": { en: "Campaign Command", th: "หน้าหลักแคมเปญ" },
-  "campaign.command.short": { en: "Campaign Command", th: "หน้าหลักแคมเปญ" },
-  "current.campaign": { en: "Current campaign", th: "แคมเปญที่กำลังเล่น" },
-  "world.currents": { en: "World Currents", th: "ความเคลื่อนไหวในแผ่นดิน" },
-  "reward.context": { en: "Reward context", th: "สรุปรางวัลล่าสุด" },
-  "market.local": { en: "This market", th: "ตลาดพื้นที่นี้" },
-  "local.sellers": { en: "Local sellers", th: "ผู้ค้าในพื้นที่" },
-  "office.overview": { en: "Office Overview", th: "ภาพรวมการทำงาน" },
-  "campaign.boundaries": { en: "Campaign Boundaries", th: "ขอบเขตแคมเปญ" },
-  "historical.reference": { en: "Historical Reference", th: "หลักฐานและบริบท" },
-  "runtime.fallbacks": { en: "Runtime & Fallbacks", th: "การทำงานและทางสำรอง" },
-  "audit.policy": { en: "Audit Policy", th: "นโยบายตรวจสอบ" },
-  "controlled.settings": { en: "Controlled Settings", th: "การตั้งค่าควบคุม" },
-  "language.selection": { en: "Language selection", th: "การเลือกภาษา" },
-  "reward.latest": { en: "Reward context", th: "บันทึกรางวัลล่าสุด" },
-  "page.label": { en: "Page", th: "หน้า" },
-  "story.label": { en: "Story", th: "เรื่องราว" },
-  "chronicle.label": { en: "Chronicle", th: "จดหมายเหตุ" },
-  "markets.and.gear": { en: "Market and gear sections", th: "ตลาดและสัมภาระ" },
-  "campaign.ledger": { en: "Your campaign ledger", th: "สารบัญ / บันทึกแคมเปญของเจ้า" },
-  "world.archive": { en: "World Archive", th: "หอจดหมายเหตุโลก" },
-  "local.save.active": { en: "Local Save active · this campaign stays in this browser", th: "บันทึกในเครื่องกำลังทำงาน · แคมเปญนี้อยู่ในเบราว์เซอร์นี้เท่านั้น" },
-  "stat.label": { en: "Stat", th: "คุณลักษณะ" },
-};
+export const uiTranslationMap: Record<UiTranslationKey, { en: string; th: string }> = uiMessages;
 
 const gameTextEnglish: Record<string, string> = {
   "แรง อึด แบก ฝ่าอุปสรรค": "Strength, endurance, carrying, and pushing through obstacles",
