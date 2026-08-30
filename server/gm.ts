@@ -3,7 +3,7 @@ import { invokeLLM } from "./_core/llm";
 import { sengokuSocialFacts, type SengokuSocialFact } from "../shared/sengokuSocialFacts";
 import { narrativeStylePrompt } from "../shared/narrativeStyle";
 import { buildNarrativePromptPacket, evaluatePlayerFacingNarrative } from "../shared/narrativeRuntime";
-import { historicalBriefForCampaign } from "../client/src/lib/historicalTimeline";
+import { historicalBriefForCampaign } from "../shared/historicalTimeline";
 
 const languageSchema = z.enum(["en", "th"]);
 const statSchema = z.enum(["body", "hand", "wit", "mind", "heart"]);

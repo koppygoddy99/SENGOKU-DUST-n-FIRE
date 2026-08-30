@@ -4,7 +4,7 @@ import { ArrowRight, BookOpen, CalendarDays, Compass, ExternalLink, Globe2, Minu
 import { Button } from "@/components/ui/button";
 import { SengokuIcon } from "@/components/SengokuIcon";
 import type { GameState } from "@/lib/game";
-import { timelineForCampaign, timelineRegionKey, type HistoricalTimelineRecord } from "@/lib/historicalTimeline";
+import { timelineForCampaign, timelineRegionKey, type HistoricalTimelineRecord } from "@shared/historicalTimeline";
 import { INTERACTIVE_PROVINCES, PROVINCE_BY_ID, provinceName } from "./provinceMapData";
 import { localized } from "@/lib/localization";
 import "./storyMap.css";

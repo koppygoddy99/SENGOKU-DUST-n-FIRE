@@ -1,4 +1,4 @@
-import { HISTORICAL_TIMELINE, HISTORICAL_YEAR_LEDGER, SENGOKU_66_PROVINCE_IDS, SENGOKU_ISLAND_PROVINCE_IDS, historicalYearLedger, timelineForCampaign } from "../client/src/lib/historicalTimeline";
+import { HISTORICAL_TIMELINE, HISTORICAL_YEAR_LEDGER, SENGOKU_66_PROVINCE_IDS, SENGOKU_ISLAND_PROVINCE_IDS, historicalYearLedger, timelineForCampaign } from "../shared/historicalTimeline";
 
 export function buildHistoricalTimeline(year: number, region: string) {
   return {

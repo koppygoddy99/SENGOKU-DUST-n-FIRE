@@ -3,7 +3,7 @@ import {
   HISTORICAL_YEAR_LEDGER,
   SENGOKU_66_PROVINCE_IDS,
   SENGOKU_ISLAND_PROVINCE_IDS,
-} from "../client/src/lib/historicalTimeline.ts";
+} from "../shared/historicalTimeline.ts";
 
 const canonicalProvinceKeys = [...SENGOKU_66_PROVINCE_IDS, ...SENGOKU_ISLAND_PROVINCE_IDS];
 const provinceKeysWithRecords = new Set(HISTORICAL_TIMELINE.flatMap((record) => record.regionKeys));

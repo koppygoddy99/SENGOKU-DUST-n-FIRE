@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HISTORICAL_TIMELINE, HISTORICAL_YEAR_LEDGER, SENGOKU_66_PROVINCE_IDS, SENGOKU_ISLAND_PROVINCE_IDS, historicalBriefForCampaign, timelineForCampaign, timelineRegionKey } from "./historicalTimeline";
+import { HISTORICAL_TIMELINE, HISTORICAL_YEAR_LEDGER, SENGOKU_66_PROVINCE_IDS, SENGOKU_ISLAND_PROVINCE_IDS, historicalBriefForCampaign, timelineForCampaign, timelineRegionKey } from "@shared/historicalTimeline";
 
 describe("historical timeline boundary", () => {
   it("keeps year-only records year-level when a reviewed source has no month", () => {
