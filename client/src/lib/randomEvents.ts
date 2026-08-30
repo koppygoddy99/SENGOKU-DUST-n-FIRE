@@ -8,7 +8,8 @@
  *  - cooldown_days + eventHistory กันเหตุการณ์ซ้ำถี่เกิน
  * ========================================================================== */
 import eventsData from "../../../shared/data/random-events.json";
-import { applyEventEffects, defaultProgression, type GameState, type Mission } from "./game";
+import { applyEventEffects, defaultProgression } from "./game/state";
+import type { GameState, Mission } from "./game";
 
 export type EventEffect = { type: string; amount?: number; target?: string; template?: string; value?: string };
 export type EventChoice = { id: string; check: { stat: string; tags: string[] }; effects: EventEffect[] };
