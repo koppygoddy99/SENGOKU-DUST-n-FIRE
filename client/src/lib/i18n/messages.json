@@ -22,6 +22,21 @@
   "campaign.ledger": { "en": "Your campaign ledger", "th": "สารบัญ / บันทึกแคมเปญของเจ้า" },
   "world.archive": { "en": "World Archive", "th": "หอจดหมายเหตุโลก" },
   "local.save.active": { "en": "Local Save active · this campaign stays in this browser", "th": "บันทึกในเครื่องกำลังทำงาน · แคมเปญนี้อยู่ในเบราว์เซอร์นี้เท่านั้น" },
-  "stat.label": { "en": "Stat", "th": "คุณลักษณะ" }
+  "stat.label": { "en": "Stat", "th": "คุณลักษณะ" },
+  "campaigns.kicker": { "en": "LOCAL CAMPAIGNS", "th": "แคมเปญในเครื่อง" },
+  "campaigns.ledger.title": { "en": "Your campaign ledger", "th": "สารบัญแคมเปญของเจ้า" },
+  "campaigns.ledger.hint": { "en": "Choose a campaign you have played. Its name becomes the active campaign menu on the left.", "th": "เลือกแคมเปญที่เคยเล่น ชื่อของมันจะกลายเป็นเมนูแคมเปญที่กำลังเล่นทางซ้ายทันที" },
+  "campaigns.new": { "en": "NEW CAMPAIGN", "th": "เริ่มแคมเปญใหม่" },
+  "local.campaign": { "en": "LOCAL CAMPAIGN", "th": "แคมเปญในเครื่อง" },
+  "campaigns.open": { "en": "Open campaign", "th": "เปิดแคมเปญ" },
+  "management.unavailable.title": { "en": "This management page is unavailable", "th": "หน้านี้ของการจัดการยังไม่พร้อม" },
+  "management.unavailable.hint": { "en": "The available page could not be found for this account view.", "th": "ไม่พบหน้าที่เปิดใช้ได้สำหรับมุมมองบัญชีนี้" },
+  "management.back": { "en": "Back to management", "th": "กลับไปการจัดการ" },
+  "management.title": { "en": "Application Management", "th": "การจัดการแอปพลิเคชัน" },
+  "management.preparing": { "en": "PREPARING", "th": "กำลังเตรียม" },
+  "management.status.title": { "en": "Preparing — no service is connected", "th": "กำลังเตรียม — ยังไม่เชื่อมบริการ" },
+  "management.status.hint": { "en": "This screen contains general structure only. It does not call an API, change campaign data, request login, or submit payment.", "th": "หน้านี้มีเพียงโครงสร้างทั่วไป ไม่เรียก API ไม่แก้ข้อมูลแคมเปญ ไม่ขอเข้าสู่ระบบ และไม่ส่งการชำระเงิน" },
+  "management.ready.kicker": { "en": "WHEN THIS AREA IS READY", "th": "เมื่อส่วนนี้พร้อมใช้งาน" },
+  "management.ready.title": { "en": "The page will make room for", "th": "หน้านี้จะรองรับ" }
 }
 
