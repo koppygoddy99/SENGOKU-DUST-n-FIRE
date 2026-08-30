@@ -109,10 +109,6 @@ import {
   selectStarterOrigin,
   templateById,
 } from "./data";
-export * from "./types";
-export * from "./engine";
-export * from "./state";
-export * from "./data";
 
 function stanceScore(stance: string): number {
   switch (stance) {
