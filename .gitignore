@@ -46,6 +46,15 @@ pids
 *.pid.lock
 *.bak
 
+# Logs directory (agent/telemetry traces)
+/.manus-logs/
+
+# Local agent tooling placeholder (empty, unreferenced)
+/.agents/
+
+# Untracked directory dump (not source)
+/structure.txt
+
 # Coverage directory used by tools like istanbul
 coverage/
 *.lcov
