@@ -2,16 +2,13 @@ import { ArrowLeft, ArrowRight, BookOpen, LoaderCircle, Sparkles } from "lucide-
 import React, { useState } from "react";
 import { trpc } from "@/lib/trpc";
 import type { BilingualText, GameState, PublicRelationshipContact } from "@/lib/game";
+import { label } from "@/lib/localization";
 import "./relationshipsView.css";
 
 type Language = "en" | "th";
 
 function text(language: Language, value: BilingualText) {
   return language === "en" ? value.en : value.th;
-}
-
-function label(language: Language, en: string, th: string) {
-  return language === "en" ? en : th;
 }
 
 function affinityLabel(language: Language, affinity: number) {

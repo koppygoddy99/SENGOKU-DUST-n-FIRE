@@ -19,6 +19,7 @@
 
 import type { GameState } from "./game";
 import { describeFaction, type FactionReputation, type FactionHeat, type PowerRumorState } from "./worldEvents";
+import { label } from "./localization";
 
 export type Language = "en" | "th";
 
@@ -180,10 +181,6 @@ const HEAT_STATUS_LABELS: Record<LocalHeat["status"], { en: string; th: string }
   wanted: { en: "Wanted", th: "ถูกตามล่า" },
   archived: { en: "Archived", th: "ปิดคดีแต่ถูกขุดได้" },
 };
-
-function label(language: Language, en: string, th: string) {
-  return language === "en" ? en : th;
-}
 
 /** ดึง state Phase 3 จาก save (ถ้ามี) */
 function getEventDrivenState(game: GameState): PowerRumorState | null {
