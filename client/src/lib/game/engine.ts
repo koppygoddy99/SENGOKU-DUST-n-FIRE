@@ -5,7 +5,7 @@
  * primitives (numbers, Mastery entries). Keeping them isolated makes the rules
  * a testable seam that every higher layer (state, missions, UI) can rely on.
  */
-import type { Difficulty, Mastery, StatXp } from "./types";
+import type { Difficulty, Mastery, StatId, StatXp } from "./types";
 
 export const MAX_MASTERY_LEVEL = 5;
 export const MASTERY_PROGRESS_PER_LEVEL = 5;
@@ -100,3 +100,12 @@ export function normalizeMasteryProgress(entry: Mastery, legacy = false): Master
   const level = legacy ? levelForLegacyMastery(entry) : masteryBonusForLevel(entry.level);
   return { ...entry, rank: level, level, xp: level >= MAX_MASTERY_LEVEL ? 0 : Math.max(0, Math.min(entry.xp ?? 0, xpNeededForMasteryLevel(level) - 1)), totalXp: Math.max(0, entry.totalXp ?? 0) };
 }
+
+export const STATS: { id: StatId; en: string; th: string; hint: string }[] = [
+  { id: "body", en: "strength", th: "พลังกาย", hint: "แรง อึด แบก ฝ่าอุปสรรค" },
+  { id: "hand", en: "Finesse", th: "ฝีมือ", hint: "อาวุธ งานช่าง การลงมือแม่น" },
+  { id: "wit", en: "Instinct", th: "ไหวพริบ", hint: "หลบ ลวง สังเกต อ่านจังหวะ" },
+  { id: "mind", en: "Insight", th: "ปัญญา", hint: "เอกสาร ข่าว แผน และเหตุผล" },
+  { id: "heart", en: "Grit", th: "ใจสู้", hint: "ยืนหยัด คำสัตย์ และแรงกดดัน" },
+];
+
