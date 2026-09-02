@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  applyRoll,
   buyMarketOffer,
   createSaikaSafehouseDemo,
   equipItem,
@@ -9,6 +10,8 @@ import {
   item,
   normalizeGameState,
   parseAction,
+  resolveRoll,
+  traitValueForRoll,
   unequipItem,
   useMarketService,
   type InventoryItem,
@@ -119,6 +122,94 @@ describe("equipment resolution rule: Inventory is not Equipped", () => {
     const preview = parseAction("I will carry the sealed order through the gate guard", withDoc);
     expect(preview.difficulty).toBe(0);
     expect(preview.specialItem?.itemId).toBe(doc.id);
+  });
+
+  it("unequipping removes the bonus effect from resolution", () => {
+    const state = demoWithEquipment();
+    const kit = bonusItem();
+    const withItem = { ...state, character: { ...state.character, inventory: [...state.character.inventory, kit] } };
+    const equipped = equipItem(withItem, "outfit", kit.id).state;
+    expect(parseAction("ข้าจะเสนอแผนให้กันทาโร่", equipped).contextBonus).toBe(1);
+    const unequipped = unequipItem(equipped, "outfit").state;
+    expect(parseAction("ข้าจะเสนอแผนให้กันทาโร่", unequipped).contextBonus).toBe(0);
+  });
+
+  it("swapping equipped items removes the old bonus and applies the new one", () => {
+    const state = demoWithEquipment();
+    // kit-a gives +1 to mind/แผน actions (outfit slot)
+    const kitA = bonusItem("kit-a");
+    // blade gives +1 to hand/fight actions (weapon slot)
+    const blade = weaponItem("swap-blade");
+    const withItems = { ...state, character: { ...state.character, inventory: [...state.character.inventory, kitA, blade] } };
+
+    // equip blade in weapon slot only
+    const withBlade = equipItem(withItems, "weapon", blade.id).state;
+    expect(parseAction("ข้าจะยิงปืนคาบศิลา", withBlade).contextBonus).toBe(1);
+    expect(parseAction("ข้าจะเสนอแผนให้กันทาโร่", withBlade).contextBonus).toBe(0);
+
+    // equip kit-a in outfit slot (now both slots filled)
+    const withBoth = equipItem(withBlade, "outfit", kitA.id).state;
+    expect(parseAction("ข้าจะเสนอแผนให้กันทาโร่", withBoth).contextBonus).toBe(1);
+    expect(parseAction("ข้าจะยิงปืนคาบศิลา", withBoth).contextBonus).toBe(1);
+
+    // replace kit-a with another outfit (slot swap in outfit slot)
+    const armor = outfitItem("armor-replace");
+    const withArmor = { ...withBoth, character: { ...withBoth.character, inventory: [...withBoth.character.inventory, armor] } };
+    const swappedOutfit = equipItem(withArmor, "outfit", armor.id).state;
+    // kit-a no longer equipped; armor gives body/แผน → เสนอแผน does NOT match body tags
+    expect(parseAction("ข้าจะเสนอแผนให้กันทาโร่", swappedOutfit).contextBonus).toBe(0);
+    expect(parseAction("ข้าจะยิงปืนคาบศิลา", swappedOutfit).contextBonus).toBe(1);
+  });
+
+  it("existing resolution without any equipped bonus items produces no contextBonus", () => {
+    // Regression: ensure parseAction with no equipped bonus items follows normal difficulty rules
+    // and that adding a non-matching equipment does not change the contextBonus.
+    const state = createSaikaSafehouseDemo();
+    const blade = weaponItem("no-match-blade");
+    const withBlade = { ...state, character: { ...state.character, inventory: [...state.character.inventory, blade] } };
+    const withBladeEquipped = equipItem(withBlade, "weapon", blade.id).state;
+
+    // The action does not match blade tags (fight/weapon) — but since demo has relevant mastery,
+    // we use an action that intentionally does not match any tag, to assert contextBonus=0 invariant.
+    const action = "ข้าจะบัญชีเอกสารภาษี";
+    const baseline = parseAction(action, state);
+    const equipped = parseAction(action, withBladeEquipped);
+    expect(baseline.contextBonus).toBe(0);
+    expect(equipped.contextBonus).toBe(0);
+    // difficulty must be the same with/without non-matching equipment
+    expect(equipped.difficulty).toBe(baseline.difficulty);
+  });
+
+  it("bonus value is capped at +2 even when item value is much higher", () => {
+    const state = demoWithEquipment();
+    const overPoweredItem: InventoryItem = { ...bonusItem("op-item"), bonus: { stat: "mind", value: 99, tags: ["แผน"] } };
+    const withItem = { ...state, character: { ...state.character, inventory: [...state.character.inventory, overPoweredItem] } };
+    const equipped = equipItem(withItem, "outfit", overPoweredItem.id).state;
+    expect(parseAction("ข้าจะเสนอแผนให้กันทาโร่", equipped).contextBonus).toBe(2);
+  });
+
+  it("end-to-end: equipped bonus flows into resolveRoll total and applyRoll", () => {
+    // Regression: ensure the equipped item bonus affects the roll total end-to-end
+    const state = demoWithEquipment();
+    const blade = weaponItem("e2e-blade");
+    const withItem = { ...state, character: { ...state.character, inventory: [...state.character.inventory, blade] } };
+    const equipped = equipItem(withItem, "weapon", blade.id).state;
+
+    // parseAction with matching weapon bonus
+    const preview = parseAction("ข้าจะยิงปืนคาบศิลาเพื่อคุ้มกันเอจิยะ", equipped);
+    expect(preview.contextBonus).toBe(1);
+
+    // resolveRoll uses the contextBonus from preview
+    const record = resolveRoll(preview, equipped);
+    expect(record.contextBonus).toBe(1);
+    // total = dice + stat + mastery + contextBonus + flaw
+    const expectedTotal = record.dice[0] + record.dice[1] + traitValueForRoll(equipped.character.attributes[record.stat]) + (record.mastery?.level ?? 0) + 1 + 0;
+    expect(record.total).toBe(expectedTotal);
+
+    // applyRoll must preserve the record and advance tick without re-calculating bonus
+    const next = applyRoll(equipped, record);
+    expect(next).not.toBe(equipped);
+    expect(next.tick).toBe(equipped.tick + 1);
   });
 });
 
