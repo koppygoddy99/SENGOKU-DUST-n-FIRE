@@ -21,7 +21,7 @@ const tabs: { id: MarketHubTab; en: string; th: string; Icon: typeof BriefcaseBu
 function LedgerGuidance({ tab, language, marketTitle }: { tab: MarketHubTab; language: Language; marketTitle: string }) {
   const active = tabs.find((entry) => entry.id === tab) ?? tabs[1];
   const message = tab === "gear"
-    ? copy(language, "Carried gear · read-only campaign record", "ของที่พก · บันทึกแคมเปญแบบอ่านอย่างเดียว")
+    ? copy(language, "Carried gear · equip or unequip what you carry", "ของที่พก · สวมหรือถอดของที่ติดตัวได้")
     : tab === "market"
       ? copy(language, "Choose one offer below to accept", "เลือกข้อเสนอหนึ่งรายการด้านล่างเพื่อรับไว้")
       : tab === "services"
@@ -36,7 +36,6 @@ function LedgerGuidance({ tab, language, marketTitle }: { tab: MarketHubTab; lan
 export function MarketHub({ game, language, onUpdate, initialTab = "market" }: { game: GameState; language: Language; onUpdate: (next: GameState, message: string) => void; initialTab?: MarketHubTab }) {
   const [tab, setTab] = useState<MarketHubTab>(initialTab);
   const [inventoryFilter, setInventoryFilter] = useState<InventoryCategory | "all">("all");
-  const usedSlots = game.character.inventory.reduce((total, item) => total + item.slots, 0);
   const economy = game.economy ?? {
     marketTitle: copy(language, `Market near ${game.campaign.location}`, `ตลาดใกล้ ${game.campaign.location}`),
     marketContext: copy(language, "Local trade context is being restored.", "กำลังกู้บริบทการค้าท้องถิ่น"),
@@ -67,7 +66,72 @@ export function MarketHub({ game, language, onUpdate, initialTab = "market" }: {
     <LedgerGuidance tab={tab} language={language} marketTitle={economy.marketTitle} />
 
     <section data-testid="market-tab-content">
-      {tab === "gear" && <><section className="inventory-sheet"><div className="inventory-capacity"><span>{copy(language, "Carried slots", "ช่องสัมภาระ")}</span><strong>{usedSlots}/8</strong></div><div className="inventory-capacity" data-testid="equipment-slots"><span>{copy(language, "Equipped", "สวมอยู่")}</span><strong>{copy(language, "Outfit", "ชุด/เกราะ")}: {equippedName("outfit")} · {copy(language, "Weapon", "อาวุธ")}: {equippedName("weapon")}</strong></div><div className="tab-strip" aria-label="Inventory categories">{inventoryFilters.map((filter) => <button key={filter.id} className={inventoryFilter === filter.id ? "active" : ""} onClick={() => setInventoryFilter(filter.id)}>{copy(language, filter.en, filter.th)}{filter.id !== "all" ? ` · ${inventoryCounts[filter.id]}` : ` · ${game.character.inventory.length}`}</button>)}</div>{visibleInventory.map((item) => { const equipSlot = equipmentSlotForItem(item); const isEquipped = equipSlot ? game.equipment?.[equipSlot] === item.id : false; return (<article key={item.id}><div><strong>{localized(language, item.label)}</strong><small>{localized(language, item.description)}</small></div><span>{copy(language, item.location ?? "carried", item.location === "safehouse" ? "อยู่เซฟเฮาส์" : "พกติดตัว")}</span><b>{copy(language, inventoryCategory(item), inventoryCategory(item) === "weapon" ? "อาวุธ" : inventoryCategory(item) === "food" ? "อาหาร" : inventoryCategory(item) === "medicine" ? "ยา" : inventoryCategory(item) === "story" ? "เนื้อเรื่อง" : inventoryCategory(item) === "tool" ? "เครื่องมือ" : "สถานะ")}</b>{equipSlot ? isEquipped ? <Button className="df-button df-button--ghost" onClick={() => { const result = unequipItem(game, equipSlot); onUpdate(result.state, result.message); }}>{copy(language, "UNEQUIP", "ถอด")}</Button> : <Button className="df-button df-button--ghost" onClick={() => { const result = equipItem(game, equipSlot, item.id); onUpdate(result.state, result.message); }}>{copy(language, "EQUIP", "สวม")}</Button> : <small className="market-row-status">{copy(language, "RECORD", "บันทึก")}</small>}</article>);})}</section>{localContext}</>}
+      {tab === "gear" && <><section className="inventory-sheet">
+        <div className="equipment-section">
+          <div className="section-kicker section-kicker--equipment">{copy(language, "EQUIPMENT", "อุปกรณ์ที่สวม")}</div>
+          <div className="equipment-slot" data-testid="equipment-slot-outfit">
+            <div className="equipment-slot__label">{copy(language, "Outfit", "ชุด/เกราะ")}</div>
+            <div className="equipment-slot__item">
+              {equipment.outfit
+                ? <><span className="equipped-badge">{copy(language, "EQUIPPED", "สวมอยู่")}</span><strong>{equippedName("outfit")}</strong></>
+                : <em className="equipment-slot__empty">{copy(language, "Nothing equipped", "ยังไม่สวมอะไร")}</em>
+              }
+            </div>
+            {equipment.outfit && <Button className="df-button df-button--ghost" onClick={() => { const result = unequipItem(game, "outfit"); onUpdate(result.state, result.message); }}>{copy(language, "UNEQUIP", "ถอด")}</Button>}
+          </div>
+          <div className="equipment-slot" data-testid="equipment-slot-weapon">
+            <div className="equipment-slot__label">{copy(language, "Weapon", "อาวุธ")}</div>
+            <div className="equipment-slot__item">
+              {equipment.weapon
+                ? <><span className="equipped-badge">{copy(language, "EQUIPPED", "สวมอยู่")}</span><strong>{equippedName("weapon")}</strong></>
+                : <em className="equipment-slot__empty">{copy(language, "Nothing equipped", "ยังไม่สวมอะไร")}</em>
+              }
+            </div>
+            {equipment.weapon && <Button className="df-button df-button--ghost" onClick={() => { const result = unequipItem(game, "weapon"); onUpdate(result.state, result.message); }}>{copy(language, "UNEQUIP", "ถอด")}</Button>}
+          </div>
+        </div>
+        <div className="inventory-section">
+          <div className="section-kicker section-kicker--inventory" data-testid="inventory-section">{copy(language, "INVENTORY", "สัมภาระที่พก")}</div>
+          <div className="inventory-meta" data-testid="inventory-counts">
+            <span>{copy(language, "Items carried", "จำนวนชิ้น")}</span>
+            <strong className="inventory-count">{game.character.inventory.length}</strong>
+          </div>
+        <div className="tab-strip" aria-label="Inventory categories">{inventoryFilters.map((filter) => <button key={filter.id} className={inventoryFilter === filter.id ? "active" : ""} onClick={() => setInventoryFilter(filter.id)}>{copy(language, filter.en, filter.th)}{filter.id !== "all" ? ` · ${inventoryCounts[filter.id]}` : ` · ${game.character.inventory.length}`}</button>)}</div>
+          {visibleInventory.map((item) => {
+            const equipSlot = equipmentSlotForItem(item);
+            const isEquipped = equipSlot ? game.equipment?.[equipSlot] === item.id : false;
+            const categoryLabel = copy(language,
+              inventoryCategory(item) === "weapon" ? "Weapons" :
+              inventoryCategory(item) === "food" ? "Food" :
+              inventoryCategory(item) === "medicine" ? "Medicine" :
+              inventoryCategory(item) === "story" ? "Story" :
+              inventoryCategory(item) === "tool" ? "Tools" : "Status",
+              inventoryCategory(item) === "weapon" ? "อาวุธ" :
+              inventoryCategory(item) === "food" ? "อาหาร" :
+              inventoryCategory(item) === "medicine" ? "ยา" :
+              inventoryCategory(item) === "story" ? "เนื้อเรื่อง" :
+              inventoryCategory(item) === "tool" ? "เครื่องมือ" : "สถานะ"
+            );
+            return (<article key={item.id} className={`inventory-row${isEquipped ? " inventory-row--equipped" : ""}`}>
+              <div className="inventory-row__main">
+                <div className="inventory-row__category">{categoryLabel}{equipSlot ? ` · ${equipSlot === "weapon" ? copy(language, "Weapon slot", "ช่องอาวุธ") : copy(language, "Outfit slot", "ช่องชุด/เกราะ")}` : ""}</div>
+                <strong className="inventory-row__name">{localized(language, item.label)}</strong>
+                <small className="inventory-row__desc">{localized(language, item.description)}</small>
+                {isEquipped && <span className="equipped-badge equipped-badge--row">{copy(language, "EQUIPPED", "สวมอยู่")}</span>}
+              </div>
+              <div className="inventory-row__meta">
+                <span className="inventory-row__location">{copy(language, item.location ?? "carried", item.location === "safehouse" ? "อยู่เซฟเฮาส์" : "พกติดตัว")}</span>
+              </div>
+              <div className="inventory-row__action">
+                {equipSlot ? isEquipped
+                  ? <Button className="df-button df-button--ghost" onClick={() => { const result = unequipItem(game, equipSlot); onUpdate(result.state, result.message); }}>{copy(language, "UNEQUIP", "ถอด")}</Button>
+                  : <Button className="df-button df-button--ghost" onClick={() => { const result = equipItem(game, equipSlot, item.id); onUpdate(result.state, result.message); }}>{copy(language, "EQUIP", equipSlot === "weapon" ? copy(language, "Wear (weapon)", "สวม (อาวุธ)") : copy(language, "Wear (outfit)", "สวม (ชุด/เกราะ)"))}</Button>
+                : null}
+              </div>
+            </article>);
+          })}
+        </div>
+      </section>{localContext}</>}
       {tab === "market" && <><section className="market-list">{game.market.map((offer) => <article className="market-row" key={offer.id}><div><div className="section-kicker">{offer.kind.toUpperCase()}</div><h2>{localized(language, offer.label)}</h2><p>{localized(language, offer.note)}</p><small>{copy(language, "Market Factor:", "ปัจจัยราคา:")} {localized(language, offer.priceReason ?? copy(language, "Local availability", "ของในพื้นที่"))}</small></div><span className="market-cost">{formatMoney(offer.price, language)}</span><Button disabled={!offer.available} className="df-button df-button--ghost" onClick={() => { const result = buyMarketOffer(game, offer.id); onUpdate(result.state, result.message); }}>{offer.available ? copy(language, "TAKE OFFER", "รับข้อเสนอ") : copy(language, "RECORDED", "บันทึกแล้ว")}</Button></article>)}</section><section className="market-reason market-reason--context"><SengokuIcon name="history" tone="ochre" />{copy(language, `Seller network: ${economy.sellerNetwork}. Offers stay fixed until the world gives a reason to change them.`, `เครือข่ายผู้ขาย: ${economy.sellerNetwork} ข้อเสนอจะไม่สุ่มใหม่จนกว่าโลกจะมีเหตุให้เปลี่ยน`)}</section></>}
       {tab === "services" && <><section className="mission-ledger">{economy.services.map((service) => <article className="mission-folio" key={service.id}><span className="folio-marker"><UsersRound size={15} /></span><div><div className="section-kicker">{service.role} · {service.availability.toUpperCase()} · {copy(language, "RECORD", "บันทึก")}</div><h2>{service.provider}</h2><p>{service.request}</p><div className="mission-meta"><span><b>{copy(language, "Network", "เครือข่าย")}</b>{service.affiliation}</span><span><b>{copy(language, "Price", "ราคา")}</b>{service.price}</span><span><b>{copy(language, "Time", "เวลา")}</b>{service.timeCost}</span><span><b>{copy(language, "Condition", "เงื่อนไข")}</b>{service.requirement}</span></div><div className="context-check"><ArrowRight size={16} />{copy(language, "If contacted in a scene, risk:", "หากติดต่อในฉาก ความเสี่ยงคือ:")} {service.witnessRisk}</div><Button disabled={service.availability === "unavailable"} className="df-button df-button--ghost" onClick={() => { const result = useMarketService(game, service.id); onUpdate(result.state, result.message); }}>{service.availability === "unavailable" ? copy(language, "NOT AVAILABLE", "ไม่พร้อม") : copy(language, "HIRE", "จ้าง")}</Button></div></article>)}</section>{localContext}</>}
       {tab === "obligations" && <><section className="memory-ledger"><div className="section-kicker">{copy(language, "NO SINGLE NATIONAL CREDIT SCORE · RECORD", "ไม่มีเครดิตสกอร์เดียวทั้งแผ่นดิน · บันทึก")}</div>{economy.obligations.map((entry) => <article key={entry.id}><small>{entry.kind.toUpperCase()} · {entry.status.toUpperCase()} · {entry.holder} · {copy(language, "RECORD", "บันทึก")}</small><div><strong>{entry.subject}</strong><p>{copy(language, "Due:", "กำหนด:")} {entry.due} · {copy(language, "Witness:", "พยาน:")} {entry.witness}<br />{entry.note}</p></div></article>)}</section>{localContext}</>}

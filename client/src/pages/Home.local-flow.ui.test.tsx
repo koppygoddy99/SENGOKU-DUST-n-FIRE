@@ -314,7 +314,7 @@ describe("UI Preview click flow", () => {
     fireEvent.click(screen.getByRole("button", { name: "Muster" }));
     ["Carried Gear", "This Market", "Services & Hands", "Leverage", "Bonds"].forEach((item) => expect(screen.getByRole("button", { name: item })).toBeTruthy());
     fireEvent.click(screen.getByRole("button", { name: "Carried Gear" }));
-    expect(await screen.findByText("Carried slots")).toBeTruthy();
+      expect(await screen.findByTestId("inventory-counts")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "This Market" }));
     expect((await screen.findAllByText(/Market Factor:/i)).length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole("button", { name: "Services & Hands" }));
