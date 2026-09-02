@@ -21,7 +21,7 @@ import type {
 } from "./base";
 import type { Character } from "./character";
 import type { Mission } from "./mission";
-import type { EconomyState, MarketOffer } from "./economy";
+import type { EconomyState, EquipmentState, MarketOffer } from "./economy";
 import type { EventHistoryEntry, RandomEvent } from "../../randomEvents";
 import type { PowerRumorState } from "../../worldEvents";
 
@@ -205,6 +205,8 @@ export type WorldSystems = {
 
 export type GameState = {
   schemaVersion: number;
+  /** Equipped item ids (Outfit 1 / Weapon 1) — อ้างอิง item id ใน inventory เดิม; เซฟเก่าไม่มีฟิลด์นี้ */
+  equipment?: EquipmentState;
   credits: number;
   campaign: CampaignContext;
   character: Character;

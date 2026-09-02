@@ -92,6 +92,7 @@ import {
   buildMarket,
   buildSaikaEconomy,
   buildSaikaMarket,
+  equippedItemsOf,
   clampVital,
   defaultProgression,
   levelUpVital,
@@ -301,7 +302,9 @@ export function parseAction(action: string, state: GameState): RollPreview {
     return score(b) - score(a) || b.level - a.level;
   });
   const selectedMastery = rankedMasteries.find((mastery) => mastery.tags.some((tag) => match.masteryTags.includes(tag) || normalized.includes(tag)));
-  const matchingItem = state.character.inventory.find((entry) => entry.condition === "usable" && entry.bonus && entry.bonus.tags.some((tag) => normalized.includes(tag) || match.masteryTags.includes(tag)));
+  // Equipment rule: เฉพาะ item ที่ Equipped (outfit/weapon) เท่านั้นที่ให้ bonus — item ใน inventory เฉย ๆ ไม่มีผล
+  // หมายเหตุ: special document (kind "document", DN 0 / auto_pass) คงอ่านจาก inventory เดิม เพราะเอกสารไม่ใช่ equipment
+  const matchingItem = equippedItemsOf(state).find((entry) => entry.bonus && entry.bonus.tags.some((tag) => normalized.includes(tag) || match.masteryTags.includes(tag)));
   const namesSpecialDocumentUse = ["คำสั่ง", "ตรา", "ใบผ่าน", "order", "seal", "pass"].some((tag) => normalized.includes(tag));
   const specializedItem = state.character.inventory.find((entry) => namesSpecialDocumentUse && entry.condition === "usable" && entry.functions.includes("unlock") && entry.special && entry.special.tags.some((tag) => normalized.includes(tag)));
   const illicitRisk = normalized.includes("ฆ่า") || normalized.includes("ปลอม") || normalized.includes("ขโมย") || normalized.includes("บุก");
@@ -663,6 +666,25 @@ export function applyRoll(state: GameState, record: RollRecord): GameState {
   const missionMilestoneId = missionResolved ? `mission-${activeMission?.id ?? record.id}` : undefined;
   const milestoneAlreadyClaimed = missionMilestoneId ? (calendar.progression.claimedMilestoneIds ?? []).includes(missionMilestoneId) : false;
   return maybeTriggerRandomEvent({ ...state, campaign: calendar.campaign, progression: { ...calendar.progression, lastPractice: awarded.practice, lastStatPractice: traitAwarded.practice, growthPoints: (calendar.progression.growthPoints ?? 0) + (record.outcome === "decisive_success" ? 1 : 0), milestonePoints: (calendar.progression.milestonePoints ?? 0) + (missionResolved && !milestoneAlreadyClaimed ? 1 : 0), claimedMilestoneIds: missionMilestoneId && !milestoneAlreadyClaimed ? Array.from(new Set([...(calendar.progression.claimedMilestoneIds ?? []), missionMilestoneId])) : calendar.progression.claimedMilestoneIds, vitalEvents: [...(calendar.progression.vitalEvents ?? []), ...(vitalDelta.blood || vitalDelta.focus ? [{ id: `vital-${record.id}`, type: vitalDelta.blood ? "blood" : "focus", delta: vitalDelta.blood || vitalDelta.focus, reason: vitalDelta.reason, source: resting ? "rest" : "roll", tick: record.tick } as VitalEvent] : [])].slice(-50) }, character: updatedCharacter, currentScene: nextScene, missions, economy: missionResult.transaction ? { ...state.economy, transactions: [...state.economy.transactions, missionResult.transaction] } : state.economy, memories: [...state.memories, memory], rolls: [...state.rolls, storedRecord], storyRecords: [...previousStoryRecords.filter((entry) => entry.id !== storyRecord.id), storyRecord], relationships, tick: record.tick, worldSystems: { ...state.worldSystems, schemaVersion: 1, powerRumor: updatedWorld } });
+}
+
+
+/* ==========================================================================
+ * Services consumer — ทำให้ economy.services ถูกใช้จริงผ่าน gameplay
+ * deterministic: ตรวจ service และ availability ที่มีอยู่จริงใน data model
+ * ผลที่ทำได้ตาม data model: ExchangeRecord (kind service) + market memory + ปิด availability
+ * ไม่มี stat/reputation/combat effect — service field ไม่รองรับและห้ามประดิษฐ์
+ * ========================================================================== */
+export function useMarketService(state: GameState, serviceId: string): { state: GameState; message: string } {
+  const service = state.economy.services.find((entry) => entry.id === serviceId);
+  if (!service) return { state, message: "ไม่พบบริการนี้" };
+  if (service.availability === "unavailable") return { state, message: service.provider + " ยังไม่พร้อมรับงานตอนนี้" };
+  const transaction: ExchangeRecord = { id: `tx-service-${service.id}-${Date.now()}`, kind: "service", title: `จ้าง ${service.provider}: ${service.request}`, counterpart: service.provider, payment: service.price, witness: service.affiliation, consequence: service.witnessRisk, tick: state.tick };
+  const memory: WorldMemory = { id: `memory-${transaction.id}`, kind: "actor_relation", title: transaction.title, detail: `${transaction.payment}; ${transaction.consequence}`, tick: state.tick, tone: "navy" };
+  return {
+    state: { ...state, economy: { ...state.economy, services: state.economy.services.map((entry) => entry.id === service.id ? { ...entry, availability: "unavailable" as const } : entry), transactions: [...state.economy.transactions, transaction] }, memories: [...state.memories, memory] },
+    message: "ติดต่อ " + service.provider + " แล้ว · บันทึกในสมุดสัญญา",
+  };
 }
 
 export function buyMarketOffer(state: GameState, offerId: string): { state: GameState; message: string } {

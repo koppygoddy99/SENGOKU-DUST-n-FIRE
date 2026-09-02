@@ -3,6 +3,7 @@ import {
   applyRoll,
   createGameState,
   createSaikaSafehouseDemo,
+  equipItem,
   masteryLevelDetails,
   parseAction,
   resolveRoll,
@@ -42,9 +43,13 @@ describe("rule changes: traits, mastery, context, and specialized gear", () => {
     expect(parseAction("ข้าจะปลอมตราเพื่อผ่านด่าน", game).difficulty).toBe(28);
     const prepared = {
       ...game,
+      equipment: { outfit: null, weapon: null },
       character: { ...game.character, inventory: [...game.character.inventory, { id: "overprepared", label: "ชุดเครื่องมือ", kind: "equipment" as const, slots: 1, description: "อุปกรณ์พร้อม", functions: ["bonus"] as const, bonus: { value: 9, tags: ["แผน"] }, condition: "usable" as const }] },
     };
-    expect(parseAction("ข้าจะเสนอแผน", prepared).contextBonus).toBe(2);
+    // Equipment rule: item ใน inventory ที่ยังไม่ได้ Equipped ต้องไม่ให้ bonus
+    expect(parseAction("ข้าจะเสนอแผน", prepared).contextBonus).toBe(0);
+    const equippedState = equipItem(prepared, "weapon", "overprepared").state;
+    expect(parseAction("ข้าจะเสนอแผน", equippedState).contextBonus).toBe(2);
   });
 
   it("applies a verified flaw after raw Trait and Mastery values, then records both matching Progress tracks", () => {

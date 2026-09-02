@@ -69,6 +69,9 @@ export type ExchangeRecord = {
   tick: number;
 };
 
+export type EquipmentSlot = "outfit" | "weapon";
+export type EquipmentState = { outfit: string | null; weapon: string | null };
+
 export type EconomyState = {
   marketTitle: string;
   marketContext: string;

@@ -24,7 +24,7 @@ describe("Market and gear hub", () => {
     expect(screen.getAllByText("บันทึก").length).toBeGreaterThan(0);
     fireEvent.click(screen.getAllByRole("button")[2]);
     expect(screen.getByText("คนส่งสารท่าเรือ")).toBeTruthy();
-    expect(screen.getByTestId("market-ledger-guidance").textContent).toContain("อ่านอย่างเดียวจนกว่าฉากจะทำให้ติดต่อกัน");
+    expect(screen.getByTestId("market-ledger-guidance").textContent).toContain("เลือกผู้ติดต่อด้านล่างเพื่อจ้างช่วยงาน");
     expect(screen.getAllByText(/· บันทึก$/).length).toBeGreaterThan(0);
     fireEvent.click(screen.getAllByRole("button")[3]);
     expect(screen.getByText("หนี้ชีวิตจากการลากซาเนฟุยุขึ้นจากน้ำ")).toBeTruthy();

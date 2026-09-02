@@ -8,6 +8,7 @@
 import type { GameState, VitalEvent, WorldMemory, ProgressionState, CampaignContext, Season, Character, BilingualText, PublicRelationshipContact, PublicRelationshipEvent, Mission, MissionRole, MissionVisibility, MissionDirectiveInput, StoryRecord, StatXp, Attributes, EconomyState, MarketOffer, InventoryItem, InventoryCategory, StatId, RollRecord, MissionChangeNotice, MissionState, RelationshipTone } from "./types";
 import { VITAL_CAP, STATS, canonicalDifficulty, normalizeStatValue, traitProgressNeededForLevel, normalizeMasteryProgress } from "./engine";
 import type { EventEffect } from "../randomEvents";
+import type { EquipmentSlot, EquipmentState } from "./types";
 
 export function defaultProgression(context: CampaignContext, ageAtCampaignStart = 20, birthSeason: Season = context.season): ProgressionState {
   return { leaf: 1, segment: "day", timeMarksSinceLeaf: 0, daysSinceLeaf: 0, ageAtCampaignStart, currentAge: ageAtCampaignStart, birthSeason, campaignStartYear: context.year, growthPoints: 0, milestonePoints: 0, vitalEvents: [] };
@@ -320,6 +321,66 @@ export function inventoryCategory(item: Pick<InventoryItem, "id" | "label" | "ki
   return "tool";
 }
 
+/* ==========================================================================
+ * Equipment — Outfit 1 ชิ้น + Weapon 1 ชิ้น
+ *
+ * กติกาหลัก: Inventory Item ไม่เท่ากับ Equipped Item
+ * - item ที่อยู่ใน inventory เฉย ๆ ไม่มีผลต่อ gameplay (ไม่มี bonus/functions)
+ * - เฉพาะชิ้นที่ถูก equip ในช่อง outfit/weapon เท่านั้นที่ resolution อ่าน
+ * - equipment เก็บแค่ item id (ไม่ duplicate item) — item ยังอยู่ใน inventory เสมอ
+ * - deterministic ทั้งหมด — AI ห้ามแก้ equipment โดยตรง
+ * ========================================================================== */
+
+export function emptyEquipmentState(): EquipmentState {
+  return { outfit: null, weapon: null };
+}
+
+/** กำหนดช่อง equip ของ item แบบ deterministic — อิง kind/category ที่มีอยู่จริงใน data model เท่านั้น */
+export function equipmentSlotForItem(item: Pick<InventoryItem, "id" | "label" | "kind" | "category">): EquipmentSlot | null {
+  if (item.kind !== "equipment") return null;
+  return inventoryCategory(item) === "weapon" ? "weapon" : "outfit";
+}
+
+/** แหล่งเดียวที่ resolution ใช้อ่าน item ที่ Equipped จริง — stale id ไม่ทำให้เกมพัง */
+export function equippedItemsOf(state: Pick<GameState, "character" | "equipment">): InventoryItem[] {
+  const equipment = state.equipment ?? emptyEquipmentState();
+  const ids = new Set([equipment.outfit, equipment.weapon].filter((id): id is string => Boolean(id)));
+  return state.character.inventory.filter((entry) => entry.condition === "usable" && ids.has(entry.id));
+}
+
+function normalizeEquipmentState(state: GameState, inventory: GameState["character"]["inventory"]): EquipmentState {
+  const slotOf = (id: string | null | undefined): EquipmentSlot | null => {
+    if (!id) return null;
+    const entry = inventory.find((item) => item.id === id && item.condition === "usable");
+    return entry ? equipmentSlotForItem(entry) : null;
+  };
+  const raw = state.equipment;
+  return {
+    outfit: raw?.outfit && slotOf(raw.outfit) === "outfit" ? raw.outfit : null,
+    weapon: raw?.weapon && slotOf(raw.weapon) === "weapon" ? raw.weapon : null,
+  };
+}
+
+export function equipItem(state: GameState, slot: EquipmentSlot, itemId: string): { state: GameState; message: string } {
+  const target = state.character.inventory.find((entry) => entry.id === itemId);
+  if (!target) return { state, message: "ไม่พบไอเทมนี้ในสัมภาระ" };
+  const actualSlot = equipmentSlotForItem(target);
+  if (actualSlot !== slot) return { state, message: actualSlot ? target.label + (actualSlot === "weapon" ? " ใช้ในช่องอาวุธเท่านั้น" : " ใช้ในช่องชุด/เกราะเท่านั้น") : "ไอเทมนี้สวมใส่หรือถือเป็นอาวุธไม่ได้" };
+  if (target.condition !== "usable") return { state, message: target.label + " ใช้งานไม่ได้แล้ว" };
+  const equipment = state.equipment ?? emptyEquipmentState();
+  if (equipment[slot] === itemId) return { state, message: target.label + " ถูกใช้อยู่แล้ว" };
+  const slotLabel = slot === "weapon" ? "อาวุธ" : "ชุด/เกราะ";
+  return { state: { ...state, equipment: { ...equipment, [slot]: itemId } }, message: "สวม" + slotLabel + ": " + target.label };
+}
+
+export function unequipItem(state: GameState, slot: EquipmentSlot): { state: GameState; message: string } {
+  const equipment = state.equipment ?? emptyEquipmentState();
+  const current = equipment[slot];
+  if (!current) return { state, message: slot === "weapon" ? "ยังไม่มีอาวุธที่ถืออยู่" : "ยังไม่มีชุดที่สวมอยู่" };
+  const label = state.character.inventory.find((entry) => entry.id === current)?.label ?? current;
+  return { state: { ...state, equipment: { ...equipment, [slot]: null } }, message: "เก็บกลับสัมภาระ: " + label };
+}
+
 export function normalizeGameState(state: GameState): GameState {
   const campaign = state.campaign;
   const legacyState = state.schemaVersion < 4;
@@ -335,6 +396,7 @@ export function normalizeGameState(state: GameState): GameState {
     const normalized = item.bonus?.stat ? item : item.bonus?.axis ? { ...item, bonus: { ...item.bonus, stat: item.bonus.axis } } : item;
     return { ...normalized, category: inventoryCategory(normalized) };
   });
+  const equipment = normalizeEquipmentState(state, inventory);
   const legacyProperty = Math.max(0, Math.round(state.character.resources.property ?? 0));
   const currency = state.character.resources.currency ?? { unit: "mon" as const, amount: legacyProperty };
   const resources = { ...state.character.resources, currency, property: currency.amount, credit: 0 };
@@ -369,6 +431,7 @@ export function normalizeGameState(state: GameState): GameState {
     schemaVersion: 9,
     character: { ...state.character, weakness: flaws[0] ?? "มีหนี้ที่ยังไม่กล้าพูดถึง", flaws: flaws.length ? flaws : ["มีหนี้ที่ยังไม่กล้าพูดถึง"], attributes, statXp, inventory, masteries: state.character.masteries.map((entry) => normalizeMasteryProgress(entry, legacyState)), vitals: { blood: vitals.blood, focus: vitals.focus, maxBlood: vitals.maxBlood, maxFocus: vitals.maxFocus }, resources },
     missions,
+    equipment,
     rolls,
     memories,
     storyRecords,
