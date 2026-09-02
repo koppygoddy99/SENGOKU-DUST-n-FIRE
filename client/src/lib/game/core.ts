@@ -682,3 +682,61 @@ export function buyMarketOffer(state: GameState, offerId: string): { state: Game
     message: paidOnObligation ? `รับ ${offer.label} แล้ว · บันทึกเป็นหนี้บุญคุณและภารกิจที่ต้องชำระ` : offer.kind === "goods" ? `รับ ${offer.label} แล้ว · จ่ายเป็น ${formatMoney(offer.price)}` : `ใช้บริการ: ${offer.label} · จ่ายเป็น ${formatMoney(offer.price)}`,
   };
 }
+
+/* ==========================================================================
+ * AI analysis merge — the single validation point between the AI GM and the
+ * deterministic engine.
+ *
+ * Boundary: AI proposes -> engine validates -> RollPreview -> resolveRoll().
+ * This function reproduces the previous PlayScene inline merge behavior
+ * exactly (field precedence, null handling, clamps) using only existing
+ * engine rules (canonicalDifficulty, gameplay ranges). It must remain the
+ * one source of truth for merging AI analysis into a RollPreview.
+ * ========================================================================== */
+
+/** Shape of the AI GM analysis proposal (mirrors the server analyze contract). */
+export type GMAnalysisProposal = {
+  intentSummary: string;
+  stat: StatId;
+  suggestedMastery: string | null;
+  difficulty: number;
+  contextBonus: number;
+  flawTriggered: boolean;
+  flawBonus: -2 | 0;
+  triggeredFlaw: string | null;
+  flawReason: string | null;
+  contextReason: string;
+  confirmation: string;
+  risk: string;
+  historicalFence: string;
+  historicalStatus: HistoricalStatus;
+};
+
+/**
+ * Merge an AI GM analysis proposal into a deterministic parseAction() preview.
+ * Special-item previews keep the engine difficulty of 0 and the local
+ * context bonus/reason; every other field follows the historical UI contract.
+ */
+export function mergeAIAnalysis(base: RollPreview, analysis: GMAnalysisProposal, masteries: Mastery[]): RollPreview {
+  const mastery = analysis.suggestedMastery ? masteries.find((entry) => entry.label.toLowerCase().includes(analysis.suggestedMastery!.toLowerCase()) || analysis.suggestedMastery!.toLowerCase().includes(entry.label.toLowerCase())) : undefined;
+  const special = base.specialItem;
+  return {
+    ...base,
+    isRiskOnly: false,
+    intent: analysis.intentSummary,
+    method: analysis.confirmation,
+    stat: analysis.stat,
+    mastery,
+    contextBonus: special ? base.contextBonus : Math.max(0, Math.min(2, analysis.contextBonus)),
+    contextReason: special ? base.contextReason : analysis.contextReason,
+    flawTriggered: analysis.flawTriggered,
+    flawBonus: analysis.flawBonus,
+    triggeredFlaw: analysis.triggeredFlaw ?? undefined,
+    flawReason: analysis.flawReason ?? undefined,
+    difficulty: special ? 0 : canonicalDifficulty(analysis.difficulty),
+    specialItem: special,
+    risks: [analysis.risk],
+    witnesses: [],
+    historical: { status: analysis.historicalStatus, fence: analysis.historicalFence },
+  };
+}
