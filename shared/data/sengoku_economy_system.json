@@ -1,0 +1,1088 @@
+{
+  "_schema_version": "1.0.0",
+  "_game": "Sengoku: Dust & Fire",
+  "_description": "Unified currency display (Mon) with hidden 3-tier backend. Auto-conversion, weight, barter, warifu, and domain variance.",
+  "metadata": {
+    "design_principles": [
+      "Player sees ONE currency: Mon (文). Backend manages 3 tiers silently.",
+      "Auto-conversion: system handles tier-upgrades, player never clicks 'exchange'.",
+      "Tier is felt through: shop rejection, color/icon, weight, NPC attitude, rumor.",
+      "Barter and Warifu exist as ALTERNATIVES to cash, not replacements.",
+      "Every price = base_price * domain_index * season * political * rumor_factor"
+    ],
+    "historical_era": "Sengoku period (1467-1615)",
+    "currency_display_unit": "Mon",
+    "currency_display_symbol": "文",
+    "volume_units": {
+      "koku": {
+        "liters": 180.39,
+        "kg_rice": 150,
+        "sho_per_koku": 10,
+        "note": "Standard tax/volume unit"
+      },
+      "to": {
+        "liters": 18.04,
+        "note": "1/10 koku"
+      },
+      "sho": {
+        "liters": 1.804,
+        "note": "Standard sho. Kai-sho was 5.39L (3x)"
+      },
+      "go": {
+        "liters": 0.1804,
+        "note": "1/10 sho"
+      },
+      "shaku": {
+        "volume_ml": 18.04,
+        "note": "Small volume measure, also used for miso/salt rations"
+      }
+    },
+    "weight_units": {
+      "kan_weight": {
+        "grams": 3750,
+        "note": "Weight of 1,000 copper mon coins"
+      },
+      "mon_per_kg": 267,
+      "carry_capacity_warning": "Over 3 kan (11.25kg) slows movement, over 10 kan (37.5kg) prevents running"
+    }
+  },
+  "currency_tiers": {
+    "copper_mon": {
+      "tier_id": "T1",
+      "name": {
+        "ja": "銭",
+        "en": "Copper Mon",
+        "th": "ทองแดง"
+      },
+      "symbol": "🥉",
+      "color_hex": "#B87333",
+      "material": "copper/bronze",
+      "base_value_mon": 1,
+      "typical_uses": [
+        "food_and_drink",
+        "daily_wages",
+        "ferry_tolls",
+        "cheap_inns",
+        "common_goods",
+        "waraji_sandals",
+        "small_fish"
+      ],
+      "weight_per_unit_grams": 3.75,
+      "forgery_risk": 0.15,
+      "regional_acceptance": "universal but scarce in rural areas",
+      "historical_note": "Chronic shortage (銭不足). Many domains minted low-quality local coins (私鋳)."
+    },
+    "silver_monme": {
+      "tier_id": "T2",
+      "name": {
+        "ja": "匁",
+        "en": "Silver Monme/Bu",
+        "th": "เงิน"
+      },
+      "symbol": "🥈",
+      "color_hex": "#C0C0C0",
+      "material": "silver",
+      "base_value_mon": 1000,
+      "typical_uses": [
+        "weapons",
+        "armor",
+        "medicine",
+        "silk_cloth",
+        "quality_inns",
+        "skilled_craftsman_services",
+        "bribes_mid",
+        "horse_rental"
+      ],
+      "weight_per_unit_grams": 3.75,
+      "forgery_risk": 0.05,
+      "regional_acceptance": "accepted in cities and trade hubs, questioned in remote villages",
+      "historical_note": "Used for 'silver-calculation' transactions (銀勘定). Medicine was typically priced in silver."
+    },
+    "gold_ryo": {
+      "tier_id": "T3",
+      "name": {
+        "ja": "両",
+        "en": "Gold Ryō",
+        "th": "ทอง"
+      },
+      "symbol": "🥇",
+      "color_hex": "#FFD700",
+      "material": "gold",
+      "base_value_mon": 4000,
+      "typical_uses": [
+        "land_purchase",
+        "ransom",
+        "large_bribes",
+        "famous_blades",
+        "cannon",
+        "domain_level_trade",
+        "temple_donations_major"
+      ],
+      "weight_per_unit_grams": 16.5,
+      "forgery_risk": 0.01,
+      "regional_acceptance": "universally trusted but carrying it attracts attention",
+      "historical_note": "1 ryo = 50-60 monme silver. Exchange rate varied 4,000-6,500 mon depending on domain and year."
+    }
+  },
+  "auto_conversion_rules": {
+    "enabled": true,
+    "player_never_manual_convert": true,
+    "conversion_directions": {
+      "upward": {
+        "description": "System auto-converts copper to silver to gold when needed for high-tier purchases",
+        "mon_to_monme_threshold": 1000,
+        "monme_to_ryo_threshold": 4,
+        "rounding": "floor",
+        "loss_rate": 0.0,
+        "animation": "coins shimmer and reform into larger ingot"
+      },
+      "downward": {
+        "description": "System auto-breaks gold/silver into smaller units when making small purchases",
+        "loss_rate": 0.0,
+        "animation": "ingot shatters into coins"
+      }
+    },
+    "shop_display_logic": {
+      "if_player_has_tier": "show price in Mon with tier-color",
+      "if_player_lacks_tier": "show 'Requires higher denomination' or offer barter/warifu",
+      "example": "Sword 500 Mon (🥈 Silver) → if player has 500 copper, shop says 'We don't take copper for this.'"
+    }
+  },
+  "weight_system": {
+    "enabled": true,
+    "display_in_ui": true,
+    "weight_per_1000_mon_kg": 3.75,
+    "tiers_affected_by_weight": [
+      "copper_mon"
+    ],
+    "silver_and_gold_weight_negligible": true,
+    "movement_penalties": {
+      "light": {
+        "threshold_mon": 1000,
+        "penalty": "none",
+        "note": "Under 1 kan (3.75kg)"
+      },
+      "medium": {
+        "threshold_mon": 3000,
+        "penalty": "-10% move speed",
+        "note": "1-3 kan"
+      },
+      "heavy": {
+        "threshold_mon": 10000,
+        "penalty": "-25% move speed, cannot run",
+        "note": "3-10 kan"
+      },
+      "overburdened": {
+        "threshold_mon": 20000,
+        "penalty": "-50% move speed, cannot fast-travel",
+        "note": "10+ kan"
+      }
+    },
+    "mitigation_methods": [
+      "deposit_at_temple",
+      "use_money_changer",
+      "convert_to_silver_gold",
+      "hire_porter",
+      "hide_stash_in_field"
+    ],
+    "theft_risk": {
+      "carrying_over_5000_mon": "+20% bandit encounter chance",
+      "carrying_gold_ryo": "+40% bandit encounter, + rumor 'rich traveler'",
+      "carrying_silver_in_rural": "suspicious, may be accused of theft"
+    }
+  },
+  "price_tables": {
+    "grains": {
+      "rice_polished": {
+        "base_price_mon": 70,
+        "unit": "1 sho (1.8L)",
+        "koku_equivalent_mon": 700,
+        "required_tier": "copper_mon",
+        "barter_alternative": {
+          "item": "unpolished_rice",
+          "ratio": "1.2:1"
+        },
+        "category_tags": [
+          "staple",
+          "portable",
+          "perishable"
+        ],
+        "historical_low": 40,
+        "historical_high": 300,
+        "famine_price_mon": 1500,
+        "siege_price_mon": 3000
+      },
+      "rice_unpolished": {
+        "base_price_mon": 55,
+        "unit": "1 sho",
+        "required_tier": "copper_mon",
+        "barter_alternative": {
+          "item": "labor_hours",
+          "ratio": "2 hours per sho"
+        },
+        "category_tags": [
+          "staple",
+          "tax_form"
+        ]
+      },
+      "barley": {
+        "base_price_mon": 24,
+        "unit": "1 sho",
+        "required_tier": "copper_mon",
+        "category_tags": [
+          "staple",
+          "ashigaru_food"
+        ]
+      },
+      "millet": {
+        "base_price_mon": 22,
+        "unit": "1 sho",
+        "required_tier": "copper_mon",
+        "category_tags": [
+          "staple",
+          "ashigaru_food"
+        ]
+      },
+      "soybeans": {
+        "base_price_mon": 45,
+        "unit": "1 sho",
+        "required_tier": "copper_mon",
+        "category_tags": [
+          "protein",
+          "volatile"
+        ]
+      }
+    },
+    "preserved_foods": {
+      "miso": {
+        "base_price_mon": 1,
+        "unit": "2 shaku (1 meal portion)",
+        "required_tier": "copper_mon",
+        "category_tags": [
+          "essential",
+          "protein_source"
+        ]
+      },
+      "salt": {
+        "base_price_mon": 40,
+        "unit": "1 sho",
+        "required_tier": "copper_mon",
+        "domain_variance_note": "coastal: 0.3x, inland mountain: 3.0x",
+        "category_tags": [
+          "essential",
+          "high_regional_variance"
+        ]
+      },
+      "soy_sauce": {
+        "base_price_mon": 500,
+        "unit": "1 barrel (~9L)",
+        "required_tier": "copper_mon",
+        "category_tags": [
+          "luxury_condiment"
+        ]
+      }
+    },
+    "beverages": {
+      "sake_clear_premium": {
+        "base_price_mon": 500,
+        "unit": "2 to 5 sho (~45L)",
+        "per_liter_mon": 15,
+        "required_tier": "copper_mon",
+        "category_tags": [
+          "entertainment",
+          "gift",
+          "official"
+        ]
+      },
+      "sake_white": {
+        "base_price_mon": 422,
+        "unit": "7 to 2 sho (~130L)",
+        "per_liter_mon": 6,
+        "required_tier": "copper_mon",
+        "category_tags": [
+          "common_drink"
+        ]
+      },
+      "sake_standard": {
+        "base_price_mon": 18,
+        "unit": "1 liter",
+        "required_tier": "copper_mon",
+        "category_tags": [
+          "common_drink"
+        ]
+      }
+    },
+    "proteins": {
+      "fish_iwashi": {
+        "base_price_mon": 1,
+        "unit": "2 fish",
+        "required_tier": "copper_mon"
+      },
+      "fish_aji_large": {
+        "base_price_mon": 2,
+        "unit": "1 fish",
+        "required_tier": "copper_mon"
+      },
+      "fish_abalone": {
+        "base_price_mon": 3,
+        "unit": "1 piece",
+        "required_tier": "copper_mon"
+      },
+      "fish_inada": {
+        "base_price_mon": 5,
+        "unit": "1 fish",
+        "required_tier": "copper_mon"
+      },
+      "fish_katsuo": {
+        "base_price_mon": 12,
+        "unit": "1 fish",
+        "required_tier": "copper_mon"
+      },
+      "fish_tai_small": {
+        "base_price_mon": 10,
+        "unit": "6-7 sun",
+        "required_tier": "copper_mon"
+      },
+      "fish_tai_medium": {
+        "base_price_mon": 15,
+        "unit": "1 shaku",
+        "required_tier": "copper_mon"
+      },
+      "fish_tai_large": {
+        "base_price_mon": 30,
+        "unit": "1.5 shaku",
+        "required_tier": "copper_mon"
+      },
+      "fish_freshwater_large": {
+        "base_price_mon": 80,
+        "unit": "1 fish",
+        "required_tier": "copper_mon"
+      },
+      "dried_squid": {
+        "base_price_mon": 45,
+        "unit": "1 sheet",
+        "required_tier": "copper_mon"
+      },
+      "rabbit": {
+        "base_price_mon": 95,
+        "unit": "1 animal",
+        "required_tier": "copper_mon"
+      },
+      "bird_pheasant": {
+        "base_price_mon": 105,
+        "unit": "1 animal",
+        "required_tier": "copper_mon"
+      }
+    },
+    "vegetables": {
+      "daikon": {
+        "base_price_mon": 25,
+        "unit": "5 bundles",
+        "required_tier": "copper_mon"
+      }
+    },
+    "weapons": {
+      "katana_famous_master": {
+        "base_price_mon": 100000,
+        "unit": "1 blade",
+        "required_tier": "gold_ryo",
+        "barter_alternative": null,
+        "category_tags": [
+          "masterpiece",
+          "status_symbol",
+          "quest_item"
+        ],
+        "historical_example": "Hizen Tadayoshi ordered by Tamiya Heibei 1619, took 4 years to save",
+        "shop_behavior": "Only sold on introduction by trusted intermediary. Shopkeeper evaluates player's reputation before showing."
+      },
+      "katana_standard": {
+        "base_price_mon": 2500,
+        "unit": "1 blade",
+        "required_tier": "silver_monme",
+        "tier_fallback": "if player lacks silver, shop offers payment-plan (debt_bond) or barter: 3 koku rice + 30 days labor",
+        "category_tags": [
+          "weapon",
+          "essential_samurai"
+        ]
+      },
+      "katana_poor_quality": {
+        "base_price_mon": 500,
+        "unit": "1 blade",
+        "required_tier": "copper_mon",
+        "category_tags": [
+          "weapon",
+          "disposable"
+        ]
+      },
+      "tanegashima_arquebus": {
+        "base_price_mon": 250,
+        "unit": "1 matchlock",
+        "required_tier": "silver_monme",
+        "historical_year": 1593,
+        "category_tags": [
+          "firearm",
+          "game_changer"
+        ]
+      },
+      "yari_spear": {
+        "base_price_mon": 200,
+        "unit": "1 spear",
+        "required_tier": "copper_mon",
+        "category_tags": [
+          "weapon",
+          "ashigaru"
+        ]
+      },
+      "bow": {
+        "base_price_mon": 500,
+        "unit": "1 bow",
+        "required_tier": "silver_monme",
+        "category_tags": [
+          "weapon"
+        ]
+      },
+      "arrow": {
+        "base_price_mon": 8,
+        "unit": "1 arrow",
+        "required_tier": "copper_mon",
+        "category_tags": [
+          "ammunition",
+          "expensive_per_use"
+        ]
+      }
+    },
+    "armor_gear": {
+      "armor_set_basic": {
+        "base_price_mon": 6500,
+        "unit": "1 set (tatami-gusoku)",
+        "required_tier": "silver_monme",
+        "category_tags": [
+          "armor",
+          "portable"
+        ]
+      },
+      "armor_set_quality": {
+        "base_price_mon": 35000,
+        "unit": "1 set (custom fitted)",
+        "required_tier": "gold_ryo",
+        "category_tags": [
+          "armor",
+          "status"
+        ]
+      },
+      "helmet_kabuto": {
+        "base_price_mon": 8000,
+        "unit": "1 helmet",
+        "required_tier": "silver_monme",
+        "category_tags": [
+          "armor"
+        ]
+      },
+      "waraji_sandals": {
+        "base_price_mon": 25,
+        "unit": "1 pair",
+        "required_tier": "copper_mon",
+        "category_tags": [
+          "consumable"
+        ]
+      }
+    },
+    "medicine": {
+      "herbal_remedy_local": {
+        "base_price_mon": 120,
+        "unit": "1 dose",
+        "required_tier": "copper_mon",
+        "efficacy_variance": "0.3-1.2x",
+        "category_tags": [
+          "healing",
+          "unreliable"
+        ]
+      },
+      "kanpo_chinese_medicine": {
+        "base_price_mon": 1500,
+        "unit": "1 prescription",
+        "required_tier": "silver_monme",
+        "historical_note": "Silver-calculation only. Shop rejects copper outright.",
+        "shop_dialogue": "This medicine comes from Ming. We deal in silver, not copper.",
+        "category_tags": [
+          "healing",
+          "imported",
+          "reliable"
+        ]
+      },
+      "wound_treatment_battlefield": {
+        "base_price_mon": 350,
+        "unit": "1 session",
+        "required_tier": "silver_monme",
+        "category_tags": [
+          "healing",
+          "emergency"
+        ]
+      },
+      "ginseng_root": {
+        "base_price_mon": 3000,
+        "unit": "1 root",
+        "required_tier": "silver_monme",
+        "category_tags": [
+          "luxury_medicine",
+          "gift"
+        ]
+      }
+    },
+    "services": {
+      "laborer_daily": {
+        "base_price_mon": 50,
+        "unit": "1 day",
+        "required_tier": "copper_mon"
+      },
+      "skilled_craftsman_daily": {
+        "base_price_mon": 200,
+        "unit": "1 day",
+        "required_tier": "copper_mon"
+      },
+      "massage": {
+        "base_price_mon": 50,
+        "unit": "1 session",
+        "required_tier": "copper_mon"
+      },
+      "ferry_crossing": {
+        "base_price_mon": 15,
+        "unit": "1 crossing",
+        "required_tier": "copper_mon"
+      },
+      "prostitute_low": {
+        "base_price_mon": 550,
+        "unit": "1 night",
+        "required_tier": "copper_mon",
+        "note": "~half a laborer's monthly wage"
+      },
+      "prostitute_high": {
+        "base_price_mon": 5000,
+        "unit": "1 night",
+        "required_tier": "silver_monme",
+        "shop_dialogue": "Our tayu does not accept copper. Silver or gold only."
+      },
+      "inn_cheap": {
+        "base_price_mon": 50,
+        "unit": "1 night",
+        "required_tier": "copper_mon"
+      },
+      "inn_standard": {
+        "base_price_mon": 200,
+        "unit": "1 night + meals",
+        "required_tier": "copper_mon"
+      },
+      "inn_quality": {
+        "base_price_mon": 800,
+        "unit": "1 night + meals + bath",
+        "required_tier": "silver_monme"
+      }
+    },
+    "travel_tolls": {
+      "goods_textile_horse": {
+        "base_price_mon": 10,
+        "unit": "1 load",
+        "required_tier": "copper_mon"
+      },
+      "merchant_horse": {
+        "base_price_mon": 5,
+        "unit": "1 horse",
+        "required_tier": "copper_mon"
+      },
+      "porter_back_load": {
+        "base_price_mon": 3,
+        "unit": "1 load",
+        "required_tier": "copper_mon"
+      },
+      "traveler_with_horse": {
+        "base_price_mon": 10,
+        "unit": "1 person + horse",
+        "required_tier": "copper_mon"
+      },
+      "monk_local_farmer": {
+        "base_price_mon": 0,
+        "unit": "1 person",
+        "required_tier": "copper_mon",
+        "note": "Free passage for religious/local"
+      }
+    },
+    "protection_rackets": {
+      "seifu_no_aramashi": {
+        "large_village_mon": 3200,
+        "medium_village_mon": 2000,
+        "small_village_mon": 1000,
+        "required_tier": "copper_mon",
+        "context": "1590 Toyotomi Hideyoshi rates. Paid to attacking army to prevent looting.",
+        "consequence_if_unpaid": "village_looted, reputation -faction, NPCs_killed_or_taken"
+      }
+    },
+    "human_trafficking": {
+      "prisoner_slave": {
+        "base_price_mon": 7500,
+        "unit": "1 person",
+        "required_tier": "silver_monme",
+        "historical_context": "Post-battle randori. Sold domestically or to Europeans.",
+        "morality_impact": "severe"
+      }
+    }
+  },
+  "domain_price_indices": {
+    "_formula": "final_price = base_price * domain_index * season_modifier * political_modifier * rumor_factor",
+    "domains": {
+      "kai": {
+        "name": "甲斐 (Kai - Takeda)",
+        "description": "Mountainous, gold mines, large sho measure",
+        "indices": {
+          "grains": 1.3,
+          "weapons": 0.7,
+          "medicine": 1.1,
+          "salt": 1.5,
+          "sake": 1.0
+        },
+        "special_rules": [
+          "Uses Kai-sho (5.39L = 3x standard). Prices per 'sho' appear lower but volume is larger.",
+          "Gold cheap due to mines. Silver has higher purchasing power.",
+          "Rice expensive: mountainous terrain, limited paddies."
+        ],
+        "exchange_rate_mon_per_ryo": 3500
+      },
+      "owari": {
+        "name": "尾張 (Owari - Oda)",
+        "description": "Plains, commercial, near Kyoto",
+        "indices": {
+          "grains": 0.8,
+          "weapons": 0.9,
+          "medicine": 0.9,
+          "salt": 1.0,
+          "sake": 0.9
+        },
+        "special_rules": [
+          "Rice cheap: fertile plains.",
+          "Active commerce: prices stable, low variance.",
+          "Good access to imported goods via Sakai merchants."
+        ],
+        "exchange_rate_mon_per_ryo": 4000
+      },
+      "kanto": {
+        "name": "関東 (Kanto - Hojo/Uesugi later)",
+        "description": "Eastern frontier, less commercialized",
+        "indices": {
+          "grains": 0.9,
+          "weapons": 1.1,
+          "medicine": 1.3,
+          "salt": 1.2,
+          "sake": 1.1
+        },
+        "special_rules": [
+          "Less monetized: barter more common.",
+          "Medicine expensive: far from import routes.",
+          "Kandaka system persisted longer here."
+        ],
+        "exchange_rate_mon_per_ryo": 4500
+      },
+      "ise_kii": {
+        "name": "伊勢・紀伊 (Ise/Kii - coastal)",
+        "description": "Coastal, fishing, Ise Grand Shrine",
+        "indices": {
+          "grains": 1.4,
+          "proteins": 0.5,
+          "salt": 0.3,
+          "medicine": 1.0,
+          "sake": 1.0
+        },
+        "special_rules": [
+          "Fish and salt extremely cheap.",
+          "Rice expensive: must import from Kinai.",
+          "Shrine economy: temple donations create secondary market."
+        ],
+        "exchange_rate_mon_per_ryo": 3800
+      },
+      "sakai": {
+        "name": "堺 (Sakai - merchant city)",
+        "description": "Independent merchant city, international trade",
+        "indices": {
+          "grains": 1.0,
+          "weapons": 0.8,
+          "medicine": 0.7,
+          "salt": 0.8,
+          "sake": 0.9,
+          "silk": 0.8
+        },
+        "special_rules": [
+          "Most monetized city in Japan. Almost everything available for cash.",
+          "Best prices for imported goods: Chinese medicine, firearms, silk.",
+          "Money changers everywhere: lowest conversion loss."
+        ],
+        "exchange_rate_mon_per_ryo": 3900
+      },
+      "kyushu": {
+        "name": "九州 (Kyushu - Shimazu/Otomo)",
+        "description": "Southern island, European contact, war-torn",
+        "indices": {
+          "grains": 1.2,
+          "weapons": 0.9,
+          "medicine": 1.1,
+          "salt": 0.6,
+          "firearms": 0.8
+        },
+        "special_rules": [
+          "Firearms cheaper: closer to Tanegashima, more gunsmiths.",
+          "European goods available (tobacco, clocks) at extreme prices.",
+          "Frequent warfare creates boom-bust cycles."
+        ],
+        "exchange_rate_mon_per_ryo": 3800
+      }
+    }
+  },
+  "seasonal_modifiers": {
+    "_description": "Applied to all food and some commodities. Weapons/services mostly unaffected.",
+    "spring_planting": {
+      "months": [
+        3,
+        4,
+        5
+      ],
+      "rice": 1.5,
+      "barley": 1.3,
+      "vegetables": 1.2,
+      "labor_wage": 0.9,
+      "note": "Last year's stores running low. Prices peak before harvest."
+    },
+    "summer_growth": {
+      "months": [
+        6,
+        7,
+        8
+      ],
+      "rice": 1.2,
+      "fish": 0.9,
+      "note": "Early vegetables available. Rice still high."
+    },
+    "autumn_harvest": {
+      "months": [
+        9,
+        10,
+        11
+      ],
+      "rice": 0.5,
+      "barley": 0.6,
+      "soybeans": 0.7,
+      "labor_wage": 1.1,
+      "note": "Harvest glut. Prices crash. Best time to buy grain."
+    },
+    "winter": {
+      "months": [
+        12,
+        1,
+        2
+      ],
+      "rice": 1.3,
+      "fish": 1.2,
+      "vegetables": 1.5,
+      "medicine": 1.2,
+      "ferry_toll": 1.5,
+      "note": "Mountain passes closed. Transport difficult. Medicine demand rises."
+    }
+  },
+  "political_modifiers": {
+    "peace": {
+      "all_goods": 1.0,
+      "weapons": 0.9,
+      "description": "Stable domain. Normal prices."
+    },
+    "war_nearby": {
+      "all_goods": 1.3,
+      "rice": 2.0,
+      "weapons": 2.5,
+      "medicine": 1.8,
+      "labor_wage": 1.5,
+      "description": "Army requisitioning food. Smiths busy. Refugees drive up prices."
+    },
+    "siege_active": {
+      "all_goods": 3.0,
+      "rice": 5.0,
+      "weapons": 4.0,
+      "medicine": 3.0,
+      "description": "Inside castle: barter dominates. Money may be worthless."
+    },
+    "road_closed": {
+      "imported_goods": 2.0,
+      "salt_inland": 2.5,
+      "medicine": 1.5,
+      "description": "Bandits or army blocking trade routes."
+    },
+    "famine": {
+      "rice": 5.0,
+      "barley": 4.0,
+      "human_trafficking": 0.5,
+      "description": "People sell themselves cheap. Grain is priceless."
+    },
+    "coin_shortage": {
+      "all_cash_goods": 0.8,
+      "description": "Senzeni - merchants prefer barter. Cash prices artificially low."
+    }
+  },
+  "barter_system": {
+    "enabled": true,
+    "trigger_conditions": [
+      "domain_has_low_monetization",
+      "player_carrying_insufficient_copper",
+      "shopkeeper_prefers_barter",
+      "seasonal_surplus",
+      "war_disrupts_currency"
+    ],
+    "common_barter_goods": {
+      "unpolished_rice": {
+        "value_per_sho_mon": 55,
+        "universal_acceptance": 0.9
+      },
+      "salt": {
+        "value_per_sho_mon": 40,
+        "universal_acceptance": 0.8
+      },
+      "miso": {
+        "value_per_sho_mon": 20,
+        "universal_acceptance": 0.7
+      },
+      "firewood": {
+        "value_per_bundle_mon": 15,
+        "universal_acceptance": 0.6
+      },
+      "labor_promise": {
+        "value_per_day_mon": 50,
+        "universal_acceptance": 0.4,
+        "risk": "debt_bond"
+      },
+      "information": {
+        "value_variable": true,
+        "universal_acceptance": 0.3,
+        "requires_rumor_network": true
+      }
+    },
+    "barter_premium": {
+      "description": "When using barter, shopkeeper may demand 10-30% more value than cash price",
+      "reason": "Inconvenience of non-cash, need to resell"
+    }
+  },
+  "warifu_system": {
+    "enabled": true,
+    "name": {
+      "ja": "割符",
+      "en": "Warifu",
+      "th": "ตั๋วเงิน"
+    },
+    "description": "Promissory note issued by domain lord, temple, or merchant guild",
+    "types": {
+      "domain_warifu": {
+        "issuer": "Daimyo's treasury",
+        "face_value_mon": 1000,
+        "discount_rate": 0.15,
+        "description": "Worth 850 mon if sold to money changer. Full 1000 if redeemed directly with domain.",
+        "risk": "If daimyo loses war, warifu becomes worthless paper",
+        "acceptance": {
+          "same_domain": 0.9,
+          "neighboring_domain": 0.3,
+          "distant_domain": 0.05
+        }
+      },
+      "temple_warifu": {
+        "issuer": "Major temple (e.g., Kofukuji, Enryakuji)",
+        "face_value_mon": 500,
+        "discount_rate": 0.05,
+        "description": "More trusted than domain. Temples rarely collapse.",
+        "acceptance": {
+          "same_region": 0.8,
+          "nationwide": 0.4
+        }
+      },
+      "merchant_guild_warifu": {
+        "issuer": "Za (merchant guild)",
+        "face_value_mon": 200,
+        "discount_rate": 0.1,
+        "description": "Accepted only within guild network. Good for bulk trade.",
+        "acceptance": {
+          "guild_members": 1.0,
+          "same_city": 0.6,
+          "outside": 0.0
+        }
+      }
+    },
+    "player_interaction": {
+      "can_receive_as_payment": true,
+      "can_attempt_to_spend": true,
+      "can_sell_to_money_changer": true,
+      "money_changer_fee": 0.1,
+      "rumor_impact": "If rumor says 'Daimyo bankrupt', warifu value drops 50% instantly"
+    }
+  },
+  "shop_tier_rules": {
+    "_description": "How shops handle different currency tiers",
+    "rural_village_shop": {
+      "accepts": [
+        "copper_mon"
+      ],
+      "rejects": [
+        "silver_monme",
+        "gold_ryo"
+      ],
+      "rejection_dialogue": "We don't see silver here. If you have none of the small coins, we can talk about rice.",
+      "barter_friendly": true,
+      "warifu_accepted": [
+        "temple_warifu"
+      ]
+    },
+    "town_market_stall": {
+      "accepts": [
+        "copper_mon",
+        "silver_monme"
+      ],
+      "rejects": [
+        "gold_ryo"
+      ],
+      "rejection_dialogue": "Gold? Sir, I sell fish. Take that to the money changer.",
+      "barter_friendly": true,
+      "warifu_accepted": [
+        "domain_warifu",
+        "temple_warifu"
+      ]
+    },
+    "city_weapon_shop": {
+      "accepts": [
+        "silver_monme",
+        "gold_ryo"
+      ],
+      "rejects": [
+        "copper_mon"
+      ],
+      "rejection_dialogue": "For blades, we deal in silver. Copper is for farmers.",
+      "barter_friendly": false,
+      "warifu_accepted": [
+        "domain_warifu"
+      ],
+      "special": "May offer installment plan (debt) if player has good reputation"
+    },
+    "sakai_merchant": {
+      "accepts": [
+        "copper_mon",
+        "silver_monme",
+        "gold_ryo"
+      ],
+      "rejects": [],
+      "special": "Lowest conversion loss. Will buy warifu at best rates.",
+      "barter_friendly": false
+    },
+    "temple": {
+      "accepts": [
+        "gold_ryo",
+        "silver_monme"
+      ],
+      "rejects": [
+        "copper_mon"
+      ],
+      "special": "Accepts donations in gold. May give blessing/discount for large donation.",
+      "warifu_accepted": [
+        "temple_warifu"
+      ]
+    }
+  },
+  "rumor_and_memory_hooks": {
+    "currency_tier_visibility": {
+      "description": "NPCs remember what tier you paid with",
+      "copper_only": "NPC tags player as 'poor/commoner'. May offer pity quests or dismiss.",
+      "silver_spending": "NPC tags player as 'merchant class' or 'successful ronin'. Opens better goods.",
+      "gold_spending": "NPC tags player as 'wealthy/dangerous'. Triggers rumor 'rich traveler in town'."
+    },
+    "price_manipulation_by_rumor": {
+      "description": "Rumors affect prices before events happen",
+      "examples": [
+        {
+          "rumor": "Army marching toward domain",
+          "effect": "Rice +50%, weapons +30%, 3 days before army arrives",
+          "mechanic": "Merchants hoard. Player can hoard first if hears rumor early."
+        },
+        {
+          "rumor": "Daimyo deathly ill",
+          "effect": "Domain warifu -50% value, political instability +20% prices",
+          "mechanic": "Money changers refuse warifu. Panic selling."
+        },
+        {
+          "rumor": "Merchant guild smuggling firearms",
+          "effect": "Firearms -20% in that city, but +heat with authorities",
+          "mechanic": "Black market opens. Risk/reward."
+        }
+      ]
+    },
+    "npc_memory_price_adjustment": {
+      "description": "NPCs remember your past transactions and adjust future prices",
+      "examples": [
+        "Bought all rice in village during shortage → next visit: prices doubled, hostility +",
+        "Paid debt in full early → shopkeeper offers 10% discount permanently",
+        "Used fake warifu → blacklisted from all guild shops in region",
+        "Saved village with medicine during plague → free lodging, priority access to goods"
+      ]
+    }
+  },
+  "event_triggers": {
+    "currency_crisis": {
+      "trigger": "Domain loses major battle + coin shortage",
+      "effect": "All shops switch to barter-only for 7-30 days. Warifu worthless.",
+      "player_opportunity": "Hoarded grain becomes more valuable than gold."
+    },
+    "trade_fair": {
+      "trigger": "Seasonal (spring/autumn) in major city",
+      "effect": "Prices -20% for 3 days. Foreign goods available. Best exchange rates.",
+      "special": "Unique items only available during fair."
+    },
+    "currency_reform": {
+      "trigger": "New daimyo takes power",
+      "effect": "Old domain warifu may be honored at 50% or rejected entirely.",
+      "player_risk": "Holding large warifu stock becomes gamble."
+    }
+  },
+  "ui_display_rules": {
+    "wallet_display": {
+      "format": "{total_mon} 文",
+      "color": "dynamic based on highest tier held",
+      "hover_tooltip": "Shows breakdown: 🥉X / 🥈Y / 🥇Z"
+    },
+    "shop_price_display": {
+      "format": "{price} 文",
+      "color": "matches required_tier color",
+      "tier_indicator": "small icon next to price",
+      "if_unaffordable_tier": "price shown in gray with lock icon, tooltip explains requirement"
+    },
+    "weight_display": {
+      "format": "{weight_kg} kg",
+      "warning_at": "3 kan (11.25kg)",
+      "critical_at": "10 kan (37.5kg)"
+    }
+  },
+  "implementation_notes_for_developers": {
+    "backend_wallet_structure": {
+      "player_wallet": {
+        "copper_mon": "integer",
+        "silver_monme": "integer",
+        "gold_ryo": "integer",
+        "warifu_inventory": "array of warifu objects"
+      },
+      "display_calculation": "total_mon = copper_mon + (silver_monme * 1000) + (gold_ryo * exchange_rate)",
+      "exchange_rate_dynamic": "Stored per domain, updated by rumor/events"
+    },
+    "price_calculation_pipeline": [
+      "1. Get base_price from price_tables",
+      "2. Apply domain_index from domain_price_indices",
+      "3. Apply seasonal_modifier",
+      "4. Apply political_modifier",
+      "5. Apply rumor_factor (from Rumor Network)",
+      "6. Apply NPC_memory_adjustment (personal multiplier)",
+      "7. Round to nearest 5 mon (historical: prices often in multiples of 5)"
+    ],
+    "transaction_validation": [
+      "1. Check if shop accepts required_tier",
+      "2. If player lacks tier, check barter_alternative",
+      "3. If barter available, show barter UI",
+      "4. If warifu accepted and player has warifu, offer warifu payment",
+      "5. If all fail, show rejection dialogue"
+    ]
+  }
+}

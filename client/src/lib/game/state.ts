@@ -29,6 +29,8 @@ export function levelUpVital(state: GameState, choice: "max_blood" | "max_focus"
 export function applyEventEffects(state: GameState, title: string, effects: EventEffect[], tick: number): GameState {  let working = state;
   const memories: WorldMemory[] = [];
   const remember = (kind: WorldMemory["kind"], detail: string, tone: WorldMemory["tone"]) => memories.push({ id: `revent-${tick}-${memories.length}`, kind, title, detail, tick, tone });
+  // Deterministic counter for grant IDs — parallel to memories counter, no random generation.
+  let itemCounter = 0;
   for (const effect of effects) {
     const amount = effect.amount ?? 0;
     switch (effect.type) {
@@ -64,6 +66,50 @@ export function applyEventEffects(state: GameState, title: string, effects: Even
       case "obligation":
         remember("debt", `ผูกพันใหม่: ${effect.template ?? effect.target ?? "ผู้เกี่ยวข้อง"}`, "ochre");
         break;
+      case "grant": {
+        // amount > 0 means grant; skip if not positive (no items if zero/negative)
+        if (amount <= 0) break;
+        const label = effect.template ?? "ของฝากจากเหตุการณ์";
+        const kind = (effect.target as InventoryItem["kind"]) ?? "reserve";
+        const description = effect.value ?? "";
+        const count = Math.min(amount, 20); // hard cap to prevent runaway inventory
+        const newItems: InventoryItem[] = [];
+        for (let i = 0; i < count; i += 1) {
+          newItems.push({
+            id: `revent-grant-${tick}-${itemCounter}`,
+            label,
+            kind,
+            description,
+            slots: 1,
+            functions: ["bonus"],
+            condition: "usable",
+          });
+          itemCounter += 1;
+        }
+        working = { ...working, character: { ...working.character, inventory: [...working.character.inventory, ...newItems] } };
+        break;
+      }
+      case "remove": {
+        // amount > 0 means how many to remove; skip if zero or negative
+        if (amount <= 0) break;
+        const target = effect.target ?? "";
+        const inventory = working.character.inventory;
+        const removeCount = Math.min(amount, inventory.length);
+        let removed = 0;
+        // Find items by kind (ItemKind enum) or by label match — deterministic first-match (insertion order).
+        const filtered = inventory.filter((item) => {
+          if (removed >= removeCount) return true;
+          const matchesKind = item.kind === target;
+          const matchesLabel = item.label === target;
+          if (matchesKind || matchesLabel) {
+            removed += 1;
+            return false;
+          }
+          return true;
+        });
+        working = { ...working, character: { ...working.character, inventory: filtered } };
+        break;
+      }
       default:
         remember("news", `${effect.type} ${amount > 0 ? "+" : ""}${amount}`, "ochre");
         break;

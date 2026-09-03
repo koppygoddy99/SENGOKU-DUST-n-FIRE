@@ -167,12 +167,12 @@ export function summarizeEffects(effects: EventEffect[]): { reward: string; risk
   for (const effect of effects) {
     const amount = effect.amount ?? 0;
     const target = effect.target ?? "";
-    if (amount > 0 || effect.type === "rumor" || effect.type === "information" || effect.type === "obligation") {
-      const names: Record<string, string> = { currency: `เงิน +${amount}`, food: `อาหาร +${amount}`, blood: `เลือด +${amount}`, focus: `สมาธิ +${amount}`, reputation: `ความน่าเชื่อถือ (${target}) +${amount}`, time: `อยู่นานขึ้น ${amount} วัน`, information: "ได้ข่าวสาร", rumor: "ได้ข่าวลือ", obligation: "ได้ผู้สนับสนุนใหม่" };
+    if (amount > 0 || effect.type === "rumor" || effect.type === "information" || effect.type === "obligation" || effect.type === "grant") {
+      const names: Record<string, string> = { currency: `เงิน +${amount}`, food: `อาหาร +${amount}`, blood: `เลือด +${amount}`, focus: `สมาธิ +${amount}`, reputation: `ความน่าเชื่อถือ (${target}) +${amount}`, time: `อยู่นานขึ้น ${amount} วัน`, information: "ได้ข่าวสาร", rumor: "ได้ข่าวลือ", obligation: "ได้ผู้สนับสนุนใหม่", grant: `ได้${effect.template ?? "ของฝาก"} ${amount > 1 ? `(×${amount})` : ""}` };
       rewardParts.push(names[effect.type] ?? `${effect.type} +${amount}`);
     }
-    if (amount < 0 || effect.type === "heat") {
-      const names: Record<string, string> = { currency: `เงิน ${amount}`, food: `อาหาร ${amount}`, blood: `เลือด ${amount}`, focus: `สมาธิ ${amount}`, reputation: `ความน่าเชื่อถือ (${target}) ${amount}`, time: `เสียเวลา ${Math.abs(amount)} วัน`, heat: `Heat พุ่ง +${amount}` };
+    if (amount < 0 || effect.type === "heat" || effect.type === "remove") {
+      const names: Record<string, string> = { currency: `เงิน ${amount}`, food: `อาหาร ${amount}`, blood: `เลือด ${amount}`, focus: `สมาธิ ${amount}`, reputation: `ความน่าเชื่อถือ (${target}) ${amount}`, time: `เสียเวลา ${Math.abs(amount)} วัน`, heat: `Heat พุ่ง +${amount}`, remove: `เสีย${target || "ของ"} ${amount > 1 ? `(×${amount})` : ""}` };
       riskParts.push(names[effect.type] ?? `${effect.type} ${amount}`);
     }
   }

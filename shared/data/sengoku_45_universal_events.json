@@ -1,0 +1,5480 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema_version": 1,
+  "description": "Deterministic random event pool for Sengoku: Dust & Fire - 45 universal events covering all seasons, locations, and occupations",
+  "selection_policy": {
+    "engine_owns_randomness": true,
+    "ai_owns_narration_only": true,
+    "required_filters": [
+      "season",
+      "location_type",
+      "province_id",
+      "era_year"
+    ],
+    "optional_filters": [
+      "weather",
+      "occupation",
+      "heat",
+      "reputation",
+      "inventory",
+      "memory",
+      "mission"
+    ],
+    "effect_application": "applyRoll_or_event_reducer_only"
+  },
+  "events": [
+    {
+      "event_id": "national-spring-broken-embankment-001",
+      "title": "คันนาพังระหว่างเดินทาง",
+      "location_scope": "national",
+      "location_types": [
+        "road",
+        "village",
+        "rice_field"
+      ],
+      "seasons": [
+        "Spring"
+      ],
+      "weather_tags": [
+        "rain",
+        "clear"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 8,
+      "cooldown_days": 45,
+      "repeat_policy": "same_province_once_per_season",
+      "historical_fence": "plausible_reconstruction",
+      "historical_basis": "งานซ่อมคันนาเป็นภาระร่วมของชุมชนเกษตรในฤดูปลูก",
+      "choices": [
+        {
+          "id": "help_repair",
+          "check": {
+            "stat": "body",
+            "tags": [
+              "labor",
+              "community"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 1
+            },
+            {
+              "type": "food",
+              "amount": -1
+            },
+            {
+              "type": "reputation",
+              "target": "local_villagers",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "pay_passage",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "bargain",
+              "money"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": -2
+            },
+            {
+              "type": "time",
+              "amount": 0
+            }
+          ]
+        },
+        {
+          "id": "bypass_mud",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "route",
+              "navigation"
+            ]
+          },
+          "effects": [
+            {
+              "type": "food",
+              "amount": -1
+            },
+            {
+              "type": "focus",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "wait_dry",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "patience",
+              "planning"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 2
+            },
+            {
+              "type": "focus",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "memory_key": "spring-embankment-breach",
+      "tags": [
+        "agriculture",
+        "labor",
+        "seasonal",
+        "community"
+      ]
+    },
+    {
+      "event_id": "national-spring-temple-festival-001",
+      "title": "เทศกาลฮานามิที่วัดรกร้าง",
+      "location_scope": "national",
+      "location_types": [
+        "temple",
+        "village"
+      ],
+      "seasons": [
+        "Spring"
+      ],
+      "weather_tags": [
+        "clear",
+        "breeze"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 7,
+      "cooldown_days": 60,
+      "repeat_policy": "once_per_location_per_year",
+      "historical_fence": "historically_supported",
+      "historical_basis": "การชมดอกซากุระมีความสำคัญทางสังคมและศาสนาตั้งแต่ยุคเฮอัง",
+      "choices": [
+        {
+          "id": "join_festival",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "social",
+              "religion"
+            ]
+          },
+          "effects": [
+            {
+              "type": "focus",
+              "amount": 1
+            },
+            {
+              "type": "food",
+              "amount": -1
+            },
+            {
+              "type": "reputation",
+              "target": "local",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "network_nobles",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "intrigue",
+              "factions"
+            ]
+          },
+          "effects": [
+            {
+              "type": "information",
+              "amount": 1
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "sell_snacks",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "trade",
+              "cooking"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 3
+            },
+            {
+              "type": "time",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "avoid_crowd",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "stealth",
+              "avoidance"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 0
+            },
+            {
+              "type": "focus",
+              "amount": -1
+            }
+          ]
+        }
+      ],
+      "memory_key": "spring-temple-festival",
+      "tags": [
+        "festival",
+        "social",
+        "religion",
+        "seasonal"
+      ]
+    },
+    {
+      "event_id": "national-spring-seed-merchant-001",
+      "title": "พ่อค้าเมล็ดพันธุ์ขายฝาก",
+      "location_scope": "national",
+      "location_types": [
+        "market",
+        "village"
+      ],
+      "seasons": [
+        "Spring"
+      ],
+      "weather_tags": [
+        "clear",
+        "rain"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 6,
+      "cooldown_days": 50,
+      "repeat_policy": "once_per_market_per_season",
+      "historical_fence": "plausible_reconstruction",
+      "historical_basis": "การซื้อขายเมล็ดพันธุ์ล่วงหน้าเป็นส่วนหนึ่งของเศรษฐกิจเกษตรยุคเซงโกกุ",
+      "choices": [
+        {
+          "id": "buy_seed",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "trade",
+              "agriculture"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": -3
+            },
+            {
+              "type": "food",
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "id": "warn_villagers",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "community",
+              "risk"
+            ]
+          },
+          "effects": [
+            {
+              "type": "reputation",
+              "target": "local_villagers",
+              "amount": 1
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "ignore",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "avoidance"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 0
+            }
+          ]
+        },
+        {
+          "id": "broker_deal",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "negotiation",
+              "trade"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 2
+            },
+            {
+              "type": "obligation",
+              "template": "seed-merchant"
+            }
+          ]
+        }
+      ],
+      "memory_key": "spring-seed-merchant",
+      "tags": [
+        "trade",
+        "agriculture",
+        "seasonal"
+      ]
+    },
+    {
+      "event_id": "national-spring-missing-crew-001",
+      "title": "ลูกเรือหายตัวก่อนเรือออก",
+      "location_scope": "national",
+      "location_types": [
+        "port",
+        "coast"
+      ],
+      "seasons": [
+        "Spring"
+      ],
+      "weather_tags": [
+        "clear",
+        "breeze"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 7,
+      "cooldown_days": 40,
+      "repeat_policy": "different_npc_each_time",
+      "historical_fence": "plausible_reconstruction",
+      "historical_basis": "การหนีประจำเรือเพราะหนี้หรือการเกณฑ์เป็นปัญหาปกติในท่าเรือยุคเซงโกกุ",
+      "choices": [
+        {
+          "id": "search_crew",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "investigation",
+              "port"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 1
+            },
+            {
+              "type": "information",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "replace_self",
+          "check": {
+            "stat": "body",
+            "tags": [
+              "labor",
+              "sailing"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 3
+            },
+            {
+              "type": "focus",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "report_captain",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "bureaucracy",
+              "records"
+            ]
+          },
+          "effects": [
+            {
+              "type": "reputation",
+              "target": "port_authority",
+              "amount": 1
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "ignore_departure",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "avoidance"
+            ]
+          },
+          "effects": [
+            {
+              "type": "focus",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "memory_key": "spring-missing-crew",
+      "tags": [
+        "port",
+        "mystery",
+        "labor"
+      ]
+    },
+    {
+      "event_id": "national-spring-lost-letter-001",
+      "title": "จดหมายลับตกหล่นริมทาง",
+      "location_scope": "national",
+      "location_types": [
+        "road",
+        "forest",
+        "mountain_pass"
+      ],
+      "seasons": [
+        "Spring"
+      ],
+      "weather_tags": [
+        "rain",
+        "clear"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 6,
+      "cooldown_days": 55,
+      "repeat_policy": "unique_per_campaign_branch",
+      "historical_fence": "game_drama",
+      "choices": [
+        {
+          "id": "deliver_letter",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "route",
+              "stealth"
+            ]
+          },
+          "effects": [
+            {
+              "type": "reputation",
+              "target": "local",
+              "amount": 1
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "read_contents",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "documents",
+              "language"
+            ]
+          },
+          "effects": [
+            {
+              "type": "information",
+              "amount": 2
+            },
+            {
+              "type": "focus",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "sell_letter",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "bargain",
+              "intrigue"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 4
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "id": "burn_letter",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "prudence",
+              "avoidance"
+            ]
+          },
+          "effects": [
+            {
+              "type": "focus",
+              "amount": 1
+            },
+            {
+              "type": "rumor",
+              "value": "มีจดหมายสำคัญถูกเผยทางภาคเหนือ"
+            }
+          ]
+        }
+      ],
+      "memory_key": "spring-lost-letter",
+      "tags": [
+        "intrigue",
+        "documents",
+        "mystery"
+      ]
+    },
+    {
+      "event_id": "national-spring-castle-repair-levy-001",
+      "title": "การเกณฑ์แรงงานซ่อมปราสาท",
+      "location_scope": "national",
+      "location_types": [
+        "castle",
+        "village",
+        "road"
+      ],
+      "seasons": [
+        "Spring"
+      ],
+      "weather_tags": [
+        "clear",
+        "rain"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 8,
+      "cooldown_days": 60,
+      "repeat_policy": "once_per_castle_per_year",
+      "historical_fence": "historically_supported",
+      "historical_basis": "ระบบโงะเย็ง (交替奉公) และการเกณฑ์แรงงานสร้างปราสาทเป็นภาระของชนชั้นล่าง",
+      "choices": [
+        {
+          "id": "comply_work",
+          "check": {
+            "stat": "body",
+            "tags": [
+              "labor",
+              "endurance"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 2
+            },
+            {
+              "type": "food",
+              "amount": 1
+            },
+            {
+              "type": "wounds",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "bribe_exemption",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "bargain",
+              "corruption"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": -4
+            },
+            {
+              "type": "time",
+              "amount": 0
+            }
+          ]
+        },
+        {
+          "id": "forge_exemption",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "documents",
+              "deception"
+            ]
+          },
+          "effects": [
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 2
+            },
+            {
+              "type": "time",
+              "amount": 0
+            }
+          ]
+        },
+        {
+          "id": "flee_village",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "escape",
+              "route"
+            ]
+          },
+          "effects": [
+            {
+              "type": "food",
+              "amount": -1
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "memory_key": "spring-castle-levy",
+      "tags": [
+        "authority",
+        "labor",
+        "castle",
+        "oppression"
+      ]
+    },
+    {
+      "event_id": "national-spring-paddy-flood-001",
+      "title": "น้ำท่วมนาขั้นบันไดก่อนเพาะปลูก",
+      "location_scope": "national",
+      "location_types": [
+        "rice_field",
+        "village"
+      ],
+      "seasons": [
+        "Spring"
+      ],
+      "weather_tags": [
+        "heavy_rain",
+        "flood"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 9,
+      "cooldown_days": 35,
+      "repeat_policy": "allow_with_weather_change",
+      "historical_fence": "plausible_reconstruction",
+      "choices": [
+        {
+          "id": "help_drain",
+          "check": {
+            "stat": "body",
+            "tags": [
+              "labor",
+              "agriculture"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 1
+            },
+            {
+              "type": "reputation",
+              "target": "local_villagers",
+              "amount": 1
+            },
+            {
+              "type": "food",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "offer_expertise",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "engineering",
+              "agriculture"
+            ]
+          },
+          "effects": [
+            {
+              "type": "reputation",
+              "target": "local_villagers",
+              "amount": 2
+            },
+            {
+              "type": "focus",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "pass_through",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "route",
+              "avoidance"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 0
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "demand_payment",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "bargain",
+              "exploitation"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 2
+            },
+            {
+              "type": "reputation",
+              "target": "local_villagers",
+              "amount": -2
+            }
+          ]
+        }
+      ],
+      "memory_key": "spring-paddy-flood",
+      "tags": [
+        "agriculture",
+        "disaster",
+        "community",
+        "seasonal"
+      ]
+    },
+    {
+      "event_id": "national-spring-pilgrim-caravan-001",
+      "title": "ขบวนแสวงบุญขอติดทาง",
+      "location_scope": "national",
+      "location_types": [
+        "road",
+        "temple",
+        "mountain_pass"
+      ],
+      "seasons": [
+        "Spring"
+      ],
+      "weather_tags": [
+        "clear",
+        "breeze"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 6,
+      "cooldown_days": 45,
+      "repeat_policy": "different_npc_each_time",
+      "historical_fence": "historically_supported",
+      "historical_basis": "การแสวงบุญเป็นสิทธิสำคัญของทุกชนชั้นและสร้างเครือข่ายทางสังคม",
+      "choices": [
+        {
+          "id": "guide_caravan",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "route",
+              "religion"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 1
+            },
+            {
+              "type": "food",
+              "amount": -1
+            },
+            {
+              "type": "reputation",
+              "target": "religious_order",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "share_food",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "charity",
+              "community"
+            ]
+          },
+          "effects": [
+            {
+              "type": "food",
+              "amount": -1
+            },
+            {
+              "type": "focus",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "rob_caravan",
+          "check": {
+            "stat": "body",
+            "tags": [
+              "combat",
+              "crime"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 3
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 3
+            },
+            {
+              "type": "wounds",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "avoid_pilgrims",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "avoidance"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 0
+            }
+          ]
+        }
+      ],
+      "memory_key": "spring-pilgrim-caravan",
+      "tags": [
+        "religion",
+        "travel",
+        "community",
+        "moral-choice"
+      ]
+    },
+    {
+      "event_id": "national-spring-forest-fire-001",
+      "title": "ไฟป่าใกล้หมู่บ้าน",
+      "location_scope": "national",
+      "location_types": [
+        "forest",
+        "village",
+        "mountain_pass"
+      ],
+      "seasons": [
+        "Spring"
+      ],
+      "weather_tags": [
+        "dry",
+        "wind"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 7,
+      "cooldown_days": 50,
+      "repeat_policy": "once_per_province_per_season",
+      "historical_fence": "plausible_reconstruction",
+      "choices": [
+        {
+          "id": "help_extinguish",
+          "check": {
+            "stat": "body",
+            "tags": [
+              "labor",
+              "risk"
+            ]
+          },
+          "effects": [
+            {
+              "type": "wounds",
+              "amount": -1
+            },
+            {
+              "type": "reputation",
+              "target": "local_villagers",
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "id": "evacuate",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "planning",
+              "leadership"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 1
+            },
+            {
+              "type": "reputation",
+              "target": "local_villagers",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "loot_abandoned",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "crime",
+              "opportunity"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 4
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 3
+            }
+          ]
+        },
+        {
+          "id": "watch_distance",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "patience",
+              "prudence"
+            ]
+          },
+          "effects": [
+            {
+              "type": "focus",
+              "amount": -1
+            },
+            {
+              "type": "time",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "memory_key": "spring-forest-fire",
+      "tags": [
+        "disaster",
+        "fire",
+        "community",
+        "moral-choice"
+      ]
+    },
+    {
+      "event_id": "national-spring-swordsmith-request-001",
+      "title": "ช่างตีดาบรับงานที่ไม่มีชื่อ",
+      "location_scope": "national",
+      "location_types": [
+        "workshop",
+        "market",
+        "village"
+      ],
+      "seasons": [
+        "Spring"
+      ],
+      "weather_tags": [
+        "clear",
+        "rain"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 5,
+      "cooldown_days": 70,
+      "repeat_policy": "unique_per_campaign_branch",
+      "historical_fence": "plausible_reconstruction",
+      "historical_basis": "ช่างตีดาบในยุคเซงโกกุมักรับงานจากหลายฝ่ายโดยไม่ถามที่มา",
+      "choices": [
+        {
+          "id": "deliver_materials",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "stealth",
+              "transport"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 3
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "ask_too_much",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "negotiation",
+              "risk"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 5
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "id": "refuse_job",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "prudence",
+              "boundary"
+            ]
+          },
+          "effects": [
+            {
+              "type": "focus",
+              "amount": 1
+            },
+            {
+              "type": "rumor",
+              "value": "มีคนปฏิเสธงานขนส่งเหล็กในพื้นที่นี้"
+            }
+          ]
+        },
+        {
+          "id": "report_authorities",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "bureaucracy",
+              "faction"
+            ]
+          },
+          "effects": [
+            {
+              "type": "reputation",
+              "target": "local_authority",
+              "amount": 1
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 2
+            }
+          ]
+        }
+      ],
+      "memory_key": "spring-swordsmith-request",
+      "tags": [
+        "craft",
+        "crime",
+        "weapon",
+        "moral-choice"
+      ]
+    },
+    {
+      "event_id": "national-summer-flooded-road-001",
+      "title": "น้ำหลากตัดเส้นทาง",
+      "location_scope": "national",
+      "location_types": [
+        "road",
+        "river_crossing",
+        "village",
+        "coast"
+      ],
+      "seasons": [
+        "Summer"
+      ],
+      "weather_tags": [
+        "heavy_rain",
+        "flood"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 10,
+      "cooldown_days": 20,
+      "repeat_policy": "allow_with_weather_change",
+      "historical_fence": "plausible_reconstruction",
+      "choices": [
+        {
+          "id": "wait_flood",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "patience",
+              "planning"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 2
+            },
+            {
+              "type": "food",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "pay_boatman",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "negotiation",
+              "transport"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": -3
+            },
+            {
+              "type": "focus",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "cross_risk",
+          "check": {
+            "stat": "body",
+            "tags": [
+              "swim",
+              "endurance"
+            ]
+          },
+          "effects": [
+            {
+              "type": "wounds",
+              "amount": -1
+            },
+            {
+              "type": "food",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "find_alternate",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "route",
+              "navigation"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 1
+            },
+            {
+              "type": "food",
+              "amount": -2
+            }
+          ]
+        }
+      ],
+      "memory_key": "summer-flooded-road",
+      "tags": [
+        "weather",
+        "travel",
+        "route",
+        "disaster"
+      ]
+    },
+    {
+      "event_id": "national-summer-port-rain-inspection-001",
+      "title": "ฝนหนักที่ท่าเรือและการตรวจเข้ม",
+      "location_scope": "national",
+      "location_types": [
+        "port",
+        "coast"
+      ],
+      "seasons": [
+        "Summer"
+      ],
+      "weather_tags": [
+        "heavy_rain"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 9,
+      "cooldown_days": 25,
+      "repeat_policy": "once_per_port_per_season",
+      "historical_fence": "plausible_reconstruction",
+      "choices": [
+        {
+          "id": "submit_inspection",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "documents",
+              "patience"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 1
+            },
+            {
+              "type": "focus",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "bribe_guard",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "bargain",
+              "corruption"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": -3
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "hide_cargo",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "concealment",
+              "stealth"
+            ]
+          },
+          "effects": [
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 2
+            },
+            {
+              "type": "focus",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "delay_departure",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "planning",
+              "weather"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 1
+            },
+            {
+              "type": "food",
+              "amount": -1
+            }
+          ]
+        }
+      ],
+      "memory_key": "summer-port-inspection",
+      "tags": [
+        "port",
+        "weather",
+        "authority",
+        "trade"
+      ]
+    },
+    {
+      "event_id": "national-summer-spoiled-rations-001",
+      "title": "เสบียงเน่าเสียในความชื้น",
+      "location_scope": "national",
+      "location_types": [
+        "road",
+        "camp",
+        "port",
+        "forest"
+      ],
+      "seasons": [
+        "Summer"
+      ],
+      "weather_tags": [
+        "heavy_rain",
+        "humid"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 8,
+      "cooldown_days": 30,
+      "repeat_policy": "allow_with_inventory_change",
+      "historical_fence": "plausible_reconstruction",
+      "choices": [
+        {
+          "id": "discard_food",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "medicine",
+              "prudence"
+            ]
+          },
+          "effects": [
+            {
+              "type": "food",
+              "amount": -2
+            },
+            {
+              "type": "focus",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "eat_anyway",
+          "check": {
+            "stat": "body",
+            "tags": [
+              "endurance",
+              "risk"
+            ]
+          },
+          "effects": [
+            {
+              "type": "food",
+              "amount": 1
+            },
+            {
+              "type": "wounds",
+              "amount": -1
+            },
+            {
+              "type": "focus",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "trade_locals",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "bargain",
+              "trade"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": -2
+            },
+            {
+              "type": "food",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "forage_wild",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "survival",
+              "nature"
+            ]
+          },
+          "effects": [
+            {
+              "type": "food",
+              "amount": 1
+            },
+            {
+              "type": "time",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "memory_key": "summer-spoiled-rations",
+      "tags": [
+        "survival",
+        "food",
+        "weather",
+        "disease"
+      ]
+    },
+    {
+      "event_id": "national-summer-plague-camp-001",
+      "title": "โรคระบาดในแคมป์ทหารใกล้เส้นทาง",
+      "location_scope": "national",
+      "location_types": [
+        "castle",
+        "camp",
+        "road"
+      ],
+      "seasons": [
+        "Summer"
+      ],
+      "weather_tags": [
+        "humid",
+        "heavy_rain"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 7,
+      "cooldown_days": 60,
+      "repeat_policy": "once_per_province_per_year",
+      "historical_fence": "historically_supported",
+      "historical_basis": "โรคระบาดเป็นสาเหตุสำคัญของการสูญเสียในกองทัพยุคเซงโกกุ",
+      "choices": [
+        {
+          "id": "help_heal",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "medicine",
+              "care"
+            ]
+          },
+          "effects": [
+            {
+              "type": "medicine",
+              "amount": -1
+            },
+            {
+              "type": "reputation",
+              "target": "military_camp",
+              "amount": 1
+            },
+            {
+              "type": "wounds",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "avoid_camp",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "avoidance",
+              "route"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 1
+            },
+            {
+              "type": "focus",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "loot_deserted",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "crime",
+              "opportunity"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 3
+            },
+            {
+              "type": "medicine",
+              "amount": 1
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 3
+            }
+          ]
+        },
+        {
+          "id": "report_lord",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "bureaucracy",
+              "faction"
+            ]
+          },
+          "effects": [
+            {
+              "type": "information",
+              "amount": 1
+            },
+            {
+              "type": "reputation",
+              "target": "local_authority",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "memory_key": "summer-plague-camp",
+      "tags": [
+        "disease",
+        "war",
+        "medicine",
+        "moral-choice"
+      ]
+    },
+    {
+      "event_id": "national-summer-shipwreck-debris-001",
+      "title": "ซากเรือและสินค้าลอยเกยตื้น",
+      "location_scope": "national",
+      "location_types": [
+        "coast",
+        "port"
+      ],
+      "seasons": [
+        "Summer"
+      ],
+      "weather_tags": [
+        "storm",
+        "heavy_rain"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 7,
+      "cooldown_days": 40,
+      "repeat_policy": "once_per_coast_per_year",
+      "historical_fence": "plausible_reconstruction",
+      "choices": [
+        {
+          "id": "rescue_crew",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "care",
+              "water"
+            ]
+          },
+          "effects": [
+            {
+              "type": "reputation",
+              "target": "local",
+              "amount": 1
+            },
+            {
+              "type": "wounds",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "salvage_goods",
+          "check": {
+            "stat": "body",
+            "tags": [
+              "labor",
+              "swim"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 4
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "id": "report_wreck",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "bureaucracy",
+              "records"
+            ]
+          },
+          "effects": [
+            {
+              "type": "reputation",
+              "target": "port_authority",
+              "amount": 1
+            },
+            {
+              "type": "currency",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "ignore_debris",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "avoidance"
+            ]
+          },
+          "effects": [
+            {
+              "type": "focus",
+              "amount": -1
+            }
+          ]
+        }
+      ],
+      "memory_key": "summer-shipwreck-debris",
+      "tags": [
+        "coast",
+        "storm",
+        "trade",
+        "moral-choice"
+      ]
+    },
+    {
+      "event_id": "national-summer-starving-bandits-001",
+      "title": "กลุ่มคนอดอยากขออาหารริมทาง",
+      "location_scope": "national",
+      "location_types": [
+        "forest",
+        "road",
+        "mountain_pass"
+      ],
+      "seasons": [
+        "Summer"
+      ],
+      "weather_tags": [
+        "heavy_rain",
+        "clear"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 8,
+      "cooldown_days": 35,
+      "repeat_policy": "different_npc_each_time",
+      "historical_fence": "plausible_reconstruction",
+      "choices": [
+        {
+          "id": "share_food",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "charity",
+              "community"
+            ]
+          },
+          "effects": [
+            {
+              "type": "food",
+              "amount": -1
+            },
+            {
+              "type": "focus",
+              "amount": 1
+            },
+            {
+              "type": "reputation",
+              "target": "local",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "offer_work",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "leadership",
+              "labor"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 1
+            },
+            {
+              "type": "food",
+              "amount": -1
+            },
+            {
+              "type": "reputation",
+              "target": "local",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "drive_away",
+          "check": {
+            "stat": "body",
+            "tags": [
+              "combat",
+              "intimidation"
+            ]
+          },
+          "effects": [
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 1
+            },
+            {
+              "type": "focus",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "walk_past",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "avoidance"
+            ]
+          },
+          "effects": [
+            {
+              "type": "focus",
+              "amount": -1
+            },
+            {
+              "type": "rumor",
+              "value": "มีนักเดินทางเย็นชาปล่อยคนอดอยากริมทาง"
+            }
+          ]
+        }
+      ],
+      "memory_key": "summer-starving-bandits",
+      "tags": [
+        "poverty",
+        "food",
+        "moral-choice",
+        "banditry"
+      ]
+    },
+    {
+      "event_id": "national-summer-checkpoint-siege-001",
+      "title": "ด่านตรวจเข้มเพราะสงครามใกล้พื้นที่",
+      "location_scope": "national",
+      "location_types": [
+        "checkpoint",
+        "road",
+        "castle"
+      ],
+      "seasons": [
+        "Summer"
+      ],
+      "weather_tags": [
+        "clear",
+        "heavy_rain"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 9,
+      "cooldown_days": 30,
+      "repeat_policy": "once_per_checkpoint_per_conflict",
+      "historical_fence": "historically_supported",
+      "historical_basis": "ด่านตรวจถูกใช้ควบคุมการเคลื่อนทัพและสินค้าในช่วงสงคราม",
+      "choices": [
+        {
+          "id": "show_papers",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "documents",
+              "bureaucracy"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 1
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "bribe_pass",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "bargain",
+              "corruption"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": -3
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "sneak_around",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "stealth",
+              "route"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 1
+            },
+            {
+              "type": "food",
+              "amount": -1
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "id": "turn_back",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "planning",
+              "prudence"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 2
+            },
+            {
+              "type": "food",
+              "amount": -1
+            }
+          ]
+        }
+      ],
+      "memory_key": "summer-checkpoint-siege",
+      "tags": [
+        "war",
+        "authority",
+        "travel",
+        "checkpoint"
+      ]
+    },
+    {
+      "event_id": "national-summer-snake-in-camp-001",
+      "title": "งูพิษในที่พักกลางคืน",
+      "location_scope": "national",
+      "location_types": [
+        "road",
+        "forest",
+        "camp",
+        "village"
+      ],
+      "seasons": [
+        "Summer"
+      ],
+      "weather_tags": [
+        "humid",
+        "clear"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 6,
+      "cooldown_days": 45,
+      "repeat_policy": "allow_with_location_change",
+      "historical_fence": "plausible_reconstruction",
+      "choices": [
+        {
+          "id": "kill_snake",
+          "check": {
+            "stat": "body",
+            "tags": [
+              "combat",
+              "reflex"
+            ]
+          },
+          "effects": [
+            {
+              "type": "focus",
+              "amount": 1
+            },
+            {
+              "type": "food",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "use_medicine",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "medicine",
+              "nature"
+            ]
+          },
+          "effects": [
+            {
+              "type": "medicine",
+              "amount": -1
+            },
+            {
+              "type": "focus",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "flee_camp",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "escape",
+              "risk"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 1
+            },
+            {
+              "type": "food",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "warn_others",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "community",
+              "care"
+            ]
+          },
+          "effects": [
+            {
+              "type": "reputation",
+              "target": "local",
+              "amount": 1
+            },
+            {
+              "type": "time",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "memory_key": "summer-snake-camp",
+      "tags": [
+        "wildlife",
+        "survival",
+        "danger",
+        "night"
+      ]
+    },
+    {
+      "event_id": "national-summer-market-riot-water-001",
+      "title": "วิวาทเรื่องน้ำในตลาดกลางแดด",
+      "location_scope": "national",
+      "location_types": [
+        "market",
+        "village"
+      ],
+      "seasons": [
+        "Summer"
+      ],
+      "weather_tags": [
+        "clear",
+        "hot"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 7,
+      "cooldown_days": 35,
+      "repeat_policy": "different_npc_each_time",
+      "historical_fence": "plausible_reconstruction",
+      "choices": [
+        {
+          "id": "mediate_fight",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "negotiation",
+              "social"
+            ]
+          },
+          "effects": [
+            {
+              "type": "reputation",
+              "target": "local",
+              "amount": 1
+            },
+            {
+              "type": "focus",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "sell_water",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "trade",
+              "opportunity"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 2
+            },
+            {
+              "type": "food",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "avoid_riot",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "avoidance",
+              "stealth"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 0
+            },
+            {
+              "type": "focus",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "join_fight",
+          "check": {
+            "stat": "body",
+            "tags": [
+              "combat",
+              "risk"
+            ]
+          },
+          "effects": [
+            {
+              "type": "wounds",
+              "amount": -1
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 2
+            }
+          ]
+        }
+      ],
+      "memory_key": "summer-market-water-riot",
+      "tags": [
+        "market",
+        "social",
+        "conflict",
+        "summer"
+      ]
+    },
+    {
+      "event_id": "national-summer-army-forage-001",
+      "title": "กองทัพเคลื่อนผ่านเกณฑ์เสบียง",
+      "location_scope": "national",
+      "location_types": [
+        "village",
+        "road",
+        "market"
+      ],
+      "seasons": [
+        "Summer"
+      ],
+      "weather_tags": [
+        "clear",
+        "hot"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 9,
+      "cooldown_days": 50,
+      "repeat_policy": "once_per_province_per_campaign",
+      "historical_fence": "historically_supported",
+      "historical_basis": "กองทัพยุคเซงโกกุอาศัยการเกณฑ์เสบียงจากท้องถิ่นที่ผ่าน",
+      "choices": [
+        {
+          "id": "hide_supplies",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "concealment",
+              "village"
+            ]
+          },
+          "effects": [
+            {
+              "type": "food",
+              "amount": 1
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "id": "comply_levy",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "prudence",
+              "survival"
+            ]
+          },
+          "effects": [
+            {
+              "type": "food",
+              "amount": -2
+            },
+            {
+              "type": "reputation",
+              "target": "military_camp",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "negotiate_payment",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "negotiation",
+              "faction"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": -2
+            },
+            {
+              "type": "food",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "flee_before_arrival",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "escape",
+              "planning"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 1
+            },
+            {
+              "type": "food",
+              "amount": -1
+            }
+          ]
+        }
+      ],
+      "memory_key": "summer-army-forage",
+      "tags": [
+        "war",
+        "army",
+        "food",
+        "oppression"
+      ]
+    },
+    {
+      "event_id": "national-summer-mine-flood-001",
+      "title": "น้ำล้นเหมืองที่หยุดงาน",
+      "location_scope": "national",
+      "location_types": [
+        "mine",
+        "workshop"
+      ],
+      "seasons": [
+        "Summer"
+      ],
+      "weather_tags": [
+        "heavy_rain",
+        "flood"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 6,
+      "cooldown_days": 45,
+      "repeat_policy": "once_per_mine_per_season",
+      "historical_fence": "plausible_reconstruction",
+      "choices": [
+        {
+          "id": "help_pump",
+          "check": {
+            "stat": "body",
+            "tags": [
+              "labor",
+              "engineering"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 2
+            },
+            {
+              "type": "wounds",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "warn_others",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "leadership",
+              "community"
+            ]
+          },
+          "effects": [
+            {
+              "type": "reputation",
+              "target": "local",
+              "amount": 1
+            },
+            {
+              "type": "time",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "loot_tools",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "crime",
+              "opportunity"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 3
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "id": "abandon_mine",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "avoidance",
+              "risk"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 0
+            },
+            {
+              "type": "focus",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "memory_key": "summer-mine-flood",
+      "tags": [
+        "mine",
+        "disaster",
+        "labor",
+        "weather"
+      ]
+    },
+    {
+      "event_id": "national-summer-ghost-ship-rumor-001",
+      "title": "ข่าวลือเรือล่องลอยไร้ลูกเรือ",
+      "location_scope": "national",
+      "location_types": [
+        "port",
+        "coast",
+        "sea_route"
+      ],
+      "seasons": [
+        "Summer"
+      ],
+      "weather_tags": [
+        "fog",
+        "clear"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 5,
+      "cooldown_days": 60,
+      "repeat_policy": "unique_per_campaign_branch",
+      "historical_fence": "game_drama",
+      "choices": [
+        {
+          "id": "investigate_ship",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "investigation",
+              "water"
+            ]
+          },
+          "effects": [
+            {
+              "type": "information",
+              "amount": 2
+            },
+            {
+              "type": "focus",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "spread_rumor",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "social",
+              "intrigue"
+            ]
+          },
+          "effects": [
+            {
+              "type": "rumor",
+              "value": "เรือผีปรากฏบริเวณชายฝั่งนี้"
+            },
+            {
+              "type": "reputation",
+              "target": "local",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "avoid_curse",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "religion",
+              "prudence"
+            ]
+          },
+          "effects": [
+            {
+              "type": "focus",
+              "amount": 1
+            },
+            {
+              "type": "time",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "salvage_timber",
+          "check": {
+            "stat": "body",
+            "tags": [
+              "labor",
+              "swim"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 2
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "memory_key": "summer-ghost-ship-rumor",
+      "tags": [
+        "sea",
+        "rumor",
+        "supernatural",
+        "mystery"
+      ]
+    },
+    {
+      "event_id": "national-autumn-harvest-festival-001",
+      "title": "งานฉลองเก็บเกี่ยวในหมู่บ้าน",
+      "location_scope": "national",
+      "location_types": [
+        "village",
+        "rice_field",
+        "market"
+      ],
+      "seasons": [
+        "Autumn"
+      ],
+      "weather_tags": [
+        "clear",
+        "breeze"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 8,
+      "cooldown_days": 60,
+      "repeat_policy": "once_per_village_per_year",
+      "historical_fence": "historically_supported",
+      "historical_basis": "การฉลองการเก็บเกี่ยวเป็นประเพณีสำคัญของชุมชนเกษตร",
+      "choices": [
+        {
+          "id": "join_celebration",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "social",
+              "community"
+            ]
+          },
+          "effects": [
+            {
+              "type": "focus",
+              "amount": 1
+            },
+            {
+              "type": "food",
+              "amount": 1
+            },
+            {
+              "type": "reputation",
+              "target": "local_villagers",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "offer_labor",
+          "check": {
+            "stat": "body",
+            "tags": [
+              "labor",
+              "agriculture"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 2
+            },
+            {
+              "type": "time",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "steal_rice",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "crime",
+              "stealth"
+            ]
+          },
+          "effects": [
+            {
+              "type": "food",
+              "amount": 2
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 3
+            }
+          ]
+        },
+        {
+          "id": "observe_from_afar",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "patience",
+              "information"
+            ]
+          },
+          "effects": [
+            {
+              "type": "information",
+              "amount": 1
+            },
+            {
+              "type": "focus",
+              "amount": -1
+            }
+          ]
+        }
+      ],
+      "memory_key": "autumn-harvest-festival",
+      "tags": [
+        "agriculture",
+        "festival",
+        "community",
+        "seasonal"
+      ]
+    },
+    {
+      "event_id": "national-autumn-grain-tax-inspection-001",
+      "title": "เจ้าหน้าที่ตรวจบัญชีข้าวก่อนเก็บเข้าคลัง",
+      "location_scope": "national",
+      "location_types": [
+        "warehouse",
+        "castle",
+        "village",
+        "market"
+      ],
+      "seasons": [
+        "Autumn"
+      ],
+      "weather_tags": [
+        "clear",
+        "rain"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 9,
+      "cooldown_days": 55,
+      "repeat_policy": "once_per_harvest_cycle",
+      "historical_fence": "historically_supported",
+      "historical_basis": "ระบบเก็บภาษีข้าว (石高) เป็นรากฐานเศรษฐกิจการปกครองยุคเซงโกกุ",
+      "choices": [
+        {
+          "id": "help_records",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "documents",
+              "tax"
+            ]
+          },
+          "effects": [
+            {
+              "type": "reputation",
+              "target": "local_authority",
+              "amount": 1
+            },
+            {
+              "type": "time",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "hide_surplus",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "concealment",
+              "village"
+            ]
+          },
+          "effects": [
+            {
+              "type": "food",
+              "amount": 1
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "id": "warn_villagers",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "community",
+              "risk"
+            ]
+          },
+          "effects": [
+            {
+              "type": "reputation",
+              "target": "local_villagers",
+              "amount": 1
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "bribe_inspector",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "bargain",
+              "corruption"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": -3
+            },
+            {
+              "type": "food",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "memory_key": "autumn-grain-tax-inspection",
+      "tags": [
+        "rice",
+        "tax",
+        "authority",
+        "harvest"
+      ]
+    },
+    {
+      "event_id": "national-autumn-unclaimed-cargo-001",
+      "title": "ลังสินค้าที่ท่าไม่มีผู้รับ",
+      "location_scope": "national",
+      "location_types": [
+        "port",
+        "warehouse",
+        "market"
+      ],
+      "seasons": [
+        "Autumn"
+      ],
+      "weather_tags": [
+        "clear",
+        "breeze"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 7,
+      "cooldown_days": 40,
+      "repeat_policy": "once_per_port_per_year",
+      "historical_fence": "plausible_reconstruction",
+      "choices": [
+        {
+          "id": "declare_authority",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "records",
+              "trade"
+            ]
+          },
+          "effects": [
+            {
+              "type": "reputation",
+              "target": "port_authority",
+              "amount": 1
+            },
+            {
+              "type": "currency",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "sell_quietly",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "market",
+              "bargain"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 5
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "id": "find_owner",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "investigation",
+              "rumor"
+            ]
+          },
+          "effects": [
+            {
+              "type": "information",
+              "amount": 2
+            },
+            {
+              "type": "obligation",
+              "template": "cargo-owner"
+            }
+          ]
+        },
+        {
+          "id": "mark_for_self",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "concealment",
+              "patience"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 2
+            },
+            {
+              "type": "currency",
+              "amount": 3
+            }
+          ]
+        }
+      ],
+      "memory_key": "autumn-unclaimed-cargo",
+      "tags": [
+        "port",
+        "trade",
+        "cargo",
+        "mystery"
+      ]
+    },
+    {
+      "event_id": "national-autumn-army-provisions-001",
+      "title": "กองทัพซื้อเสบียงจนราคาพุ่ง",
+      "location_scope": "national",
+      "location_types": [
+        "market",
+        "village",
+        "road"
+      ],
+      "seasons": [
+        "Autumn"
+      ],
+      "weather_tags": [
+        "clear",
+        "breeze"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 8,
+      "cooldown_days": 45,
+      "repeat_policy": "once_per_market_per_campaign",
+      "historical_fence": "historically_supported",
+      "historical_basis": "กองทัพขนาดใหญ่ในยุคเซงโกกุสร้างแรงกดดันต่อราคาเสบียงในท้องถิ่น",
+      "choices": [
+        {
+          "id": "hoard_early",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "trade",
+              "planning"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": -4
+            },
+            {
+              "type": "food",
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "id": "sell_to_army",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "trade",
+              "faction"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 5
+            },
+            {
+              "type": "food",
+              "amount": -2
+            },
+            {
+              "type": "reputation",
+              "target": "military_camp",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "help_locals",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "community",
+              "charity"
+            ]
+          },
+          "effects": [
+            {
+              "type": "food",
+              "amount": -1
+            },
+            {
+              "type": "reputation",
+              "target": "local_villagers",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "steal_from_army",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "crime",
+              "stealth"
+            ]
+          },
+          "effects": [
+            {
+              "type": "food",
+              "amount": 2
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 3
+            }
+          ]
+        }
+      ],
+      "memory_key": "autumn-army-provisions",
+      "tags": [
+        "war",
+        "market",
+        "food",
+        "economy"
+      ]
+    },
+    {
+      "event_id": "national-autumn-foreign-traveler-001",
+      "title": "นักเดินทางต่างแดนขอล่ามและผู้พา",
+      "location_scope": "national",
+      "location_types": [
+        "road",
+        "port",
+        "market"
+      ],
+      "seasons": [
+        "Autumn"
+      ],
+      "weather_tags": [
+        "clear",
+        "breeze"
+      ],
+      "era_range": [
+        1543,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 6,
+      "cooldown_days": 70,
+      "repeat_policy": "different_npc_each_time",
+      "historical_fence": "plausible_reconstruction",
+      "choices": [
+        {
+          "id": "guide_traveler",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "language",
+              "route"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 3
+            },
+            {
+              "type": "time",
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "id": "learn_foreign",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "language",
+              "culture"
+            ]
+          },
+          "effects": [
+            {
+              "type": "information",
+              "amount": 2
+            },
+            {
+              "type": "focus",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "rob_traveler",
+          "check": {
+            "stat": "body",
+            "tags": [
+              "crime",
+              "combat"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 5
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 3
+            },
+            {
+              "type": "wounds",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "avoid_foreign",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "avoidance",
+              "prudence"
+            ]
+          },
+          "effects": [
+            {
+              "type": "focus",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "memory_key": "autumn-foreign-traveler",
+      "tags": [
+        "foreign",
+        "travel",
+        "culture",
+        "trade"
+      ]
+    },
+    {
+      "event_id": "national-autumn-workshop-fire-001",
+      "title": "ไฟไหม้ย่านช่างกลางคืน",
+      "location_scope": "national",
+      "location_types": [
+        "workshop",
+        "market",
+        "village"
+      ],
+      "seasons": [
+        "Autumn"
+      ],
+      "weather_tags": [
+        "dry",
+        "wind"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 7,
+      "cooldown_days": 55,
+      "repeat_policy": "once_per_location_per_year",
+      "historical_fence": "plausible_reconstruction",
+      "choices": [
+        {
+          "id": "help_extinguish",
+          "check": {
+            "stat": "body",
+            "tags": [
+              "labor",
+              "risk"
+            ]
+          },
+          "effects": [
+            {
+              "type": "wounds",
+              "amount": -1
+            },
+            {
+              "type": "reputation",
+              "target": "local",
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "id": "save_tools",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "opportunity",
+              "crime"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 3
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "id": "warn_others",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "leadership",
+              "community"
+            ]
+          },
+          "effects": [
+            {
+              "type": "reputation",
+              "target": "local",
+              "amount": 1
+            },
+            {
+              "type": "time",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "watch_burn",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "patience",
+              "prudence"
+            ]
+          },
+          "effects": [
+            {
+              "type": "focus",
+              "amount": -1
+            },
+            {
+              "type": "information",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "memory_key": "autumn-workshop-fire",
+      "tags": [
+        "fire",
+        "disaster",
+        "craft",
+        "night"
+      ]
+    },
+    {
+      "event_id": "national-autumn-unburied-dead-001",
+      "title": "ศพไร้ญาติริมเส้นทาง",
+      "location_scope": "national",
+      "location_types": [
+        "road",
+        "forest",
+        "mountain_pass"
+      ],
+      "seasons": [
+        "Autumn"
+      ],
+      "weather_tags": [
+        "clear",
+        "rain"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 6,
+      "cooldown_days": 50,
+      "repeat_policy": "different_npc_each_time",
+      "historical_fence": "plausible_reconstruction",
+      "choices": [
+        {
+          "id": "bury_body",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "religion",
+              "community"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 1
+            },
+            {
+              "type": "focus",
+              "amount": 1
+            },
+            {
+              "type": "reputation",
+              "target": "religious_order",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "search_body",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "investigation",
+              "crime"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 2
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "leave_offering",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "religion",
+              "prudence"
+            ]
+          },
+          "effects": [
+            {
+              "type": "food",
+              "amount": -1
+            },
+            {
+              "type": "focus",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "walk_past",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "avoidance"
+            ]
+          },
+          "effects": [
+            {
+              "type": "focus",
+              "amount": -1
+            },
+            {
+              "type": "rumor",
+              "value": "มีศพไร้ญาติปรากฏบนเส้นทางนี้"
+            }
+          ]
+        }
+      ],
+      "memory_key": "autumn-unburied-dead",
+      "tags": [
+        "death",
+        "religion",
+        "moral-choice",
+        "road"
+      ]
+    },
+    {
+      "event_id": "national-autumn-market-animal-escape-001",
+      "title": "ม้าคลั่งในตลาดนัด",
+      "location_scope": "national",
+      "location_types": [
+        "market",
+        "village"
+      ],
+      "seasons": [
+        "Autumn"
+      ],
+      "weather_tags": [
+        "clear",
+        "breeze"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 6,
+      "cooldown_days": 40,
+      "repeat_policy": "different_npc_each_time",
+      "historical_fence": "plausible_reconstruction",
+      "choices": [
+        {
+          "id": "calm_horse",
+          "check": {
+            "stat": "body",
+            "tags": [
+              "animal",
+              "risk"
+            ]
+          },
+          "effects": [
+            {
+              "type": "reputation",
+              "target": "local",
+              "amount": 1
+            },
+            {
+              "type": "wounds",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "help_owner",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "community",
+              "animal"
+            ]
+          },
+          "effects": [
+            {
+              "type": "reputation",
+              "target": "local",
+              "amount": 1
+            },
+            {
+              "type": "currency",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "steal_horse",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "crime",
+              "animal"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 4
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 3
+            }
+          ]
+        },
+        {
+          "id": "flee_scene",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "avoidance",
+              "escape"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 0
+            },
+            {
+              "type": "focus",
+              "amount": -1
+            }
+          ]
+        }
+      ],
+      "memory_key": "autumn-market-animal-escape",
+      "tags": [
+        "market",
+        "animal",
+        "chaos",
+        "moral-choice"
+      ]
+    },
+    {
+      "event_id": "national-autumn-rice-convoy-001",
+      "title": "ขบวนส่งข้าวไปค่ายทหาร",
+      "location_scope": "national",
+      "location_types": [
+        "road",
+        "village",
+        "warehouse"
+      ],
+      "seasons": [
+        "Autumn"
+      ],
+      "weather_tags": [
+        "clear",
+        "rain"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 8,
+      "cooldown_days": 50,
+      "repeat_policy": "once_per_route_per_campaign",
+      "historical_fence": "historically_supported",
+      "historical_basis": "การขนส่งข้าวไปเลี้ยงกองทัพเป็นภาระหลักของชุมชนในฤดูเก็บเกี่ยว",
+      "choices": [
+        {
+          "id": "guard_convoy",
+          "check": {
+            "stat": "body",
+            "tags": [
+              "combat",
+              "protection"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 3
+            },
+            {
+              "type": "wounds",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "ambush_convoy",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "crime",
+              "stealth"
+            ]
+          },
+          "effects": [
+            {
+              "type": "food",
+              "amount": 2
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 3
+            },
+            {
+              "type": "wounds",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "warn_bandits",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "intrigue",
+              "faction"
+            ]
+          },
+          "effects": [
+            {
+              "type": "information",
+              "amount": 1
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "id": "ignore_convoy",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "avoidance"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 0
+            }
+          ]
+        }
+      ],
+      "memory_key": "autumn-rice-convoy",
+      "tags": [
+        "war",
+        "food",
+        "transport",
+        "banditry"
+      ]
+    },
+    {
+      "event_id": "national-autumn-temple-hidden-documents-001",
+      "title": "วัดรับฝ่ายเอกสารที่ถูกตามล่า",
+      "location_scope": "national",
+      "location_types": [
+        "temple",
+        "village"
+      ],
+      "seasons": [
+        "Autumn"
+      ],
+      "weather_tags": [
+        "clear",
+        "rain"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 6,
+      "cooldown_days": 65,
+      "repeat_policy": "unique_per_campaign_branch",
+      "historical_fence": "plausible_reconstruction",
+      "choices": [
+        {
+          "id": "hide_documents",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "concealment",
+              "religion"
+            ]
+          },
+          "effects": [
+            {
+              "type": "reputation",
+              "target": "religious_order",
+              "amount": 1
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "id": "read_documents",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "documents",
+              "language"
+            ]
+          },
+          "effects": [
+            {
+              "type": "information",
+              "amount": 2
+            },
+            {
+              "type": "focus",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "betray_temple",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "faction",
+              "intrigue"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 4
+            },
+            {
+              "type": "reputation",
+              "target": "religious_order",
+              "amount": -2
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "leave_quickly",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "avoidance",
+              "escape"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 1
+            },
+            {
+              "type": "focus",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "memory_key": "autumn-temple-documents",
+      "tags": [
+        "temple",
+        "documents",
+        "intrigue",
+        "religion"
+      ]
+    },
+    {
+      "event_id": "national-autumn-landslide-001",
+      "title": "หินถล่มขวางเส้นทางภูเขา",
+      "location_scope": "national",
+      "location_types": [
+        "mountain_pass",
+        "road",
+        "forest"
+      ],
+      "seasons": [
+        "Autumn"
+      ],
+      "weather_tags": [
+        "rain",
+        "clear"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 7,
+      "cooldown_days": 45,
+      "repeat_policy": "once_per_route_per_season",
+      "historical_fence": "plausible_reconstruction",
+      "choices": [
+        {
+          "id": "clear_rocks",
+          "check": {
+            "stat": "body",
+            "tags": [
+              "labor",
+              "endurance"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 2
+            },
+            {
+              "type": "wounds",
+              "amount": -1
+            },
+            {
+              "type": "reputation",
+              "target": "local",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "climb_over",
+          "check": {
+            "stat": "body",
+            "tags": [
+              "mountain",
+              "risk"
+            ]
+          },
+          "effects": [
+            {
+              "type": "wounds",
+              "amount": -1
+            },
+            {
+              "type": "time",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "turn_back",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "planning",
+              "route"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 2
+            },
+            {
+              "type": "food",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "find_guide",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "negotiation",
+              "route"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": -2
+            },
+            {
+              "type": "time",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "memory_key": "autumn-landslide",
+      "tags": [
+        "mountain",
+        "disaster",
+        "travel",
+        "route"
+      ]
+    },
+    {
+      "event_id": "national-autumn-archery-contest-001",
+      "title": "การแข่งขันธนูในค่ายทหาร",
+      "location_scope": "national",
+      "location_types": [
+        "castle",
+        "camp"
+      ],
+      "seasons": [
+        "Autumn"
+      ],
+      "weather_tags": [
+        "clear",
+        "breeze"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 6,
+      "cooldown_days": 70,
+      "repeat_policy": "once_per_camp_per_year",
+      "historical_fence": "historically_supported",
+      "historical_basis": "การยิงธนูเป็นทักษะสำคัญของอาชิการุและซามูไรยุคเซงโกกุ",
+      "choices": [
+        {
+          "id": "join_contest",
+          "check": {
+            "stat": "body",
+            "tags": [
+              "archery",
+              "combat"
+            ]
+          },
+          "effects": [
+            {
+              "type": "reputation",
+              "target": "military_camp",
+              "amount": 1
+            },
+            {
+              "type": "focus",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "bet_on_winner",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "gambling",
+              "observation"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 3
+            },
+            {
+              "type": "currency",
+              "amount": -2
+            }
+          ]
+        },
+        {
+          "id": "sabotage_arrow",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "crime",
+              "stealth"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 4
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "id": "watch_learn",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "observation",
+              "combat"
+            ]
+          },
+          "effects": [
+            {
+              "type": "information",
+              "amount": 1
+            },
+            {
+              "type": "time",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "memory_key": "autumn-archery-contest",
+      "tags": [
+        "military",
+        "contest",
+        "skill",
+        "gambling"
+      ]
+    },
+    {
+      "event_id": "national-winter-snow-blocked-pass-001",
+      "title": "หิมะปิดช่องเขา",
+      "location_scope": "national",
+      "location_types": [
+        "mountain_pass",
+        "road",
+        "temple_route"
+      ],
+      "seasons": [
+        "Winter"
+      ],
+      "weather_tags": [
+        "snow",
+        "cold"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 8,
+      "cooldown_days": 35,
+      "repeat_policy": "same_route_once_per_winter",
+      "historical_fence": "historically_supported",
+      "choices": [
+        {
+          "id": "turn_back",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "planning",
+              "route"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 2
+            },
+            {
+              "type": "food",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "seek_shelter",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "petition",
+              "religion"
+            ]
+          },
+          "effects": [
+            {
+              "type": "obligation",
+              "template": "temple-shelter"
+            },
+            {
+              "type": "focus",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "cross_anyway",
+          "check": {
+            "stat": "body",
+            "tags": [
+              "endurance",
+              "mountain"
+            ]
+          },
+          "effects": [
+            {
+              "type": "wounds",
+              "amount": -1
+            },
+            {
+              "type": "food",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "hire_guide",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "negotiation",
+              "route"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": -3
+            },
+            {
+              "type": "time",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "memory_key": "winter-snow-blocked-pass",
+      "tags": [
+        "snow",
+        "mountain",
+        "travel",
+        "weather"
+      ]
+    },
+    {
+      "event_id": "national-winter-wounded-samurai-001",
+      "title": "ซามูไรบาดเจ็บข้างศาลาพัก",
+      "location_scope": "national",
+      "location_types": [
+        "road",
+        "village",
+        "temple",
+        "market"
+      ],
+      "seasons": [
+        "Winter",
+        "Summer"
+      ],
+      "weather_tags": [
+        "cold",
+        "clear",
+        "hot"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 7,
+      "cooldown_days": 40,
+      "repeat_policy": "different_npc_each_time",
+      "historical_fence": "plausible_reconstruction",
+      "choices": [
+        {
+          "id": "tend_wounds",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "care",
+              "medicine"
+            ]
+          },
+          "effects": [
+            {
+              "type": "medicine",
+              "amount": -1
+            },
+            {
+              "type": "reputation",
+              "target": "local",
+              "amount": 1
+            },
+            {
+              "type": "obligation",
+              "template": "wounded-warrior"
+            }
+          ]
+        },
+        {
+          "id": "question_info",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "information",
+              "interview"
+            ]
+          },
+          "effects": [
+            {
+              "type": "information",
+              "amount": 1
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "rob_wounded",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "crime",
+              "opportunity"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 3
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 2
+            },
+            {
+              "type": "reputation",
+              "target": "local",
+              "amount": -2
+            }
+          ]
+        },
+        {
+          "id": "walk_past",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "avoidance"
+            ]
+          },
+          "effects": [
+            {
+              "type": "focus",
+              "amount": 1
+            },
+            {
+              "type": "rumor",
+              "value": "มีนักรบบาดเจ็บถูกปล่อยให้ตายริมทาง"
+            }
+          ]
+        }
+      ],
+      "memory_key": "winter-wounded-samurai",
+      "tags": [
+        "war",
+        "medicine",
+        "moral-choice",
+        "samurai"
+      ]
+    },
+    {
+      "event_id": "national-winter-frozen-port-001",
+      "title": "น้ำแข็งปิดท่าเรือ",
+      "location_scope": "national",
+      "location_types": [
+        "port",
+        "coast"
+      ],
+      "seasons": [
+        "Winter"
+      ],
+      "weather_tags": [
+        "snow",
+        "cold"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 6,
+      "cooldown_days": 50,
+      "repeat_policy": "once_per_port_per_winter",
+      "historical_fence": "plausible_reconstruction",
+      "choices": [
+        {
+          "id": "break_ice",
+          "check": {
+            "stat": "body",
+            "tags": [
+              "labor",
+              "water"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 2
+            },
+            {
+              "type": "wounds",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "wait_thaw",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "patience",
+              "planning"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 3
+            },
+            {
+              "type": "food",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "travel_overland",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "route",
+              "planning"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 2
+            },
+            {
+              "type": "food",
+              "amount": -2
+            }
+          ]
+        },
+        {
+          "id": "bribe_icebreaker",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "bargain",
+              "transport"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": -4
+            },
+            {
+              "type": "time",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "memory_key": "winter-frozen-port",
+      "tags": [
+        "port",
+        "winter",
+        "ice",
+        "travel"
+      ]
+    },
+    {
+      "event_id": "national-winter-food-shortage-001",
+      "title": "อาหารขาดแคลนในชุมชน",
+      "location_scope": "national",
+      "location_types": [
+        "village",
+        "market",
+        "road",
+        "castle"
+      ],
+      "seasons": [
+        "Winter"
+      ],
+      "weather_tags": [
+        "snow",
+        "cold",
+        "clear"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 9,
+      "cooldown_days": 45,
+      "repeat_policy": "once_per_village_per_winter",
+      "historical_fence": "historically_supported",
+      "historical_basis": "การขาดแคลนอาหารในฤดูหนาวเป็นปัญหาประจำในสังคมเกษตรยุคก่อนสมัยใหม่",
+      "choices": [
+        {
+          "id": "share_food",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "charity",
+              "community"
+            ]
+          },
+          "effects": [
+            {
+              "type": "food",
+              "amount": -2
+            },
+            {
+              "type": "reputation",
+              "target": "local_villagers",
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "id": "hoard_food",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "survival",
+              "concealment"
+            ]
+          },
+          "effects": [
+            {
+              "type": "food",
+              "amount": 1
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "broker_deal",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "trade",
+              "negotiation"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 2
+            },
+            {
+              "type": "food",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "steal_supplies",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "crime",
+              "stealth"
+            ]
+          },
+          "effects": [
+            {
+              "type": "food",
+              "amount": 2
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 3
+            }
+          ]
+        }
+      ],
+      "memory_key": "winter-food-shortage",
+      "tags": [
+        "survival",
+        "food",
+        "winter",
+        "community"
+      ]
+    },
+    {
+      "event_id": "national-winter-bandit-raid-001",
+      "title": "โจรขึ้นบ้านในหมู่บ้านกลางคืน",
+      "location_scope": "national",
+      "location_types": [
+        "village",
+        "road"
+      ],
+      "seasons": [
+        "Winter"
+      ],
+      "weather_tags": [
+        "cold",
+        "snow",
+        "clear"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 8,
+      "cooldown_days": 40,
+      "repeat_policy": "different_npc_each_time",
+      "historical_fence": "plausible_reconstruction",
+      "choices": [
+        {
+          "id": "defend_village",
+          "check": {
+            "stat": "body",
+            "tags": [
+              "combat",
+              "protection"
+            ]
+          },
+          "effects": [
+            {
+              "type": "wounds",
+              "amount": -1
+            },
+            {
+              "type": "reputation",
+              "target": "local_villagers",
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "id": "help_evacuate",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "planning",
+              "leadership"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 1
+            },
+            {
+              "type": "reputation",
+              "target": "local_villagers",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "hide_and_watch",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "avoidance",
+              "stealth"
+            ]
+          },
+          "effects": [
+            {
+              "type": "focus",
+              "amount": -1
+            },
+            {
+              "type": "information",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "join_bandits",
+          "check": {
+            "stat": "body",
+            "tags": [
+              "crime",
+              "combat"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 4
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 3
+            },
+            {
+              "type": "reputation",
+              "target": "local_villagers",
+              "amount": -2
+            }
+          ]
+        }
+      ],
+      "memory_key": "winter-bandit-raid",
+      "tags": [
+        "crime",
+        "combat",
+        "village",
+        "night"
+      ]
+    },
+    {
+      "event_id": "national-winter-temple-fire-pit-001",
+      "title": "เตาผิงในวัดดับกลางหนาว",
+      "location_scope": "national",
+      "location_types": [
+        "temple",
+        "village"
+      ],
+      "seasons": [
+        "Winter"
+      ],
+      "weather_tags": [
+        "snow",
+        "cold"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 6,
+      "cooldown_days": 50,
+      "repeat_policy": "once_per_temple_per_winter",
+      "historical_fence": "plausible_reconstruction",
+      "choices": [
+        {
+          "id": "fetch_firewood",
+          "check": {
+            "stat": "body",
+            "tags": [
+              "labor",
+              "forest"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 1
+            },
+            {
+              "type": "focus",
+              "amount": 1
+            },
+            {
+              "type": "reputation",
+              "target": "religious_order",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "share_fuel",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "charity",
+              "community"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": -1
+            },
+            {
+              "type": "focus",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "leave_cold",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "avoidance",
+              "route"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 1
+            },
+            {
+              "type": "focus",
+              "amount": -1
+            },
+            {
+              "type": "wounds",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "demand_payment",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "bargain",
+              "exploitation"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 2
+            },
+            {
+              "type": "reputation",
+              "target": "religious_order",
+              "amount": -1
+            }
+          ]
+        }
+      ],
+      "memory_key": "winter-temple-fire-pit",
+      "tags": [
+        "temple",
+        "winter",
+        "survival",
+        "community"
+      ]
+    },
+    {
+      "event_id": "national-winter-camp-downsizing-001",
+      "title": "ค่ายทหารลดกำลังปลดแรงงาน",
+      "location_scope": "national",
+      "location_types": [
+        "castle",
+        "camp",
+        "village"
+      ],
+      "seasons": [
+        "Winter"
+      ],
+      "weather_tags": [
+        "snow",
+        "cold",
+        "clear"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 7,
+      "cooldown_days": 55,
+      "repeat_policy": "once_per_camp_per_winter",
+      "historical_fence": "historically_supported",
+      "historical_basis": "กองทัพยุคเซงโกกุมักลดกำลังในฤดูหนาวเพื่อประหยัดเสบียง",
+      "choices": [
+        {
+          "id": "hire_desperate",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "leadership",
+              "labor"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": -2
+            },
+            {
+              "type": "food",
+              "amount": -1
+            },
+            {
+              "type": "reputation",
+              "target": "local",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "seek_enlistment",
+          "check": {
+            "stat": "body",
+            "tags": [
+              "combat",
+              "military"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 2
+            },
+            {
+              "type": "food",
+              "amount": 1
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "loot_deserters",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "crime",
+              "opportunity"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 3
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "id": "avoid_camp",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "avoidance"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 0
+            },
+            {
+              "type": "focus",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "memory_key": "winter-camp-downsizing",
+      "tags": [
+        "military",
+        "winter",
+        "economy",
+        "labor"
+      ]
+    },
+    {
+      "event_id": "national-winter-black-market-weapons-001",
+      "title": "ตลาดมืดขายอาวุธหลังค่ายปิด",
+      "location_scope": "national",
+      "location_types": [
+        "market",
+        "village",
+        "road"
+      ],
+      "seasons": [
+        "Winter"
+      ],
+      "weather_tags": [
+        "snow",
+        "cold",
+        "clear"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 6,
+      "cooldown_days": 60,
+      "repeat_policy": "unique_per_campaign_branch",
+      "historical_fence": "plausible_reconstruction",
+      "choices": [
+        {
+          "id": "buy_weapon",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "bargain",
+              "crime"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": -4
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "id": "report_black_market",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "bureaucracy",
+              "faction"
+            ]
+          },
+          "effects": [
+            {
+              "type": "reputation",
+              "target": "local_authority",
+              "amount": 1
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "broker_deal",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "trade",
+              "intrigue"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 3
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "id": "ignore_market",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "avoidance",
+              "prudence"
+            ]
+          },
+          "effects": [
+            {
+              "type": "focus",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "memory_key": "winter-black-market-weapons",
+      "tags": [
+        "crime",
+        "weapon",
+        "market",
+        "winter"
+      ]
+    },
+    {
+      "event_id": "national-winter-crew-mutiny-001",
+      "title": "ลูกเรือกบฏบนเรือที่จอดหลบหนาว",
+      "location_scope": "national",
+      "location_types": [
+        "port",
+        "coast",
+        "sea_route"
+      ],
+      "seasons": [
+        "Winter"
+      ],
+      "weather_tags": [
+        "snow",
+        "cold",
+        "storm"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 5,
+      "cooldown_days": 65,
+      "repeat_policy": "unique_per_campaign_branch",
+      "historical_fence": "plausible_reconstruction",
+      "choices": [
+        {
+          "id": "side_captain",
+          "check": {
+            "stat": "body",
+            "tags": [
+              "combat",
+              "loyalty"
+            ]
+          },
+          "effects": [
+            {
+              "type": "reputation",
+              "target": "ship_crew",
+              "amount": 1
+            },
+            {
+              "type": "wounds",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "side_mutineers",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "negotiation",
+              "rebellion"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 3
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 2
+            }
+          ]
+        },
+        {
+          "id": "mediate_peace",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "negotiation",
+              "leadership"
+            ]
+          },
+          "effects": [
+            {
+              "type": "focus",
+              "amount": -1
+            },
+            {
+              "type": "reputation",
+              "target": "local",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "abandon_ship",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "escape",
+              "water"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 1
+            },
+            {
+              "type": "food",
+              "amount": -1
+            }
+          ]
+        }
+      ],
+      "memory_key": "winter-crew-mutiny",
+      "tags": [
+        "sea",
+        "rebellion",
+        "winter",
+        "conflict"
+      ]
+    },
+    {
+      "event_id": "national-winter-wolves-around-camp-001",
+      "title": "ฝูงหมาป่ารอบค่ายกลางคืน",
+      "location_scope": "national",
+      "location_types": [
+        "camp",
+        "forest",
+        "road",
+        "mountain_pass"
+      ],
+      "seasons": [
+        "Winter"
+      ],
+      "weather_tags": [
+        "snow",
+        "cold"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 6,
+      "cooldown_days": 50,
+      "repeat_policy": "allow_with_location_change",
+      "historical_fence": "plausible_reconstruction",
+      "choices": [
+        {
+          "id": "defend_fire",
+          "check": {
+            "stat": "body",
+            "tags": [
+              "combat",
+              "survival"
+            ]
+          },
+          "effects": [
+            {
+              "type": "wounds",
+              "amount": -1
+            },
+            {
+              "type": "food",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "feed_wolves",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "animal",
+              "prudence"
+            ]
+          },
+          "effects": [
+            {
+              "type": "food",
+              "amount": -1
+            },
+            {
+              "type": "focus",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "climb_tree",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "escape",
+              "survival"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 1
+            },
+            {
+              "type": "focus",
+              "amount": -1
+            }
+          ]
+        },
+        {
+          "id": "light_torches",
+          "check": {
+            "stat": "mind",
+            "tags": [
+              "planning",
+              "survival"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 1
+            },
+            {
+              "type": "focus",
+              "amount": 1
+            }
+          ]
+        }
+      ],
+      "memory_key": "winter-wolves-camp",
+      "tags": [
+        "wildlife",
+        "winter",
+        "survival",
+        "night"
+      ]
+    },
+    {
+      "event_id": "national-winter-war-refugees-001",
+      "title": "ผู้ลี้ภัยจากสงครามเดินถึงหมู่บ้าน",
+      "location_scope": "national",
+      "location_types": [
+        "road",
+        "village",
+        "temple"
+      ],
+      "seasons": [
+        "Winter"
+      ],
+      "weather_tags": [
+        "snow",
+        "cold"
+      ],
+      "era_range": [
+        1467,
+        1615
+      ],
+      "occupation_tags": [
+        "all"
+      ],
+      "weight": 8,
+      "cooldown_days": 45,
+      "repeat_policy": "different_npc_each_time",
+      "historical_fence": "historically_supported",
+      "historical_basis": "สงครามยุคเซงโกกุสร้างผู้ลี้ภัยจำนวนมากที่ต้องอพยพในฤดูหนาว",
+      "choices": [
+        {
+          "id": "help_refugees",
+          "check": {
+            "stat": "heart",
+            "tags": [
+              "charity",
+              "community"
+            ]
+          },
+          "effects": [
+            {
+              "type": "food",
+              "amount": -1
+            },
+            {
+              "type": "medicine",
+              "amount": -1
+            },
+            {
+              "type": "reputation",
+              "target": "local",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "guide_shelter",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "route",
+              "planning"
+            ]
+          },
+          "effects": [
+            {
+              "type": "time",
+              "amount": 1
+            },
+            {
+              "type": "reputation",
+              "target": "local",
+              "amount": 1
+            }
+          ]
+        },
+        {
+          "id": "rob_refugees",
+          "check": {
+            "stat": "body",
+            "tags": [
+              "crime",
+              "opportunity"
+            ]
+          },
+          "effects": [
+            {
+              "type": "currency",
+              "amount": 2
+            },
+            {
+              "type": "heat",
+              "target": "local",
+              "amount": 3
+            },
+            {
+              "type": "reputation",
+              "target": "local",
+              "amount": -2
+            }
+          ]
+        },
+        {
+          "id": "avoid_involvement",
+          "check": {
+            "stat": "wit",
+            "tags": [
+              "avoidance"
+            ]
+          },
+          "effects": [
+            {
+              "type": "focus",
+              "amount": -1
+            }
+          ]
+        }
+      ],
+      "memory_key": "winter-war-refugees",
+      "tags": [
+        "war",
+        "refugee",
+        "winter",
+        "moral-choice"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schema_version": 1,
+  "description": "Deterministic random event pool for Sengoku: Dust & Fire",
+  "selection_policy": {
+    "engine_owns_randomness": true,
+    "ai_owns_narration_only": true,
+    "required_filters": ["season", "location_type", "province_id", "era_year"],
+    "optional_filters": ["weather", "occupation", "heat", "reputation", "inventory", "memory", "mission"],
+    "effect_application": "applyRoll_or_event_reducer_only"
+  },
+  "events": [
+    {
+      "event_id": "national-spring-road-repair-001",
+      "title": "คันนาที่ขวางเส้นทาง",
+      "location_scope": "national",
+      "location_types": ["village", "road", "rice_field"],
+      "seasons": ["Spring"],
+      "weather_tags": ["rain", "clear"],
+      "era_range": [1467, 1615],
+      "occupation_tags": ["farmer", "village_scribe", "jizamurai", "ronin", "ashigaru"],
+      "weight": 8,
+      "cooldown_days": 45,
+      "repeat_policy": "same_province_once_per_season",
+      "historical_fence": "plausible_reconstruction",
+      "historical_basis": "งานซ่อมคันนาและการประสานแรงงานเป็นความต้องการตามฤดูกาลของสังคมเกษตร",
+      "choices": [
+        {"id": "help", "check": {"stat": "body", "tags": ["labor", "community"]}, "effects": [{"type": "time", "amount": 1}, {"type": "reputation", "target": "local_villagers", "amount": 1}]},
+        {"id": "pay_workers", "check": {"stat": "heart", "tags": ["bargain", "money"]}, "effects": [{"type": "currency", "amount": -2}, {"type": "time", "amount": 0}]},
+        {"id": "bypass", "check": {"stat": "wit", "tags": ["route", "navigation"]}, "effects": [{"type": "food", "amount": -1}, {"type": "heat", "target": "local", "amount": 1}]}
+      ],
+      "memory_key": "spring-road-repair",
+      "tags": ["agriculture", "labor", "seasonal"]
+    },
+    {
+      "event_id": "national-summer-flooded-crossing-001",
+      "title": "น้ำหลากตัดทาง",
+      "location_scope": "national",
+      "location_types": ["road", "river_crossing", "village", "coast"],
+      "seasons": ["Summer"],
+      "weather_tags": ["heavy_rain", "flood"],
+      "era_range": [1467, 1615],
+      "occupation_tags": ["all"],
+      "weight": 10,
+      "cooldown_days": 20,
+      "repeat_policy": "allow_with_weather_change",
+      "historical_fence": "plausible_reconstruction",
+      "choices": [
+        {"id": "wait", "check": {"stat": "mind", "tags": ["patience", "planning"]}, "effects": [{"type": "time", "amount": 2}, {"type": "food", "amount": -1}]},
+        {"id": "pay_boat", "check": {"stat": "heart", "tags": ["negotiation", "transport"]}, "effects": [{"type": "currency", "amount": -3}, {"type": "focus", "amount": -1}]},
+        {"id": "cross_risk", "check": {"stat": "body", "tags": ["swim", "risk"]}, "effects": [{"type": "wounds", "amount": -1}, {"type": "heat", "target": "local", "amount": 1}]}
+      ],
+      "memory_key": "summer-flood-crossing",
+      "tags": ["weather", "travel", "route"]
+    },
+    {
+      "event_id": "national-autumn-grain-levy-001",
+      "title": "บัญชีข้าวก่อนเก็บเกี่ยว",
+      "location_scope": "national",
+      "location_types": ["village", "market", "castle", "warehouse"],
+      "seasons": ["Autumn"],
+      "era_range": [1467, 1615],
+      "occupation_tags": ["farmer", "village_scribe", "jizamurai", "merchant", "daimyo_attendant"],
+      "weight": 9,
+      "cooldown_days": 60,
+      "repeat_policy": "once_per_harvest_cycle",
+      "historical_fence": "plausible_reconstruction",
+      "choices": [
+        {"id": "cooperate", "check": {"stat": "mind", "tags": ["records", "tax"]}, "effects": [{"type": "reputation", "target": "local_authority", "amount": 1}, {"type": "food", "amount": -1}]},
+        {"id": "hide_grain", "check": {"stat": "wit", "tags": ["concealment", "village"]}, "effects": [{"type": "heat", "target": "local", "amount": 2}, {"type": "food", "amount": 1}]},
+        {"id": "negotiate_quota", "check": {"stat": "heart", "tags": ["petition", "faction"]}, "effects": [{"type": "focus", "amount": -1}, {"type": "reputation", "target": "local_villagers", "amount": 1}]}
+      ],
+      "memory_key": "autumn-grain-levy",
+      "tags": ["rice", "tax", "authority"]
+    },
+    {
+      "event_id": "national-winter-mountain-closure-001",
+      "title": "หิมะปิดช่องเขา",
+      "location_scope": "national",
+      "location_types": ["mountain_pass", "road", "temple_route"],
+      "seasons": ["Winter"],
+      "weather_tags": ["snow", "cold"],
+      "era_range": [1467, 1615],
+      "occupation_tags": ["all"],
+      "weight": 7,
+      "cooldown_days": 30,
+      "repeat_policy": "same_route_once_per_winter",
+      "historical_fence": "historically_supported",
+      "choices": [
+        {"id": "turn_back", "check": {"stat": "mind", "tags": ["planning", "route"]}, "effects": [{"type": "time", "amount": 2}, {"type": "food", "amount": -1}]},
+        {"id": "seek_temple", "check": {"stat": "heart", "tags": ["petition", "religion"]}, "effects": [{"type": "obligation", "template": "temple-shelter"}, {"type": "focus", "amount": 1}]},
+        {"id": "cross_pass", "check": {"stat": "body", "tags": ["endurance", "mountain"]}, "effects": [{"type": "wounds", "amount": -1}, {"type": "heat", "target": "local", "amount": 1}]}
+      ],
+      "memory_key": "winter-pass-closure",
+      "tags": ["snow", "mountain", "travel"]
+    },
+    {
+      "event_id": "sakai-summer-dock-inspection-001",
+      "title": "ฝนหนักที่ท่าเรือซาไก",
+      "location_scope": "specific",
+      "province_ids": ["izumi"],
+      "location_ids": ["sakai_dock"],
+      "location_types": ["port"],
+      "seasons": ["Summer"],
+      "weather_tags": ["heavy_rain"],
+      "era_range": [1549, 1615],
+      "occupation_tags": ["sakai_boat_crew", "merchant", "village_scribe", "shinobi", "ronin"],
+      "min_heat": 1,
+      "weight": 12,
+      "cooldown_days": 15,
+      "repeat_policy": "once_per_memory_cycle",
+      "required_memory_keys": [],
+      "historical_fence": "plausible_reconstruction",
+      "choices": [
+        {"id": "show_pass", "check": {"stat": "mind", "tags": ["documents", "bureaucracy"]}, "effects": [{"type": "time", "amount": 1}, {"type": "heat", "target": "sakai_checkpoint", "amount": -1}]},
+        {"id": "bribe", "check": {"stat": "heart", "tags": ["bargain", "corruption"]}, "effects": [{"type": "currency", "amount": -4}, {"type": "heat", "target": "sakai_checkpoint", "amount": 1}]},
+        {"id": "flee_by_water", "check": {"stat": "wit", "tags": ["water", "escape"]}, "effects": [{"type": "focus", "amount": -1}, {"type": "heat", "target": "sakai_checkpoint", "amount": 2}, {"type": "route_status", "value": "watched"}]},
+        {"id": "ask_saika_witness", "check": {"stat": "heart", "tags": ["faction", "favor"]}, "effects": [{"type": "obligation", "template": "saika-witness"}, {"type": "reputation", "target": "saika_merchants", "amount": 1}]}
+      ],
+      "memory_key": "sakai-dock-inspection",
+      "tags": ["port", "inspection", "heat", "rumor"]
+    },
+    {
+      "event_id": "iga-spring-shinobi-message-001",
+      "title": "คนส่งสารไม่ใช้ชื่อ",
+      "location_scope": "specific",
+      "province_ids": ["iga"],
+      "location_types": ["village", "mountain_pass", "temple_route", "forest"],
+      "seasons": ["Spring"],
+      "era_range": [1467, 1615],
+      "occupation_tags": ["shinobi", "ronin", "village_scribe", "temple_keeper"],
+      "weight": 8,
+      "cooldown_days": 50,
+      "repeat_policy": "unique_per_campaign_branch",
+      "historical_fence": "plausible_reconstruction",
+      "choices": [
+        {"id": "carry_message", "check": {"stat": "wit", "tags": ["stealth", "route"]}, "effects": [{"type": "reputation", "target": "iga_network", "amount": 1}, {"type": "heat", "target": "local", "amount": 1}]},
+        {"id": "read_message", "check": {"stat": "mind", "tags": ["documents", "language"]}, "effects": [{"type": "information", "amount": 1}, {"type": "reputation", "target": "iga_network", "amount": -1}]},
+        {"id": "refuse", "check": {"stat": "heart", "tags": ["boundary", "risk"]}, "effects": [{"type": "focus", "amount": 1}, {"type": "rumor", "value": "ผู้เล่นปฏิเสธงานลับ"}]}
+      ],
+      "memory_key": "iga-anonymous-messenger",
+      "tags": ["shinobi", "message", "network"]
+    },
+    {
+      "event_id": "hizen-autumn-foreign-cargo-001",
+      "title": "ลังสินค้าที่ไม่มีผู้รับ",
+      "location_scope": "specific",
+      "province_ids": ["hizen"],
+      "location_types": ["port", "market", "warehouse"],
+      "seasons": ["Autumn"],
+      "era_range": [1543, 1615],
+      "occupation_tags": ["merchant", "sakai_boat_crew", "ship_captain", "scribe"],
+      "weight": 6,
+      "cooldown_days": 35,
+      "repeat_policy": "once_per_port_per_year",
+      "historical_fence": "plausible_reconstruction",
+      "choices": [
+        {"id": "declare", "check": {"stat": "mind", "tags": ["records", "trade"]}, "effects": [{"type": "reputation", "target": "port_authority", "amount": 1}, {"type": "currency", "amount": 2}]},
+        {"id": "sell_quietly", "check": {"stat": "heart", "tags": ["market", "bargain"]}, "effects": [{"type": "currency", "amount": 6}, {"type": "heat", "target": "local", "amount": 2}]},
+        {"id": "find_owner", "check": {"stat": "wit", "tags": ["investigation", "rumor"]}, "effects": [{"type": "information", "amount": 2}, {"type": "obligation", "template": "cargo-owner"}]}
+      ],
+      "memory_key": "hizen-unclaimed-cargo",
+      "tags": ["port", "trade", "cargo", "foreign-contact"]
+    },
+    {
+      "event_id": "national-winter-wounded-soldier-001",
+      "title": "ทหารบาดเจ็บข้างศาลา",
+      "location_scope": "national",
+      "location_types": ["road", "village", "temple_route", "market"],
+      "seasons": ["Winter", "Summer"],
+      "era_range": [1467, 1615],
+      "occupation_tags": ["all"],
+      "min_heat": 0,
+      "weight": 5,
+      "cooldown_days": 40,
+      "repeat_policy": "different_npc_each_time",
+      "historical_fence": "plausible_reconstruction",
+      "choices": [
+        {"id": "give_medicine", "check": {"stat": "heart", "tags": ["care", "medicine"]}, "effects": [{"type": "medicine", "amount": -1}, {"type": "reputation", "target": "local_villagers", "amount": 1}]},
+        {"id": "question", "check": {"stat": "mind", "tags": ["information", "interview"]}, "effects": [{"type": "information", "amount": 1}, {"type": "heat", "target": "local", "amount": 1}]},
+        {"id": "walk_past", "check": {"stat": "wit", "tags": ["avoidance"]}, "effects": [{"type": "focus", "amount": 1}, {"type": "rumor", "value": "มีทหารบาดเจ็บหายตัวไปจากเส้นทาง"}]}
+      ],
+      "memory_key": "wounded-soldier-passed",
+      "tags": ["war", "medicine", "moral-choice"]
+    }
+  ]
+}
