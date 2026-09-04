@@ -1,244 +1,72 @@
 # Dust & Fire: Sengoku Stories
 
-> **Tabletop role-playing game เชิงนิยายประวัติศาสตร์ต้นฉบับ** ในบริบทญี่ปุ่นยุคเซ็นโกคุ ผู้เล่นประกาศเจตนาเพียงหนึ่งประโยค ระบบจึงอ่านวิธีการ ทอย `2d12` บันทึกรอยของผล และให้โลกตอบกลับเป็นฉากที่เล่นต่อได้
+## Overview
 
-Repository: <https://github.com/koppygoddy99/SENGOKU-DUST-n-FIRE>
+Tabletop RPG เชิงนิยายประวัติศาสตร์ในบริบทญี่ปุ่นยุคเซ็นโกคุ ผู้เล่นประกาศเจตนาเพียงหนึ่งประโยค ระบบเลือก Stat/Mastery/Context/DN ให้เอง แล้วทอย `2d12` ตามสูตร canonical เพื่อตัดสินผลที่โลกจดจำและตอบกลับ
 
-Dust & Fire ไม่ใช่เกมจำลองประวัติศาสตร์ที่อ้างว่า NPC หรือเหตุการณ์สมมติเป็นข้อเท็จจริง เกมใช้บริบทสังคมและช่วงเวลาเป็น **กรอบความน่าเชื่อถือ** โดยแยกข้อเท็จจริงทางประวัติศาสตร์ออกจาก content ในแคมเปญอย่างชัดเจน
+Deterministic engine ฝั่ง client (`client/src/lib/game/**`) เป็นผู้ตัดสินผลทอยและ state เสมอ ส่วน AI GM เป็นเพียงผู้วิเคราะห์และเล่าเรื่อง ไม่มีสิทธิ์แก้ผลเชิงกล
 
-## ภาพรวม
+เกมใช้ Local Save-first: GameState และประวัติแคมเปญทั้งหมดเก็บใน browser เป็นหลัก ส่วน Drizzle/MySQL ใน server รองรับ user/auth service
 
-แก่นของเกมคือ **Agency before procedure**: ผู้เล่นพูดสิ่งที่ตัวละครจะทำและเหตุผลที่ทำ ไม่ต้องกรอกค่า Stat, Skill หรือ DN เอง ระบบจะเลือกคุณสมบัติตัวละคร (Stat) ความชำนาญ (Mastery) โบนัสจากบริบท และ DN ที่เหมาะสม แล้วเปิดรายละเอียดให้ตรวจดูก่อนทอย
+### เอกสารเชิงลึก
 
-| สิ่งที่ผู้เล่นทำ | สิ่งที่ระบบรับผิดชอบ | สิ่งที่โลกต้องจดจำ |
-|---|---|---|
-| ประกาศเจตนาหนึ่งประโยค | เลือก Stat, Mastery, context และ DN | ผลลัพธ์ต้องเปลี่ยน state ที่ตามรอยได้อย่างน้อยหนึ่งอย่าง |
-| ยืนยันการทอย | ทอย 2d12 และรวมค่าตามกติกา | พยาน หนี้ ข่าว พลังกาย/พลังสมาธิ หรือทางเลือกใหม่ |
-| เลือกใช้ Flaw (ข้อบกพร่อง) | ลดผลรวม `-2` เมื่อยอมให้ข้อบกพร่องมีผลต่อบท | ได้แต้มลอจิกสำหรับการสวมบทบาทหรือผลลัพธ์ตามจริง |
-| อ่านผลและเล่นต่อ | อัปเดต XP, เวลา, ภารกิจ, รางวัล, Memory และ Local Save | Chronicle ของแคมเปญนั้นเท่านั้น |
+- [docs/gameplay-loop-th.md](docs/gameplay-loop-th.md) — วงจรการเล่น, กติกา 2d12, DN และ Margin
+- [docs/character-systems-th.md](docs/character-systems-th.md) — Blood/Focus, Mastery และ Stat growth
+- [docs/campaign-and-save-th.md](docs/campaign-and-save-th.md) — สถานะแคมเปญและการบันทึก
+- [docs/ai-gm-guardrails-th.md](docs/ai-gm-guardrails-th.md) — AI GM และ historical guardrails
+- [docs/dev-setup-th.md](docs/dev-setup-th.md) — เริ่มพัฒนาในเครื่อง, คำสั่งสำคัญ, การทดสอบ
+- [docs/project-status-th.md](docs/project-status-th.md) — อัปเดตระบบใหญ่ล่าสุดและสถานะปัจจุบัน
+- [docs/repo-policy-th.md](docs/repo-policy-th.md) — GitHub sync policy, เอกสารสำคัญ, License และ Asset manifest
 
-## วงจรการเล่น
+## Tech stack
 
-```text
-Declare Intent
-  → Analyze the method
-  → Reveal Stat / Mastery / Context / DN
-  → Choose Flaw option (Optional -2 penalty)
-  → Roll 2d12
-  → Record Result
-  → Narrative draft writes the consequence
-  → Open full outcome and declare the next intent
-  → Persist Local Save
-```
-
-หน้า Play ใช้ลำดับภาพสามช่วงอย่างชัดเจน: ลูกเต๋าสองลูกหมุนและหยุด, หน้าผลทอย/ช่วงตัดสินใจที่แสดงสูตรเต็ม, และ Narrative Outcome ที่มีร้อยแก้วพร้อมทางเลือกต่อไป หลังบันทึกผล เกมจะร้อยเรียงข้อความเป็นกลุ่มคำก่อนเปิดปุ่มอ่านผลเต็ม เพื่อให้ยังมีจังหวะการเล่นระหว่างรอการสร้างฉากจาก AI GM
-
-## กติกา 2d12
-
-สูตร canonical ของผลทอยคือ:
-
-```text
-baseDice = d12 + d12
-total = baseDice + statValue + masteryBonus + contextBonus + flawBonus
-margin = total - DN
-```
-
-| องค์ประกอบ | แหล่งข้อมูล | ช่วงปัจจุบัน |
-|---|---|---:|
-| `d12 + d12` | deterministic client engine | 2–24 |
-| `statValue` | ค่าคุณสมบัติตัวละคร (Stat) | 1–10 |
-| `masteryBonus` | โบนัสความชำนาญ (Mastery) | +0 ถึง +5 |
-| `contextBonus` | ของ เอกสาร คนกลาง หรือสถานการณ์ที่ตรงบริบท | 0 ถึง +2 |
-| `flawBonus` | ค่าลงโทษเมื่อยอมจำนนต่อข้อบกพร่องตัวละคร | 0 หรือ -2 |
-
-### คุณสมบัติตัวละครทั้งห้าแกน (Stats)
-
-| ID | English | ไทย | รายละเอียดและการใช้งาน |
-|---|---|---|---|
-| `body` | strength | พลังกาย | แรง อึด แบก ฝ่าอุปสรรคทางกายภาพ |
-| `hand` | Finesse | ฝีมือ | อาวุธ งานช่าง การลงมือแม่นยำ งานละเอียด |
-| `wit` | Instinct | ไหวพริบ | หลบ ลวง สังเกต อ่านจังหวะและไหวพริบปฏิภาณ |
-| `mind` | Insight | ปัญญา | เอกสาร ข้อมูล แผนการ และการคิดวิเคราะห์ |
-| `heart` | Grit | ใจสู้ | ยืนหยัด คำสัตย์ การรับแรงกดดันและศีลธรรม |
-
-ระบบเลือก **วิธีหลักที่ทำให้การกระทำสำเร็จ** ไม่ใช่คำกริยาที่ฟังดูรุนแรงที่สุด ตัวละครถือปืนอาจใช้ `mind` (Insight) เมื่อต้องอาศัยบัญชีและคำสั่งผ่านด่าน หรือใช้ `wit` (Instinct) เมื่อต้องอ่านจังหวะยาม
-
-## DN ที่ใช้งานจริง
-
-DN คือระดับแรงกดดันของฉาก ไม่ใช่โทษทางศีลธรรม กติกาปัจจุบันคำนวณตาม Canonical Difficulty ของระบบ:
-
-| DN | ใช้เมื่อ | เป้าหมายเชิงเกม |
-|---:|---|---|
-| **8** | คุ้นมือ / ทั่วไป | งานพื้นฐานไม่มีแรงกดดัน (ไม่มอบ XP/Practice) |
-| **12** | ปกติ / มีความเสี่ยง | เดิมพันปกติที่มีผลต่อฉาก (เริ่มได้รับ XP/Practice) |
-| **16** | ท้าทาย / มีอุปสรรคจริง | ต้องใช้ฝีมือ การเตรียมตัว หรือยอมรับผลที่หนักขึ้น |
-| **20** | วิกฤต / เสี่ยงสูง | วิกฤตซ้อน งานเสี่ยงสูงมากที่ควรต้องคิดหาวิธีหรือใช้ทรัพยากร |
-| **24 / 28 / 32** | ยากมาก ถึงแทบเป็นไปไม่ได้ | สถานการณ์คอขาดบาดตายหรือขีดจำกัดสูงสุดของมนุษย์ |
-
-Context และ Mastery ไม่ลด DN แบบลบล้างเดิมพัน แต่เพิ่มแต้มในสูตรอย่างตรวจสอบได้ ตัวอย่างเช่น เอกสารที่ตรงบริบทอาจให้ `+1` หรือ `+2` และผู้เล่นจะเห็นต้นทางของแต้มใน Roll Formula ก่อนบันทึกผล
-
-### Margin และผลตอบกลับของโลก
-
-| Margin | Outcome | ความหมาย |
-|---:|---|---|
-| `≥ +5` | Decisive Success | สำเร็จเด็ดขาด: เปิดทางชัด แต่โลกยังจำว่าใครช่วย ใครเสียหน้า และอะไรเปลี่ยนมือ |
-| `0..+4` | Success with Cost | สำเร็จแบบมีข้อแลกเปลี่ยน: ได้สิ่งที่ต้องการพร้อมพยาน หนี้ ข่าว หรือเงื่อนไขกดดัน |
-| `-4..-1` | Partial Success | สำเร็จบางส่วน: ได้บางส่วน เช่น เวลา ข้อมูล หรือทางเลือก แต่แรงกดดันยังอยู่ |
-| `≤ -5` | Failure with Consequence | ล้มเหลวแบบมีผลตามมา: ทางเดิมพังและต้องมีต้นทุนใหม่ แต่ไม่มี dead end |
-
-## ระบบร่างกาย จิตใจ และการเติบโต
-
-### พลังกาย (Blood) และพลังสมาธิ (Focus)
-ตัวละครบริหารจัดการพลังสองด้านที่มีขีดจำกัดสูงสุด 10 หน่วย โดยจะได้รับผลกระทบจากผลลัพธ์ทอยลูกเต๋าหรือการพักผ่อนดังนี้:
-* **พักฟื้น/ทำแผลสำเร็จ (Resting):** พลังกาย `Blood +1` และพลังสมาธิ `Focus +1`
-* **ล้มเหลวแบบมีผลตามมา (Failure with Consequence):** เสียพลังอย่างละหนึ่งหน่วย `Blood -1` และ `Focus -1`
-* **สำเร็จแบบมีข้อแลกเปลี่ยน (Success with Cost):** เสียพลังสมาธิ `Focus -1` (สำเร็จแต่ต้องแลกด้วยความกดดัน)
-* **ผลทอยอื่นๆ:** ไม่มีผลกระทบต่อค่าพลัง (`Blood +0, Focus +0`)
-* **การเติบโต:** เมื่อบรรลุเป้าหมายสำคัญ (Milestones) จะได้รับ Milestone Points เพื่อใช้พัฒนาขีดจำกัดสูงสุด (Max Vitals) ของพลังกายและพลังสมาธิได้สูงสุดถึง 10 หน่วย
-
-### การเติบโตความชำนาญ (Mastery) และคุณสมบัติ (Stats)
-ตัวละครจะได้รับ XP หรือคะแนนฝึกฝน (Practice Points) ต่อเมื่อทำภารกิจหรือทอยในงานที่มีระดับความเสี่ยงจริง (**DN ≥ 12** เท่านั้น) และไม่ได้ใช้ไอเทมช่วยผ่านด่านพิเศษ:
-* **ทอยสำเร็จเด็ดขาด (Decisive Success):** ได้รับ `+2 XP`
-* **ทอยผลลัพธ์แบบอื่นๆ:** ได้รับ `+1 XP`
-
-การเพิ่มระดับของแต่ละระบบมีเงื่อนไขดังนี้:
-* **ความชำนาญ (Mastery Level 0-5):** ใช้สะสม `5 XP` ในแต่ละระดับเพื่อเลื่อนเลเวล (Untrained [0] → Familiar [+1] → Skilled [+2] → Expert [+3] → Master [+4] → Peerless [+5])
-* **คุณสมบัติตัวละคร (Stat Level 1-10):** ปลดล็อกขีดจำกัดได้สูงสุด 10 (Unseasoned → Grounded → Honed → Renowned → Signature) โดยปริมาณ XP ที่ต้องใช้เลื่อนขั้นจะอิงตามระดับปัจจุบัน:
-  * ระดับ 1–3: ใช้ `3 XP` เพื่อเลื่อนขั้นถัดไป
-  * ระดับ 4–6: ใช้ `4 XP` เพื่อเลื่อนขั้นถัดไป
-  * ระดับ 7–8: ใช้ `5 XP` เพื่อเลื่อนขั้นถัดไป
-  * ระดับ 9: ใช้ `6 XP` เพื่อเลื่อนระดับสูงสุด (ระดับ 10)
-  * ระดับ 10: ถึงขีดจำกัดสูงสุด ไม่ได้รับ XP อีกต่อไป
-
-## สถานะแคมเปญและการบันทึก
-
-เกมใช้ **Local Save-first**: GameState, Roll records, Leaf, progression, missions, rewards, memories และ campaign snapshots เก็บใน browser เป็นหลัก คีย์หลักปัจจุบันคือ `dust-fire-local-game-v3-saika`.
-
-Manual Save, Auto Save, Load Game และ Chronicle ต้องอ้างอิงแคมเปญที่เลือกอยู่ ไม่ปนประวัติของแคมเปญอื่น การเล่น Local Trial จึงดำเนินต่อได้แม้บริการ AI หรือเซิร์ฟเวอร์ไม่ตอบ
-
-ชุดอาชีพเริ่มต้น 10 แบบ, ภารกิจแรก, Mastery, สัมภาระ, สถานะเริ่มต้น และภูมิหลังตัวละครสองข้อที่ไม่เพิ่มแต้ม อ่านได้ที่ [`docs/game-design/starter-occupations-th.md`](docs/game-design/starter-occupations-th.md). ผังเทคนิคตั้งแต่กดทอยจน Local Save บันทึกผล อ่านได้ที่ [`docs/technical/one-turn-backend-flow-th.md`](docs/technical/one-turn-backend-flow-th.md). Contract ของ Main Thread/Side Leads, canon consistency, offline yearly catalog และ historical date gate อ่านได้ที่ [`docs/technical/gm-canon-mission-timeline-contract-th.md`](docs/technical/gm-canon-mission-timeline-contract-th.md). รายงาน coverage, source hierarchy และช่องว่างที่ catalog ไม่ยอมแต่งเติม อ่านได้ที่ [`docs/research/sengoku-timeline-coverage-audit-th.md`](docs/research/sengoku-timeline-coverage-audit-th.md).
-
-## AI GM และ historical guardrails
-
-AI GM เป็นส่วนเสริม ไม่ใช่ผู้ตัดสินเต๋า หน้าที่คือวิเคราะห์เจตนา เขียนผลเชิงนิยาย สร้างตัวเลือกถัดไป และเลือก fact cards ทางสังคมประวัติศาสตร์ที่ตรงกับฉาก กฎที่ไม่เปลี่ยนคือ:
-
-1. AI ห้ามสุ่มเต๋า แก้ Total, Margin หรือ Outcome ที่ deterministic engine ตัดสินแล้ว
-2. AI ห้ามให้ context bonus เกิน `+2` และ DN ต้องผ่าน canonical rule ของ client
-3. หาก AI timeout, credit ใช้ไม่ได้ หรือเป็น UI Preview เกมต้อง fallback เป็น Local Trial โดยไม่หัก AI credit
-4. NPC และเหตุการณ์ในแคมเปญเป็นเรื่องสมมติ เว้นแต่ระบบติด historical status ที่มีหลักฐานตรงจุด
-5. GM ใช้ Main Thread ได้หนึ่งรายการและ Side Leads ที่เปิดเผยได้ไม่เกินสองรายการ; การเบนเรื่องอย่างมีนัยสำคัญจึงเปลี่ยน Main Thread หลังผลทอยเท่านั้น
-6. เหตุการณ์จริงที่มี exact date จะถูกกล่าวว่าเกิดในฉากได้ต่อเมื่อ campaign มี `historicalDate` ที่ผู้เล่นยืนยันตรงกับ record; scene day ปกติเป็นเวลา gameplay ไม่ใช่วันที่ประวัติศาสตร์
-
-## เทคโนโลยีและโครงสร้าง
-
-| ชั้นระบบ | เทคโนโลยี/ที่ตั้ง | หน้าที่ |
-|---|---|---|
-| Client | React 19, TypeScript, Tailwind/shadcn | Player shell, Play Scene, map, Chronicle, market และ Local Save UI |
-| Game rules | `client/src/lib/game.ts` | GameState, parse action, 2d12, DN, progression, mission, economy |
-| Feature UI | `client/src/features/**` | Play, Chronicle, Story Map และ player-facing flows |
-| Server | Express 4 + tRPC 11 | Auth, AI GM, timeline และ admin operations |
-| Persistence | Browser Local Save เป็นหลัก; Drizzle/MySQL สำหรับ user/auth service | ความต่อเนื่องของแคมเปญและบริบทผู้ใช้ |
-| Historical boundary | `client/src/lib/historicalTimeline.ts`, server fact cards และ docs | แยก fact-supported / contextual-play / campaign-fiction / insufficient-evidence |
-
-```text
-client/src/lib/game.ts                deterministic game contract
-client/src/features/play/             intention, dice, formula, outcome flow
-client/src/features/chronicle/        campaign-scoped records
-client/src/features/story/            National Map and province context
-client/src/pages/                     Home shell, Market Hub, Admin Console
-server/gm.ts                          AI GM analysis and narrative contract
-server/timeline.ts                    historical timeline boundary
-docs/                                 source-of-truth rules, UI research, QA evidence
-tests/                                Playwright browser regressions
-```
-
-## เริ่มพัฒนาในเครื่อง
-
-### ข้อกำหนดเบื้องต้น
-
-- Node.js 22 หรือใหม่กว่า
-- pnpm 10
-- ตัวแปรระบบ Manus สำหรับ OAuth, database และ built-in services เมื่อต้องทดสอบ auth/AI GM จริง
-
-```bash
-pnpm install
-pnpm dev
-```
-
-Development server เริ่มจาก `server/_core/index.ts` และให้ Vite ส่งหน้า React ผ่าน Express. ห้าม commit ไฟล์ `.env` หรือ token ใด ๆ ลง repository.
-
-### คำสั่งสำคัญ
-
-| คำสั่ง | หน้าที่ |
+| ชั้นระบบ | เทคโนโลยี (จาก package.json) |
 |---|---|
-| `pnpm check` | ตรวจ TypeScript |
-| `pnpm test` | รัน Vitest ทั้งชุด |
-| `pnpm test:play-dice-flow` | ตรวจ browser flow ลูกเต๋าหมุน → สูตรผล → Narrative Outcome |
-| `pnpm test:mobile-keyboard` | ตรวจ keyboard flow บนมือถือ |
-| `pnpm test:campaign-layout` | ตรวจ Campaign Command ไม่เกิด horizontal overflow |
-| `pnpm test:market-mobile-layout` | ตรวจ Market Hub บน 375px |
-| `pnpm db:push` | generate และ apply Drizzle migrations เมื่อมี schema change |
+| Client | React `^19.2.1`, TypeScript `5.9.3`, Vite `^7.1.7`, Tailwind CSS `^4.1.14` + shadcn/Radix UI, TanStack React Query `^5.90.2`, tRPC React bindings |
+| Game rules | โมดูล pure TypeScript ที่ `client/src/lib/game/**` (core.ts, state.ts, engine.ts) — deterministic ทั้งหมด |
+| Server | Express `^4.21.2` + tRPC `^11.6.0` (Node.js 22+): auth, AI GM (`server/gm.ts`), timeline, admin |
+| AI / LLM | LLM invocation ผ่าน `server/_core/llm.ts` — เสนอ content เท่านั้น ไม่ตัดสินผล |
+| Persistence | Browser Local Save เป็นหลัก; Drizzle ORM `^0.44.5` + MySQL (`mysql2 ^3.15.0`, `drizzle/schema.ts`) |
+| Testing | Vitest `^2.1.4`, Playwright `^1.62.1` (`tests/`), smoke scripts (`scripts/`) |
+| Tooling | pnpm `10.4.1` (packageManager), esbuild, Drizzle Kit `^0.31.4`, Prettier |
 
-ก่อนแก้ schema ให้ตรวจ `drizzle/schema.ts`, สร้าง migration, อ่าน SQL ที่สร้าง และ apply ผ่าน workflow ที่เหมาะสม หลีกเลี่ยงการทำลายข้อมูลโดยไม่จำเป็น
+## Project tree
 
-## การทดสอบและเกณฑ์ส่งมอบ
-
-งานที่เปลี่ยนกติกา UI หรือ flow ต้องเพิ่ม regression ที่ใกล้กับพฤติกรรมจริงที่สุด และตรวจอย่างน้อย:
-
-```bash
-pnpm check
-pnpm test
-pnpm test:play-dice-flow
-pnpm test:mobile-keyboard
-pnpm test:campaign-layout
-pnpm test:market-mobile-layout
+```text
+SENGOKU-DUST-n-FIRE/
+├── client/src/                  # React client application
+│   ├── App.tsx                  # entry composition
+│   ├── pages/                   # Home shell, MarketHub, CampaignsView, AdminConsole
+│   ├── features/                # play, story, chronicle, relationships, powerRumor, navigation, management, shared
+│   ├── lib/game/                # deterministic game contract: types/, core.ts, state.ts, engine.ts, data.ts
+│   ├── lib/                     # randomEvents, worldEvents, regionInitialState, powerRumor, i18n, trpc
+│   ├── components/              # DashboardLayout, shadcn ui components
+│   └── public/assets/           # maps และ asset runtime files
+├── server/                      # Express/tRPC server
+│   ├── gm.ts                    # AI GM analysis/narrative contract
+│   ├── timeline.ts              # historical timeline boundary
+│   ├── routers.ts               # tRPC procedures
+│   ├── relationshipAnalyzer.ts / relationshipDossiers.ts  # server-side relationship analysis
+│   ├── starterProfiles.ts       # starter-profile procedures
+│   ├── admin.ts                 # admin operations
+│   ├── db.ts / storage.ts       # database helpers
+│   ├── types/                   # server type definitions
+│   └── _core/                   # trpc, context, env, llm, oauth, vite middleware, entry index.ts
+├── shared/                      # client/server contracts และ shared data
+│   ├── ai-gm.ts                 # AI GM contract types
+│   ├── narrativeRuntime.ts / narrativeStyle.ts / narrativeGoldenExamples.ts
+│   ├── historicalTimeline.ts    # historical facts
+│   ├── sengokuSocialFacts.ts
+│   ├── types.ts / const.ts
+│   └── data/                    # staged data files (ไม่ได้เชื่อมใช้งาน runtime)
+├── drizzle/                     # MySQL/Drizzle schema + generated migration SQL
+├── tests/                       # Playwright browser-flow regressions
+├── scripts/                     # smoke checks, i18n extract/check, utility scripts
+├── docs/                        # source-of-truth guides, contracts, audits, proposals, team handbooks
+├── notes/                       # dated working notes/audits (reference เท่านั้น ไม่ใช่ runtime code)
+├── data/                        # static data sets เช่น sengoku-66-provinces (ไม่ได้เชื่อมใช้งาน runtime)
+├── schemas/                     # JSON schemas เช่น sengoku_world_state.schema.json (ไม่ได้เชื่อมใช้งาน runtime)
+└── PROJECT_ROADMAP.md           # roadmap, push protocol และ VERSION HISTORY
 ```
 
-ผลที่เกี่ยวกับ layout หรือจังหวะ Play ต้องมี visual review เพิ่มเติมบน desktop และ mobile. Screenshot ไม่ทดแทน unit/browser tests แต่ช่วยยืนยันสิ่งที่ผู้เล่นเห็นจริง
-
-## GitHub และกติกาการส่งมอบ
-
-Repository นี้ใช้ `main` เป็น branch หลัก และ remote ชื่อ `github` ชี้ไปยัง repository ส่วนตัว `koppygoddy99/SENGOKU-DUST-n-FIRE`.
-
-> **นโยบายการซิงก์:** ทุก milestone ที่ส่งมอบให้ผู้ใช้ต้องผ่านการตรวจที่เกี่ยวข้อง, สร้าง checkpoint และถูก commit/push ไป `github main` ก่อนรายงานผล. งานระหว่างทำสามารถอยู่ใน working tree ได้ชั่วคราว แต่จะไม่ถูกอ้างว่าส่งมอบหรือเสร็จจนกว่าจะซิงก์สำเร็จ.
-
-ลำดับมาตรฐานคือ: ตรวจ `todo.md` → รัน tests ที่เกี่ยวข้อง → สร้าง checkpoint → ตรวจ `git status` → commit/push → รายงาน commit/checkpoint ที่ส่งมอบ.
-
-## เอกสารสำคัญ
-
-| เอกสาร | ใช้เมื่อ |
-|---|---|
-| [`docs/dust-fire-core-game-source-of-truth-th.md`](docs/dust-fire-core-game-source-of-truth-th.md) | ต้องการ contract กติกาและ state transition เชิง implementation |
-| [`docs/dust-fire-rules-and-character-summary-th.md`](docs/dust-fire-rules-and-character-summary-th.md) | ต้องการคู่มือผู้เล่นอ่านง่าย |
-| [`docs/dust-fire-deep-game-guide-th.md`](docs/dust-fire-deep-game-guide-th.md) | ต้องการคู่มือเชิงลึกสำหรับผู้เล่นและนักพัฒนา |
-| [`docs/dust-fire-lore-narrative-art-bible-th.md`](docs/dust-fire-lore-narrative-art-bible-th.md) | ต้องการขอบเขตเรื่อง ภาษา ฉาก และอาร์ต |
-| [`docs/play-outcome-flow-review-2026-08-22-th.md`](docs/play-outcome-flow-review-2026-08-22-th.md) | ต้องการหลักฐาน QA ของ flow ลูกเต๋า/ผลเชิงเรื่องเล่า/DN ล่าสุด |
-| [`docs/team-work-status-2026-08-21-th.md`](docs/team-work-status-2026-08-21-th.md) | ต้องการสถานะตาม workflow ทีมผลิตเกม |
-| [`docs/team-handbooks/09-backend-systems-handbook-th.md`](docs/team-handbooks/09-backend-systems-handbook-th.md) | ต้องการขอบเขต server contracts, persistence, AI GM integration, asset delivery และ observability ของ Team 8 |
-| [`docs/technical/gm-canon-mission-timeline-contract-th.md`](docs/technical/gm-canon-mission-timeline-contract-th.md) | ต้องการข้อจำกัด Main Thread/Side Leads, canon consistency, offline historical catalog และ date gate ของ GM AI |
-| [`docs/research/sengoku-timeline-coverage-audit-th.md`](docs/research/sengoku-timeline-coverage-audit-th.md) | ต้องการตัวเลข coverage, source audit, date precision และช่องว่างที่ยังห้าม GM AI สร้างข้อมูลขึ้นเอง |
-
-## อัปเดตระบบใหญ่ล่าสุด (Recent Major Updates)
-
-ในช่วงที่ผ่านมา เราได้พัฒนาระบบหลักๆ ที่ส่งผลต่อโลกของเกมและการตัดสินใจของผู้เล่น ดังนี้ครับ:
-
-1. **ระบบเหตุการณ์สุ่มตามบริบท (Random Events):** เพิ่มระบบสุ่มเหตุการณ์กว่า 45 รูปแบบ ที่สอดคล้องกับฤดูกาล ยุคสมัย และสถานที่ที่อยู่จริง ระบบสามารถสร้างเหตุการณ์หน้างาน มีการรับเควส ทอยลูกเต๋าปกติ และเชื่อมต่อกับ AI GM ได้อย่างสมบูรณ์
-2. **ระบบร่างกายและจิตใจ (Blood & Focus):** ปรับปรุงระบบบาดแผลเดิมมาเป็นพลังกาย (Blood) และพลังสมาธิ (Focus) โดยมีเพดานสูงสุด 10 หน่วย พร้อมเพิ่มระบบรางวัลการเติบโตเมื่อบรรลุเป้าหมายสำคัญ (Milestones)
-3. **ระบบบันทึกทางสังคม (Social Record):** เพิ่มค่าสถานะทางสังคม 4 แกน คือ เกียรติยศ (Honor), อิทธิพล (Influence), ข่าวสาร (Information) และ รอยด่างพร้อย (Stain) ซึ่งสถานะเหล่านี้พัฒนาได้ยากจากการเล่นจริง และจะแสดงผลเป็น "คำเรียกขาน" ตามระดับใน UI
-4. **เครือข่ายอำนาจและข่าวลือ (Power & Rumor Network):** เชื่อมโยงความสัมพันธ์ของฝ่ายต่างๆ, การจัดเก็บความเสี่ยงระดับพื้นที่ (Local Heat) และเส้นเวลาประวัติศาสตร์ ให้ส่งผลโดยตรงต่อบทพูดของแต่ละฝ่าย (Faction Voices) และการตัดสินใจเดินทางของผู้เล่น
-
-## สถานะปัจจุบันและงานที่ยังไม่ปิด
-
-> **หมายเหตุ (เวอร์ชันล่าสุด):** โครงการรีแฟคเตอร์ (Refactoring) ยังไม่เสร็จ — ยังมีส่วนของระบบที่ต้องปรับปรุงเพิ่มเติมก่อนจะถือว่าสำเร็จสมบูรณ์.
-
-ผู้เล่นสามารถทดลองเกม, สร้าง/โหลดแคมเปญ Local Save, เล่นฉาก, ดูผลทอยและ Narrative Outcome, เปิด National Map, Chronicle, Market/Prepare และหน้าผู้ดูแลตามสิทธิ์ได้. สิ่งที่ยังอยู่ในขอบเขตพัฒนาคือการรับ feedback เพื่อปรับหน้าถัดไปทีละหน้า และการทบทวนชุดเอกสารกลาง/คู่มือทีมตามความเห็นของผู้ใช้
-
-## License และทรัพย์สิน
-
-โค้ดและเอกสารของ repository นี้เป็นของโครงการ Dust & Fire ตามสิทธิ์ที่เจ้าของโครงการกำหนด. ห้ามนำ PDF, แผนที่, illustration หรือทรัพย์สินภายนอกที่มีลิขสิทธิ์มา commit หรือใช้งานโดยไม่มีสิทธิ์ชัดเจน. ทรัพย์สินรูปภาพที่ผู้ใช้อนุญาตให้ใช้ต้องถูกบันทึกที่มาและใช้ตามขอบเขตอนุญาตเท่านั้น.
-
-### Asset runtime manifest
-
-| Asset | สิทธิ์/ที่มา | Runtime path | สถานะตรวจรับ |
-|---|---|---|---|
-| National Map clean | ผู้ใช้ยืนยันสิทธิ์สำหรับแผนที่ฐาน | `client/public/assets/dust-fire-national-map-clean.webp` → `/assets/dust-fire-national-map-clean.webp` | WebP ขนาด 1600×900 ที่อยู่ใน repository เพื่อให้ทั้ง `pnpm dev` จาก VS Code และ deployment ของ Vite เสิร์ฟ path เดียวกัน |
+หมายเหตุ: `schemas/` และ `data/` **ไม่ได้เชื่อมใช้งาน runtime** (ไม่มี code path ที่ import ใช้)
