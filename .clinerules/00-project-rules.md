@@ -1,4 +1,15 @@
-# SENGOKU-DUST-n-FIRE — Cline Rules
+# SENGOKU-DUST-n-FIRE — Cline Rules (Project Contract)
+
+This file is the permanent, project-wide rule contract. Detailed architecture,
+gameplay-safety, workflow, and performance rules live in sibling rule files; this
+file keeps only the principles that always apply. Consult the sibling files when
+a task touches their subject.
+
+Sibling rules:
+- `10-architecture.md` — evidence-based map of the current repository.
+- `20-gameplay-safety.md` — strict gameplay-integrity protection.
+- `30-workflow.md` — standard implementation workflow.
+- `40-performance.md` — search-first repository investigation.
 
 ## Project Priority
 
@@ -19,15 +30,11 @@ Read the repository efficiently.
 - Do not scan the entire repository when the task can be solved by inspecting a smaller relevant scope.
 - Start with the files directly related to the task.
 - Follow imports, callers, reducers, schemas, tests, and persistence only as needed to establish the actual execution path.
-- Prefer targeted searches over broad repository scans.
+- Prefer targeted searches over broad repository scans (see `40-performance.md`).
 - Reuse previously established repository evidence during the same task.
 - Do not read unrelated files merely for completeness.
-- Before reading a large file, search for the relevant symbol, function, type, or section first when practical.
-- When the task is already clearly scoped, do not repeatedly rediscover the project structure.
 
-Efficiency must never reduce correctness.
-
-If repository evidence is insufficient, inspect more files rather than guessing.
+Efficiency must never reduce correctness. If repository evidence is insufficient, inspect more files rather than guessing.
 
 ---
 
