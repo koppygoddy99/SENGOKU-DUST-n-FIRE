@@ -17,7 +17,7 @@ Before modifying code:
 
 1. Inspect the relevant existing repository structure.
 2. Read `PROJECT_ROADMAP.md`.
-3. Read `Rule-based Procedural Generation.txt` when the task involves procedural generation or AI-generated content.
+3. Read `docs/proposals/rule-based-procedural-generation-th.md` when the task involves procedural generation or AI-generated content.
 4. Find existing implementations before creating new systems.
 5. Find relevant tests before changing behavior.
 6. Reuse information already inspected during the current task whenever possible.
